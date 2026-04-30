@@ -51,6 +51,7 @@ export function SiteHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [mounted, setMounted] = useState(false);
   const [logoSrc, setLogoSrc] = useState("/logo.png");
   const [currentHash, setCurrentHash] = useState("");
 
@@ -86,6 +87,10 @@ export function SiteHeader() {
     readHash();
     window.addEventListener("hashchange", readHash);
     return () => window.removeEventListener("hashchange", readHash);
+  }, []);
+
+  useEffect(() => {
+    setMounted(true);
   }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -221,18 +226,18 @@ export function SiteHeader() {
             <Link
               className={`icon-nav-btn${pathname === "/wishlist" ? " active" : ""}`}
               href="/wishlist"
-              aria-label={`Wishlist${wishlistCount > 0 ? ` (${wishlistCount})` : ""}`}
+              aria-label={`Wishlist${mounted && wishlistCount > 0 ? ` (${wishlistCount})` : ""}`}
               title="Wishlist"
               onClick={scrollToTopAfterNav}
             >
               <HeartIcon />
-              {wishlistCount > 0 && (
+              {mounted && wishlistCount > 0 && (
                 <span className="cart-badge">{wishlistCount}</span>
               )}
             </Link>
-            <Link className="icon-nav-btn" href="/cart" aria-label="Cart" title={`Cart (${itemCount})`}>
+            <Link className="icon-nav-btn" href="/cart" aria-label="Cart" title={`Cart (${mounted ? itemCount : 0})`}>
               <CartIcon />
-              {itemCount > 0 && (
+              {mounted && itemCount > 0 && (
                 <span className="cart-badge">{itemCount}</span>
               )}
             </Link>

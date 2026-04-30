@@ -438,23 +438,23 @@ function HomePage({
       {/* ── Hero Banner ── */}
       <div className="hero-banner-new">
         <img
-          src="/banner-home.jpg"
+          src="/banner-home.png"
           alt="Henley Zone collection banner"
           className="hero-banner-img"
           onError={(e) => {
             (e.target as HTMLImageElement).style.display = "none";
           }}
         />
-        <div className="hero-banner-overlay">
-          <div className="hero-text">
-            <p className="hero-eyebrow">New Collection 2026</p>
-            <h1 className="hero-title">Henley Zone<br />Fashion</h1>
-            <p className="hero-sub">Trendy Style · Best Price · সারা বাংলাদেশে ডেলিভারি</p>
-            <Link href="/store" className="btn">
-              Shop Now →
-            </Link>
-          </div>
+        <div className="hero-banner-cta-desktop">
+          <Link href="/store" className="hero-banner-shop-btn">
+            Shop Now →
+          </Link>
         </div>
+      </div>
+      <div className="hero-banner-cta-strip">
+        <Link href="/store" className="hero-banner-shop-btn">
+          Shop Now →
+        </Link>
       </div>
 
       <div className="container">

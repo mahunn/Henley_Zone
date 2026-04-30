@@ -486,31 +486,54 @@ button {
 .hero-banner-new {
   position: relative;
   width: 100%;
-  background: var(--color-primary-dark);
+  background: var(--color-bg);
   overflow: hidden;
   border-radius: 0;
+  line-height: 0; /* remove tiny baseline seam under image */
 }
 
 .hero-banner-img {
   width: 100%;
-  height: 300px;
+  height: clamp(170px, 36vw, 320px);
   object-fit: cover;
-  object-position: center;
+  object-position: center center;
   display: block;
+  vertical-align: top;
 }
 
-.hero-banner-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to right,
-    rgba(2, 6, 23, 0.62) 0%,
-    rgba(2, 6, 23, 0.18) 55%,
-    transparent 100%
-  );
+.hero-banner-cta-strip {
+  width: 100%;
+  background: var(--color-bg);
   display: flex;
+  justify-content: center;
   align-items: center;
-  padding: 24px;
+  padding: 8px 0 12px;
+}
+
+.hero-banner-cta-desktop {
+  display: none;
+}
+
+.hero-banner-shop-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 8px 16px;
+  border: 1px solid #bae6fd;
+  background: #e0f2fe;
+  color: #0c4a6e;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1;
+  box-shadow: 0 6px 14px rgba(14, 165, 233, 0.18);
+  transition: transform 0.18s, background 0.18s, border-color 0.18s;
+}
+
+.hero-banner-shop-btn:hover {
+  transform: translateY(-1px);
+  background: #bae6fd;
+  border-color: #7dd3fc;
 }
 
 .hero-text {
@@ -2828,6 +2851,13 @@ button {
     height: 38px;
   }
 
+  .hero-banner-shop-btn {
+    min-width: 102px;
+    height: 30px;
+    padding: 6px 11px;
+    font-size: 12px;
+  }
+
   .fancy-section {
     margin-top: 24px;
   }
@@ -2873,6 +2903,13 @@ button {
     white-space: nowrap;
   }
 
+  .hero-banner-shop-btn {
+    min-width: 96px;
+    height: 28px;
+    padding: 5px 10px;
+    font-size: 11.5px;
+  }
+
   .product-row-scroll {
     grid-template-columns: 1fr;
   }
@@ -2895,7 +2932,7 @@ button {
     padding: 0 24px;
   }
   .hero-banner-img {
-    height: 400px;
+    height: clamp(230px, 34vw, 380px);
   }
   .hero-title {
     font-size: 2.6rem;
@@ -2952,7 +2989,25 @@ button {
     width: 210px;
   }
   .hero-banner-img {
-    height: 440px;
+    height: clamp(270px, 32vw, 420px);
+    object-fit: contain;
+    object-position: center center;
+    background: var(--color-bg);
+  }
+
+  .hero-banner-cta-strip {
+    display: none;
+  }
+
+  .hero-banner-cta-desktop {
+    position: absolute;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    z-index: 3;
   }
   .footer-grid {
     grid-template-columns: 2fr 1fr 1fr 1.6fr;
