@@ -1,0 +1,1002 @@
+{
+    "project": {
+      "name": "ANS Fashion Clone",
+      "description": "E-commerce fashion website inspired by ansfashion.com with sky blue color theme",
+      "instructions_for_claude": "Build a full-stack styled fashion e-commerce site using the structure below. Use a sky blue light color palette. The user will provide their own colors — use CSS variables throughout so colors are easy to swap. Use placeholder images from https://placehold.co. All prices in Taka (৳). Make it fully responsive."
+    },
+  
+    "theme": {
+      "note": "User will supply final colors. Use these as CSS variable names.",
+      "css_variables": {
+        "--color-primary": "#0ea5e9",
+        "--color-primary-dark": "#0284c7",
+        "--color-primary-light": "#e0f2fe",
+        "--color-accent": "#f59e0b",
+        "--color-bg": "#f0f9ff",
+        "--color-surface": "#ffffff",
+        "--color-text-primary": "#0f172a",
+        "--color-text-secondary": "#64748b",
+        "--color-border": "#e2e8f0",
+        "--color-badge-sale": "#ef4444",
+        "--color-badge-new": "#22c55e",
+        "--color-badge-top": "#f59e0b",
+        "--color-badge-flash": "#8b5cf6"
+      },
+      "fonts": {
+        "heading": "Playfair Display",
+        "body": "DM Sans"
+      }
+    },
+  
+    "pages": {
+  
+      "homepage": {
+        "route": "/",
+        "sections": [
+  
+          {
+            "id": "topbar",
+            "type": "topbar",
+            "content": {
+              "left": "📍 Track Order",
+              "right": {
+                "type": "button",
+                "label": "Login",
+                "icon": "user"
+              }
+            },
+            "style": {
+              "background": "var(--color-primary-dark)",
+              "text_color": "#ffffff",
+              "font_size": "13px",
+              "padding": "8px 16px"
+            }
+          },
+  
+          {
+            "id": "navbar",
+            "type": "navbar",
+            "content": {
+              "logo": {
+                "text": "ANS",
+                "subtext": "FASHION",
+                "icon": "shopping-bag"
+              },
+              "search": {
+                "placeholder": "Search by product name",
+                "icon": "search"
+              },
+              "icons": [
+                { "label": "Compare", "icon": "bar-chart-2", "badge": 0 },
+                { "label": "Wishlist", "icon": "heart", "badge": 0 },
+                { "label": "Cart", "icon": "shopping-cart", "badge": 0 }
+              ],
+              "nav_links": [
+                { "label": "Home", "href": "/", "active": true },
+                { "label": "Shop", "href": "/shop" },
+                { "label": "Campaign", "href": "/campaign" },
+                { "label": "Blog", "href": "/blog" },
+                { "label": "Pages", "href": "/pages", "has_dropdown": true },
+                { "label": "Contact", "href": "/contact" }
+              ],
+              "categories_dropdown": {
+                "label": "Categories",
+                "icon": "grid",
+                "items": ["KURTI", "BORKA", "ACCESSORIES", "BEAUTY", "SHORTS"]
+              }
+            },
+            "style": {
+              "background": "var(--color-surface)",
+              "border_bottom": "1px solid var(--color-border)",
+              "sticky": true
+            }
+          },
+  
+          {
+            "id": "hero_banner",
+            "type": "hero_slider",
+            "slides": [
+              {
+                "title": "ANS FASHION",
+                "subtitle": "New Collection • Trendy Style • Best Price",
+                "cta": { "label": "SHOP NOW", "href": "/shop" },
+                "background": "var(--color-primary-dark)",
+                "text_color": "#ffffff",
+                "title_color": "var(--color-accent)"
+              }
+            ],
+            "style": {
+              "height": "420px",
+              "show_arrows": true
+            }
+          },
+  
+          {
+            "id": "category_cards",
+            "type": "category_grid",
+            "title": null,
+            "layout": "horizontal_scroll",
+            "show_arrows": true,
+            "items": [
+              { "label": "KURTI", "image": "https://placehold.co/200x200?text=KURTI", "href": "/category/kurti" },
+              { "label": "BORKA", "image": "https://placehold.co/200x200?text=BORKA", "href": "/category/borka" },
+              { "label": "ACCESSORIES", "image": "https://placehold.co/200x200?text=ACCESSORIES", "href": "/category/accessories" },
+              { "label": "BEAUTY", "image": "https://placehold.co/200x200?text=BEAUTY", "href": "/category/beauty" },
+              { "label": "SHORTS", "image": "https://placehold.co/200x200?text=SHORTS", "href": "/category/shorts" }
+            ],
+            "card_style": {
+              "border": "1px solid var(--color-border)",
+              "border_radius": "12px",
+              "label_position": "below_image",
+              "label_align": "center",
+              "width": "180px",
+              "image_height": "140px"
+            }
+          },
+  
+          {
+            "id": "deals_of_week",
+            "type": "product_row_with_timer",
+            "title": "Deals Of The Week",
+            "title_style": {
+              "font": "var(--font-heading)",
+              "underline_color": "var(--color-primary)"
+            },
+            "left_panel": {
+              "type": "countdown_timer",
+              "label": "View All",
+              "fields": ["Days", "Hrs", "Min", "Sec"],
+              "background": "var(--color-primary-dark)",
+              "text_color": "#ffffff"
+            },
+            "show_arrows": true,
+            "view_all_link": "/deals",
+            "products": [
+              {
+                "id": "p1",
+                "name": "Three piece_TH-1",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Three+Piece",
+                "price": 850,
+                "original_price": 1150,
+                "discount_percent": 26,
+                "rating": 0,
+                "href": "/product/three-piece-th-1"
+              },
+              {
+                "id": "p2",
+                "name": "long one piece",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Long+One+Piece",
+                "price": 550,
+                "original_price": 700,
+                "discount_percent": 21,
+                "rating": 0,
+                "href": "/product/long-one-piece"
+              },
+              {
+                "id": "p3",
+                "name": "White Beauty -TW-5",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=White+Beauty",
+                "price": 999.99,
+                "original_price": null,
+                "discount_percent": null,
+                "rating": 0,
+                "href": "/product/white-beauty-tw-5"
+              },
+              {
+                "id": "p4",
+                "name": "JAFRAN- TW-4",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=JAFRAN+TW-4",
+                "price": 699.99,
+                "original_price": 1150,
+                "discount_percent": 39,
+                "rating": 0,
+                "href": "/product/jafran-tw-4"
+              }
+            ]
+          },
+  
+          {
+            "id": "new_arrival",
+            "type": "product_row",
+            "title": "New Arrival",
+            "title_style": {
+              "font": "var(--font-heading)",
+              "underline_color": "var(--color-primary)"
+            },
+            "show_view_all": true,
+            "view_all_link": "/shop?sort=newest",
+            "products": [
+              {
+                "id": "na1",
+                "name": "URVSHI-Tops-OP-4",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=URVSHI+Tops",
+                "price": 549.99,
+                "original_price": null,
+                "discount_percent": null,
+                "rating": 0,
+                "href": "/product/urvshi-tops-op-4"
+              },
+              {
+                "id": "na2",
+                "name": "Three piece_TH-1",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Three+Piece",
+                "price": 850,
+                "original_price": 1150,
+                "discount_percent": 26,
+                "rating": 0,
+                "href": "/product/three-piece-th-1"
+              },
+              {
+                "id": "na3",
+                "name": "'Rose' Digital print",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Rose+Digital",
+                "price": 599.99,
+                "original_price": 950,
+                "discount_percent": 37,
+                "rating": 0,
+                "href": "/product/rose-digital-print"
+              },
+              {
+                "id": "na4",
+                "name": "Dubai Cherry Em.",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Dubai+Cherry",
+                "price": 899.99,
+                "original_price": 1300,
+                "discount_percent": 31,
+                "rating": 0,
+                "href": "/product/dubai-cherry-em"
+              },
+              {
+                "id": "na5",
+                "name": "JAFRAN- TW-4",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=JAFRAN",
+                "price": 699.99,
+                "original_price": 1150,
+                "discount_percent": 39,
+                "rating": 0,
+                "href": "/product/jafran-tw-4"
+              }
+            ]
+          },
+  
+          {
+            "id": "featured",
+            "type": "product_row",
+            "title": "Featured",
+            "title_style": {
+              "font": "var(--font-heading)",
+              "underline_color": "var(--color-primary)"
+            },
+            "products": [
+              {
+                "id": "f1",
+                "name": "Kuchi Gown OP-3",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Kuchi+Gown",
+                "price": 750,
+                "original_price": null,
+                "discount_percent": null,
+                "badge": null
+              },
+              {
+                "id": "f2",
+                "name": "Long Shirt- TH-1",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Long+Shirt",
+                "price": 449.99,
+                "original_price": 750,
+                "discount_percent": 40,
+                "badge": null
+              },
+              {
+                "id": "f3",
+                "name": "SEQUENCE TOPS",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Sequence+Tops",
+                "price": 499.99,
+                "original_price": 650,
+                "discount_percent": 23,
+                "badge": null
+              },
+              {
+                "id": "f4",
+                "name": "আফগানি ডিজাইন",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Afgani+Design",
+                "price": 499.99,
+                "original_price": 850,
+                "discount_percent": 41,
+                "badge": null
+              },
+              {
+                "id": "f5",
+                "name": "AFGANI DESIGN",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=AFGANI",
+                "price": 599.99,
+                "original_price": 799.99,
+                "discount_percent": 25,
+                "badge": null
+              }
+            ]
+          },
+  
+          {
+            "id": "top_rated",
+            "type": "product_row",
+            "title": "Top Rated",
+            "title_style": {
+              "font": "var(--font-heading)",
+              "underline_color": "var(--color-primary)"
+            },
+            "show_view_all": true,
+            "view_all_link": "/shop?sort=rating",
+            "products": [
+              {
+                "id": "tr1",
+                "name": "Vojpuri TH-3",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Vojpuri",
+                "price": 1149.99,
+                "original_price": null,
+                "discount_percent": null
+              },
+              {
+                "id": "tr2",
+                "name": "NAKSHI - TW-7",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=NAKSHI+TW7",
+                "price": 799.99,
+                "original_price": null,
+                "discount_percent": null
+              },
+              {
+                "id": "tr3",
+                "name": "Block printed gown - TW-6",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Block+Gown",
+                "price": 649.99,
+                "original_price": null,
+                "discount_percent": null
+              },
+              {
+                "id": "tr4",
+                "name": "Short Borkha Two-Piec",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Short+Borkha",
+                "price": 750,
+                "original_price": 950,
+                "discount_percent": 21
+              },
+              {
+                "id": "tr5",
+                "name": "Afgani Real Pic",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Afgani+Real",
+                "price": 549.99,
+                "original_price": 750,
+                "discount_percent": 27
+              }
+            ]
+          },
+  
+          {
+            "id": "best_seller",
+            "type": "product_row",
+            "title": "Best Seller",
+            "title_style": {
+              "font": "var(--font-heading)",
+              "underline_color": "var(--color-primary)"
+            },
+            "show_view_all": true,
+            "view_all_link": "/shop?sort=bestseller",
+            "products": [
+              {
+                "id": "bs1",
+                "name": "Madhuri TH-4",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Madhuri",
+                "price": 1150,
+                "original_price": 1350,
+                "discount_percent": 15
+              },
+              {
+                "id": "bs2",
+                "name": "Nakshi-2 TW-8",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Nakshi-2",
+                "price": 799.99,
+                "original_price": 1000,
+                "discount_percent": 20
+              },
+              {
+                "id": "bs3",
+                "name": "Premium Georgette Gharara Th-2",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Gharara",
+                "price": 1400,
+                "original_price": 1800,
+                "discount_percent": 22
+              },
+              {
+                "id": "bs4",
+                "name": "White Beauty -TW-5",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=White+Beauty",
+                "price": 999.99,
+                "original_price": null,
+                "discount_percent": null
+              },
+              {
+                "id": "bs5",
+                "name": "White Beauty M -TW-5",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=White+Beauty+M",
+                "price": 1249.99,
+                "original_price": null,
+                "discount_percent": null
+              }
+            ]
+          },
+  
+          {
+            "id": "flash_deal",
+            "type": "flash_deal_row",
+            "title": "Flash Deal",
+            "title_style": {
+              "font": "var(--font-heading)",
+              "underline_color": "var(--color-primary)"
+            },
+            "layout": "two_column_large",
+            "items": [
+              {
+                "id": "fd1",
+                "name": "Dubai cherry-1",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Dubai+Cherry",
+                "price": 750,
+                "original_price": 850,
+                "discount_percent": 12,
+                "badge": "Flash deal",
+                "countdown": { "days": 0, "hrs": 0, "min": 0, "sec": 0 },
+                "href": "/product/dubai-cherry-1"
+              },
+              {
+                "id": "fd2",
+                "name": "LES WORK DESIGN RANI PINK",
+                "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Rani+Pink",
+                "price": 699.99,
+                "original_price": 850.5,
+                "discount_percent": 18,
+                "badge": "Flash deal",
+                "countdown": { "days": 0, "hrs": 0, "min": 0, "sec": 0 },
+                "href": "/product/les-work-design-rani-pink"
+              }
+            ]
+          },
+  
+          {
+            "id": "footer",
+            "type": "footer",
+            "columns": [
+              {
+                "type": "brand",
+                "logo": "ANS FASHION",
+                "address": "14/1, College road, Khalpar, West ashrafabad, Kamrangir char,, Dhaka-1211",
+                "phone": "+8801969576248",
+                "email": "ansfashionhouse0@gmail.com",
+                "social_links": ["facebook", "tiktok", "youtube", "linkedin"]
+              },
+              {
+                "type": "link_list",
+                "title": "Categories",
+                "links": [
+                  { "label": "KURTI", "href": "/category/kurti" },
+                  { "label": "BORKA", "href": "/category/borka" },
+                  { "label": "ACCESSORIES", "href": "/category/accessories" },
+                  { "label": "BEAUTY", "href": "/category/beauty" },
+                  { "label": "SHORTS", "href": "/category/shorts" }
+                ]
+              },
+              {
+                "type": "link_list",
+                "title": "Information",
+                "links": [
+                  { "label": "Faq", "href": "/faq" },
+                  { "label": "About Us", "href": "/about" },
+                  { "label": "Privacy Policy", "href": "/privacy" },
+                  { "label": "Terms & Service", "href": "/terms" },
+                  { "label": "Return Policy", "href": "/returns" }
+                ]
+              },
+              {
+                "type": "newsletter",
+                "title": "Newsletter",
+                "placeholder": "Your e-mail",
+                "button_label": "Subscribe",
+                "description": "Subscribe to our Newsletter to receive early discount offers, latest news, sales and promo information."
+              }
+            ],
+            "bottom_bar": {
+              "text": "ANS FASHION© All rights reserved."
+            }
+          }
+        ],
+  
+        "shared_components": {
+          "product_card": {
+            "description": "Reusable product card used in all product rows",
+            "elements": [
+              {
+                "id": "discount_badge",
+                "type": "badge",
+                "position": "top-left",
+                "content": "-{discount_percent}%",
+                "visible_when": "discount_percent != null",
+                "style": { "background": "var(--color-badge-sale)", "color": "#fff", "font_size": "12px", "border_radius": "4px", "padding": "2px 6px" }
+              },
+              {
+                "id": "type_badge",
+                "type": "badge",
+                "position": "top-left_below_discount",
+                "content": "{badge_type}",
+                "visible_when": "badge != null",
+                "badge_types": {
+                  "Best": { "background": "#3b82f6" },
+                  "Top": { "background": "var(--color-badge-top)" },
+                  "Flash deal": { "background": "var(--color-badge-flash)" },
+                  "Feature": { "background": "var(--color-primary)" },
+                  "New": { "background": "var(--color-badge-new)" }
+                }
+              },
+              {
+                "id": "product_image",
+                "type": "image",
+                "aspect_ratio": "3/4",
+                "object_fit": "cover"
+              },
+              {
+                "id": "hover_actions",
+                "type": "action_icons",
+                "position": "bottom-right on hover",
+                "icons": [
+                  { "icon": "heart", "action": "add_to_wishlist" },
+                  { "icon": "bar-chart-2", "action": "compare" },
+                  { "icon": "shopping-cart", "action": "add_to_cart" }
+                ]
+              },
+              {
+                "id": "category_label",
+                "type": "text",
+                "content": "{category}",
+                "style": { "font_size": "11px", "color": "var(--color-text-secondary)", "text_transform": "uppercase", "letter_spacing": "0.05em" }
+              },
+              {
+                "id": "product_name",
+                "type": "link",
+                "content": "{name}",
+                "style": { "font_size": "14px", "color": "var(--color-text-primary)", "font_weight": "500" }
+              },
+              {
+                "id": "star_rating",
+                "type": "stars",
+                "max": 5,
+                "value": "{rating}",
+                "color": "var(--color-accent)"
+              },
+              {
+                "id": "price_block",
+                "type": "price",
+                "current_price_style": { "font_weight": "700", "color": "var(--color-primary-dark)" },
+                "original_price_style": { "text_decoration": "line-through", "color": "var(--color-text-secondary)", "font_size": "13px" },
+                "currency_symbol": "৳"
+              }
+            ]
+          }
+        }
+      },
+  
+      "product_detail": {
+        "route": "/product/:slug",
+        "example_product": {
+          "id": "nakshi-tw-7",
+          "name": "NAKSHI - TW-7",
+          "sku": "#TH-7",
+          "brand": "ANS FASHION",
+          "categories": ["KURTI", "Two piece"],
+          "price": 799.99,
+          "original_price": null,
+          "stock": { "status": "In Stock", "quantity": 31 },
+          "rating": 0,
+          "badge": "Top",
+          "colors": [
+            { "id": "c1", "swatch_image": "https://placehold.co/50x60?text=GRN", "label": "Olive Green" },
+            { "id": "c2", "swatch_image": "https://placehold.co/50x60?text=BLU", "label": "Blue" }
+          ],
+          "sizes": ["36", "38", "40", "42", "44", "46", "48"],
+          "images": [
+            "https://placehold.co/500x620?text=NAKSHI+TW7+Main",
+            "https://placehold.co/500x620?text=NAKSHI+TW7+Alt"
+          ],
+          "description_points": [
+            "দারুণ স্টাইলিশ ও কোয়ালিটি পণ্য।",
+            "প্রিমিয়াম সুতি কাপড়",
+            "মারাত্মক এমব্রয়ডারি",
+            "কালার গ্যারান্টি ক্লিন প্রিন্ট",
+            "সাদা সালোয়ার",
+            "সাইজ- ৩৬ থেকে ৪৮ পর্যন্ত"
+          ]
+        },
+        "layout": "two_column",
+        "sections": [
+  
+          {
+            "id": "breadcrumb",
+            "type": "breadcrumb",
+            "items": ["Home", "Shop", "{product_name}"],
+            "separator": ">",
+            "style": { "font_size": "13px", "color": "var(--color-text-secondary)", "padding": "12px 0" }
+          },
+  
+          {
+            "id": "product_main",
+            "type": "two_column_layout",
+            "gap": "48px",
+            "left_column": {
+              "width": "45%",
+              "components": [
+                {
+                  "id": "main_image",
+                  "type": "image_gallery",
+                  "badge_position": "top-left",
+                  "main_image_style": { "border_radius": "12px", "width": "100%", "aspect_ratio": "4/5" },
+                  "thumbnail_strip": {
+                    "position": "below",
+                    "thumbnail_size": "70px",
+                    "gap": "8px",
+                    "active_border": "2px solid var(--color-primary)"
+                  }
+                }
+              ]
+            },
+            "right_column": {
+              "width": "55%",
+              "components": [
+                {
+                  "id": "product_title",
+                  "type": "heading",
+                  "level": "h1",
+                  "style": { "font": "var(--font-heading)", "font_size": "28px", "font_weight": "700", "color": "var(--color-text-primary)", "letter_spacing": "0.02em" }
+                },
+                {
+                  "id": "rating_stock_row",
+                  "type": "flex_row",
+                  "align": "center",
+                  "gap": "16px",
+                  "children": [
+                    { "type": "stars", "value": "{rating}", "max": 5, "color": "var(--color-accent)" },
+                    { "type": "badge", "content": "In Stock ({quantity} items)", "style": { "color": "var(--color-badge-new)", "font_size": "13px" } }
+                  ]
+                },
+                {
+                  "id": "price_display",
+                  "type": "price_block",
+                  "current_price_style": { "font_size": "28px", "font_weight": "700", "color": "var(--color-primary-dark)" },
+                  "original_price_style": { "font_size": "16px", "text_decoration": "line-through", "color": "var(--color-text-secondary)" },
+                  "currency_symbol": "৳"
+                },
+                {
+                  "id": "brand_link",
+                  "type": "text_link",
+                  "label": "NAKSHI",
+                  "sub_label": "Read more",
+                  "style": { "font_size": "13px" }
+                },
+                {
+                  "id": "color_selector",
+                  "type": "option_selector",
+                  "label": "COLOR:",
+                  "label_style": { "font_weight": "600", "font_size": "14px", "text_transform": "uppercase", "letter_spacing": "0.05em" },
+                  "selector_type": "image_swatches",
+                  "swatch_size": "52px",
+                  "active_border": "2px solid var(--color-primary)"
+                },
+                {
+                  "id": "size_selector",
+                  "type": "option_selector",
+                  "label": "SIZE:",
+                  "label_style": { "font_weight": "600", "font_size": "14px", "text_transform": "uppercase", "letter_spacing": "0.05em" },
+                  "selector_type": "button_grid",
+                  "button_style": {
+                    "border": "1px solid var(--color-border)",
+                    "border_radius": "6px",
+                    "padding": "6px 14px",
+                    "font_size": "14px",
+                    "active_background": "var(--color-primary)",
+                    "active_color": "#fff"
+                  }
+                },
+                {
+                  "id": "quantity_and_actions",
+                  "type": "flex_row",
+                  "align": "center",
+                  "gap": "12px",
+                  "children": [
+                    {
+                      "id": "quantity_stepper",
+                      "type": "quantity_input",
+                      "min": 1,
+                      "default": 1,
+                      "style": {
+                        "border": "1px solid var(--color-border)",
+                        "border_radius": "8px",
+                        "button_size": "36px",
+                        "input_width": "48px"
+                      }
+                    },
+                    {
+                      "id": "add_to_cart_btn",
+                      "type": "button",
+                      "label": "আড্ড টু কার্ট",
+                      "style": {
+                        "background": "var(--color-primary)",
+                        "color": "#fff",
+                        "border_radius": "8px",
+                        "padding": "10px 24px",
+                        "font_weight": "600"
+                      }
+                    },
+                    {
+                      "id": "order_btn",
+                      "type": "button",
+                      "label": "অর্ডার করুন",
+                      "style": {
+                        "background": "var(--color-primary-dark)",
+                        "color": "#fff",
+                        "border_radius": "8px",
+                        "padding": "10px 24px",
+                        "font_weight": "600"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "product_meta",
+                  "type": "meta_table",
+                  "rows": [
+                    { "label": "Brand:", "value": "{brand}", "type": "text" },
+                    { "label": "Categories:", "value": "{categories}", "type": "tag_list" },
+                    { "label": "Tags:", "value": "{tags}", "type": "tag_list" },
+                    { "label": "SKU:", "value": "{sku}", "type": "text" }
+                  ],
+                  "style": { "font_size": "14px", "label_color": "var(--color-text-secondary)" }
+                },
+                {
+                  "id": "wishlist_compare_row",
+                  "type": "flex_row",
+                  "gap": "8px",
+                  "children": [
+                    { "type": "button", "label": "♡ Wishlist", "variant": "outline", "border_color": "var(--color-primary)", "color": "var(--color-primary)" },
+                    { "type": "button", "label": "⇄ Compare", "variant": "outline", "border_color": "var(--color-primary)", "color": "var(--color-primary)" }
+                  ]
+                },
+                {
+                  "id": "social_share",
+                  "type": "social_share",
+                  "label": "Share",
+                  "platforms": ["facebook", "twitter", "linkedin", "pinterest"],
+                  "icon_style": { "size": "32px", "border_radius": "50%", "background": "var(--color-primary)", "color": "#fff" }
+                }
+              ]
+            }
+          },
+  
+          {
+            "id": "product_tabs",
+            "type": "tabs",
+            "tabs": [
+              {
+                "id": "descriptions",
+                "label": "Descriptions",
+                "active": true,
+                "content": {
+                  "type": "bullet_list",
+                  "items": "{description_points}",
+                  "style": { "color": "var(--color-primary-dark)", "font_size": "14px", "line_height": "2" }
+                }
+              },
+              {
+                "id": "specifications",
+                "label": "Specifications",
+                "content": { "type": "table" }
+              },
+              {
+                "id": "latest_reviews",
+                "label": "Latest Reviews",
+                "content": { "type": "review_list" }
+              }
+            ],
+            "tab_style": {
+              "active_background": "var(--color-primary)",
+              "active_color": "#fff",
+              "inactive_background": "transparent",
+              "inactive_color": "var(--color-text-secondary)",
+              "border_radius": "6px 6px 0 0",
+              "padding": "10px 20px"
+            }
+          },
+  
+          {
+            "id": "trust_badges",
+            "type": "icon_row",
+            "items": [
+              { "icon": "credit-card", "title": "Secure Online Payment", "subtitle": "We posess SSL / Secure Certificate" },
+              { "icon": "headphones", "title": "24/7 Customer Support", "subtitle": "Friendly 24/7 customer support" },
+              { "icon": "refresh-cw", "title": "Money Back Guarantee", "subtitle": "We return money within 3 days" }
+            ],
+            "style": {
+              "background": "var(--color-primary-light)",
+              "border_radius": "12px",
+              "padding": "24px",
+              "gap": "32px",
+              "icon_color": "var(--color-primary)",
+              "title_font_weight": "600"
+            }
+          },
+  
+          {
+            "id": "related_products",
+            "type": "product_row",
+            "title": "Related Products",
+            "title_style": {
+              "font": "var(--font-heading)",
+              "underline_color": "var(--color-primary)"
+            },
+            "pagination": { "type": "dots", "dots": 2 },
+            "products": [
+              {
+                "id": "rp1", "name": "Long shirt ful F-3", "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Long+Shirt",
+                "price": 600, "original_price": 850.5, "discount_percent": 29,
+                "badge": null
+              },
+              {
+                "id": "rp2", "name": "ANS Les collection mustered color", "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Les+Collection",
+                "price": 699.99, "original_price": 899, "discount_percent": 22,
+                "badge": "Best"
+              },
+              {
+                "id": "rp3", "name": "Les work design white Color", "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=White+Design",
+                "price": 699.99, "original_price": 950, "discount_percent": 26,
+                "badge": "Top"
+              },
+              {
+                "id": "rp4", "name": "LES WORK DESIGN RANI PINK", "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=Rani+Pink",
+                "price": 699.99, "original_price": 850.5, "discount_percent": 18,
+                "badge": "Flash deal"
+              },
+              {
+                "id": "rp5", "name": "AFGANI DESIGN", "category": "KURTI",
+                "image": "https://placehold.co/300x380?text=AFGANI",
+                "price": 599.99, "original_price": 799.99, "discount_percent": 25,
+                "badge": "Feature"
+              }
+            ]
+          }
+        ]
+      }
+    },
+  
+
+
+
+
+
+    {
+      "projectContext": {
+        "goal": "Build a modern, premium, and minimal e-commerce Cart and Checkout flow.",
+        "theme": "Automatically inherit the existing project's color palette from tailwind.config.ts. Use the primary brand color for main actions and muted tones for borders and backgrounds.",
+        "designStyle": "Editorial minimalism. Use generous whitespace, soft rounded corners (rounded-lg or rounded-xl), clean typography, and subtle shadows instead of harsh borders."
+      },
+      "pages": {
+        "CartPage": {
+          "layout": "Two-column grid on desktop (lg:grid-cols-12). Left side (span 8) for items, Right side (span 4) for totals. Stacked single column on mobile.",
+          "components": [
+            {
+              "name": "Breadcrumbs",
+              "description": "Minimal muted text (e.g., Home > Cart) with subtle hover states."
+            },
+            {
+              "name": "CartItemsList",
+              "features": [
+                "Clean list view (avoid heavy table borders).",
+                "Product thumbnail image.",
+                "Product title (bold/semi-bold).",
+                "Selected variations (Color, Size) displayed as subtle badges or muted text.",
+                "Price per unit.",
+                "Quantity selector: Clean UI with + / - buttons and a number input.",
+                "Item subtotal.",
+                "Remove item button: A subtle 'X' or trash icon on the far right."
+              ]
+            },
+            {
+              "name": "CartActions",
+              "features": [
+                "'Continue Shopping' button (ghost or outline variant).",
+                "'Clear Cart' button (danger ghost variant)."
+              ],
+              "layout": "Flex container with space-between underneath the items list."
+            },
+            {
+              "name": "CouponSection",
+              "features": [
+                "Input field for promo code with a clean, focus-ring design.",
+                "'Apply' button attached or adjacent to the input."
+              ]
+            },
+            {
+              "name": "CartTotalsCard",
+              "features": [
+                "Subtotal row.",
+                "Large, high-converting 'Proceed to Checkout' button (solid primary color)."
+              ],
+              "style": "Subtle gray background (e.g., bg-gray-50 dark:bg-zinc-900) or a very light border to separate it from the main content."
+            }
+          ]
+        },
+        "CheckoutPage": {
+          "layout": "Two-column grid (lg:grid-cols-12). Left side (span 7) for Billing Form, Right side (span 5) for Order Summary. The Order Summary should be sticky on desktop.",
+          "components": [
+            {
+              "name": "Breadcrumbs",
+              "description": "Minimal muted text (e.g., Home > Checkout)."
+            },
+            {
+              "name": "OrderItemsReview",
+              "features": [
+                "A compact, horizontal list of items currently in the cart.",
+                "Show image, name, variations, and a small 'Edit' text link that goes back to the cart."
+              ],
+              "style": "Clean border-b separation above the billing form."
+            },
+            {
+              "name": "BillingDetailsForm",
+              "features": [
+                "Section Title: 'Billing Information' (elegant typography).",
+                "Full Name input field.",
+                "Phone Number input field.",
+                "Full Address text area."
+              ],
+              "style": "Modern inputs. Use floating labels or clean top-labels with ample padding (e.g., p-3 or p-4). Subtle focus rings using the primary brand color."
+            },
+            {
+              "name": "OrderSummaryCard",
+              "features": [
+                "Section Title: 'Order Summary'.",
+                "Cart Subtotal.",
+                "Delivery Area Selection: Render as clickable, selectable cards/boxes (Radio group) rather than standard circular radio buttons (Options: Inside City, Outside City).",
+                "Shipping Cost (updates dynamically based on delivery area).",
+                "Total Payable Amount (large, emphasized typography).",
+                "Terms & Conditions checkbox (small text).",
+                "Large 'Confirm Order' button (solid primary color, full width)."
+              ],
+              "style": "Elevated card design. Use a subtle shadow (shadow-sm or shadow-md) to make it stand out. Keep it 'sticky' at the top of the viewport when the user scrolls down the billing form."
+            }
+          ]
+        }
+      }
+    }
+}

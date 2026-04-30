@@ -1,0 +1,23 @@
+[
+  {
+    "id": "ORD-1777273828544",
+    "items": [
+      {
+        "productId": "p1",
+        "name": "Classic Polo Shirt",
+        "price": 1350,
+        "quantity": 3
+      }
+    ],
+    "subtotal": 4050,
+    "deliveryFee": 80,
+    "total": 4130,
+    "paymentMethod": "COD",
+    "status": "pending",
+    "customerName": "Mahin Ahmad",
+    "phone": "01828034555",
+    "address": "Bashundhara Residential Area, Block B\nNorth South University",
+    "note": "2323233",
+    "createdAt": "2026-04-27T07:10:28.544Z"
+  }
+]
