@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCart } from "@/components/cart-provider";
 import { useWishlist } from "@/components/wishlist-provider";
@@ -142,6 +142,14 @@ function StoreCard({ product }: { product: Product }) {
 
 /* ─── Store Page ─────────────────────────────────────────────── */
 export default function StorePage() {
+  return (
+    <Suspense fallback={<main className="container" style={{ paddingBottom: 48, paddingTop: 24 }}>Loading store...</main>}>
+      <StorePageContent />
+    </Suspense>
+  );
+}
+
+function StorePageContent() {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
