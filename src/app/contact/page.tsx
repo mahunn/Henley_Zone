@@ -1,4 +1,4 @@
-import { defaultBusiness } from "@/config/businesses";
+import { defaultBusiness, businessTelHref, businessWhatsappChatUrl } from "@/config/businesses";
 
 export default function ContactPage() {
   return (
@@ -9,7 +9,12 @@ export default function ContactPage() {
         <strong>Business:</strong> {defaultBusiness.name}
       </p>
       <p>
-        <strong>WhatsApp:</strong> {defaultBusiness.whatsappNumber}
+        <strong>Phone / WhatsApp:</strong>{" "}
+        <a href={businessTelHref(defaultBusiness)}>{defaultBusiness.whatsappNumber}</a>
+        {" · "}
+        <a href={businessWhatsappChatUrl(defaultBusiness)} target="_blank" rel="noopener noreferrer">
+          Open in WhatsApp
+        </a>
       </p>
       <p>
         <strong>Support Hours:</strong> 10:00 AM - 8:00 PM (Daily)

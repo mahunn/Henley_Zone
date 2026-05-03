@@ -2225,6 +2225,11 @@ button {
   margin-bottom: 12px;
 }
 
+.footer-contact-link {
+  color: inherit;
+  text-decoration: underline;
+}
+
 .footer-col-title {
   font-size: 13px;
   font-weight: 700;

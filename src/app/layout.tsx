@@ -45,7 +45,7 @@ export default function RootLayout({
             </Suspense>
             {children}
             <SiteFooter />
-            <WhatsAppButton phoneNumber="8801XXXXXXXXX" />
+            <WhatsAppButton />
           </WishlistProvider>
         </CartProvider>
       </body>

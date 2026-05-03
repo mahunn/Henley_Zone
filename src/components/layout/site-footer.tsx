@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { defaultBusiness } from "@/config/businesses";
+import { defaultBusiness, businessTelHref, businessWhatsappChatUrl } from "@/config/businesses";
 
 export function SiteFooter() {
   return (
@@ -14,7 +14,20 @@ export function SiteFooter() {
               সারা দেশে ক্যাশ অন ডেলিভারি সুবিধায় পাওয়া যাচ্ছে।
             </p>
             <p className="footer-brand-text">
-              📞 {defaultBusiness.whatsappNumber}<br />
+              📞{" "}
+              <a href={businessTelHref(defaultBusiness)} className="footer-contact-link">
+                {defaultBusiness.whatsappNumber}
+              </a>
+              {" · "}
+              <a
+                href={businessWhatsappChatUrl(defaultBusiness)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="footer-contact-link"
+              >
+                WhatsApp
+              </a>
+              <br />
               📍 Dhaka, Bangladesh
             </p>
           </div>

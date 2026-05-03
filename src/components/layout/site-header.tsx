@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCart } from "@/components/cart-provider";
 import { useWishlist } from "@/components/wishlist-provider";
-import { defaultBusiness } from "@/config/businesses";
+import { defaultBusiness, businessTelHref, businessWhatsappChatUrl } from "@/config/businesses";
 import { Product } from "@/types/commerce";
 import { filterProductsBySearch } from "@/lib/product-search";
 import { getProductsCatalog, getSyncedProductCatalog } from "@/lib/product-catalog-client";
@@ -139,6 +139,19 @@ export function SiteHeader() {
         <div className="topbar-inner container">
           <span style={{ opacity: 0.9, fontSize: "12.5px" }}>
             📍 সারা বাংলাদেশে ক্যাশ অন ডেলিভারি পাওয়া যাচ্ছে
+            {" · "}
+            <a href={businessTelHref(defaultBusiness)} style={{ color: "inherit", textDecoration: "underline" }}>
+              📞 {defaultBusiness.whatsappNumber}
+            </a>
+            {" · "}
+            <a
+              href={businessWhatsappChatUrl(defaultBusiness)}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "inherit", textDecoration: "underline" }}
+            >
+              WhatsApp
+            </a>
           </span>
           <div className="topbar-right">
             <Link href="/login" style={{ display: "flex", alignItems: "center", gap: 4 }}>

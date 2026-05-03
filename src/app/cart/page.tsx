@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCart } from "@/components/cart-provider";
 import { formatCurrency } from "@/lib/money";
 import { defaultBusiness } from "@/config/businesses";
+import { DELIVERY_FEE_INSIDE_DHAKA, DELIVERY_FEE_OUTSIDE_DHAKA } from "@/config/delivery";
 
 function TrashIcon() {
   return (
@@ -16,11 +17,10 @@ function TrashIcon() {
   );
 }
 
-const DELIVERY_FEE = 80;
-
 export default function CartPage() {
   const { items, increaseQty, decreaseQty, removeItem, subtotal, clearCart } = useCart();
-  const total = subtotal + (items.length > 0 ? DELIVERY_FEE : 0);
+  const totalMin = subtotal + (items.length > 0 ? DELIVERY_FEE_INSIDE_DHAKA : 0);
+  const totalMax = subtotal + (items.length > 0 ? DELIVERY_FEE_OUTSIDE_DHAKA : 0);
 
   return (
     <div className="container cart-page-wrap">
@@ -186,15 +186,35 @@ export default function CartPage() {
                 <span className="totals-value">{formatCurrency(subtotal, defaultBusiness.currency)}</span>
               </div>
               <div className="totals-row">
-                <span className="totals-label">Delivery (est.)</span>
-                <span className="totals-value">{formatCurrency(DELIVERY_FEE, defaultBusiness.currency)}</span>
+                <span className="totals-label">Delivery</span>
+                <span className="totals-value">
+                  {formatCurrency(DELIVERY_FEE_INSIDE_DHAKA, defaultBusiness.currency)} /{" "}
+                  {formatCurrency(DELIVERY_FEE_OUTSIDE_DHAKA, defaultBusiness.currency)}
+                </span>
               </div>
+              <p
+                style={{
+                  fontSize: 12,
+                  color: "var(--color-text-secondary)",
+                  margin: "-4px 0 8px",
+                  fontFamily: "var(--font-body, sans-serif)"
+                }}
+              >
+                Inside Dhaka / outside Dhaka — you choose at checkout.
+              </p>
 
               <hr className="totals-divider" />
 
               <div className="totals-total-row">
                 <span className="totals-total-label">Total</span>
-                <span className="totals-total-value">{formatCurrency(total, defaultBusiness.currency)}</span>
+                <span className="totals-total-value">
+                  {items.length === 0
+                    ? formatCurrency(subtotal, defaultBusiness.currency)
+                    : `${formatCurrency(totalMin, defaultBusiness.currency)} – ${formatCurrency(
+                        totalMax,
+                        defaultBusiness.currency
+                      )}`}
+                </span>
               </div>
 
               <Link

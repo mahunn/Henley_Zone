@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/components/cart-provider";
 import { defaultBusiness } from "@/config/businesses";
+import { DELIVERY_FEE_INSIDE_DHAKA, DELIVERY_FEE_OUTSIDE_DHAKA } from "@/config/delivery";
 import { formatCurrency } from "@/lib/money";
 import { Order } from "@/types/commerce";
 
@@ -13,15 +14,13 @@ const DELIVERY_OPTIONS = [
     id: "inside",
     icon: "🏙️",
     title: "Inside Dhaka",
-    fee: 80,
-    sub: "1–2 business days"
+    fee: DELIVERY_FEE_INSIDE_DHAKA
   },
   {
     id: "outside",
     icon: "🚚",
     title: "Outside Dhaka",
-    fee: 130,
-    sub: "2–4 business days"
+    fee: DELIVERY_FEE_OUTSIDE_DHAKA
   }
 ] as const;
 
@@ -249,7 +248,6 @@ export default function CheckoutPage() {
                         <div className="delivery-card-icon">{opt.icon}</div>
                         <div className="delivery-card-title">{opt.title}</div>
                         <div className="delivery-card-fee">{formatCurrency(opt.fee, defaultBusiness.currency)}</div>
-                        <div className="delivery-card-sub">{opt.sub}</div>
                       </button>
                     ))}
                   </div>
@@ -257,7 +255,7 @@ export default function CheckoutPage() {
 
                 {/* Shipping fee row */}
                 <div className="totals-row">
-                  <span className="totals-label">Shipping</span>
+                  <span className="totals-label">Delivery</span>
                   <span className="totals-value">{formatCurrency(deliveryFee, defaultBusiness.currency)}</span>
                 </div>
 

@@ -1,5 +1,7 @@
-export function WhatsAppButton({ phoneNumber }: { phoneNumber: string }) {
-  const href = `https://wa.me/${phoneNumber.replace(/\D/g, "")}`;
+import { defaultBusiness, businessWhatsappChatUrl } from "@/config/businesses";
+
+export function WhatsAppButton() {
+  const href = businessWhatsappChatUrl(defaultBusiness);
 
   return (
     <a
