@@ -14,6 +14,8 @@ export interface Product {
   imageUrl: string;
   category: string;
   colors?: ProductColor[];
+  /** Display / checkout size options (e.g. 36, 38, M, L). */
+  sizes?: string[];
 }
 
 export interface CartItem {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useLayoutEffect } from "react";
 import { useCart } from "@/components/cart-provider";
 import { useWishlist } from "@/components/wishlist-provider";
 import { useRouter } from "next/navigation";
@@ -105,7 +105,7 @@ function RelatedProductCard({ rp }: { rp: RelatedProduct }) {
   return (
     <div className="pc" style={{ textDecoration: "none" }}>
       <div className="pc-img-wrap">
-        <a href={`#/product/${rp.slug}`} style={{ display: "block", textDecoration: "none" }}>
+        <a href={`/#/product/${rp.slug}`} style={{ display: "block", textDecoration: "none" }}>
           <img src={rp.image} alt={rp.name} className="pc-img" />
         </a>
         <button
@@ -139,7 +139,7 @@ function RelatedProductCard({ rp }: { rp: RelatedProduct }) {
       </div>
       <div className="pc-body">
         <span className="pc-cat">{rp.category}</span>
-        <a href={`#/product/${rp.slug}`} className="pc-name" style={{ textDecoration: "none" }}>
+        <a href={`/#/product/${rp.slug}`} className="pc-name" style={{ textDecoration: "none" }}>
           {rp.name}
         </a>
         <div className="pc-price-row">
@@ -160,6 +160,10 @@ export function ProductDetailView({ product, relatedProducts = [], onBack }: Pro
   const { addToCart, buyNow } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
   const [activeImg, setActiveImg] = useState(0);
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [product.slug]);
   const [activeColor, setActiveColor] = useState<string | null>(
     product.colors[0]?.id ?? null
   );

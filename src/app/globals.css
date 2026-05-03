@@ -1910,15 +1910,29 @@ button {
 
 /* ─── Reveal Animations ──────────────────────────────────────────── */
 
+/* Reveal: keep content visible immediately (below-fold was opacity:0 until
+   IntersectionObserver fired, which looked like a frozen blank page on mobile). */
 .reveal {
-  opacity: 0;
-  transform: translateY(22px);
-  transition: opacity 0.55s ease, transform 0.55s ease;
+  opacity: 1;
+  transform: none;
 }
 
 .reveal.in-view {
   opacity: 1;
   transform: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal.reveal-motion {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+  }
+
+  .reveal.reveal-motion.in-view {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* ─── Buttons ────────────────────────────────────────────────────── */
@@ -2883,6 +2897,59 @@ button {
     width: 100%;
     min-width: 0;
   }
+
+  /* Store grid: two columns on phones (minmax 220px was forcing a single full-width column) */
+  .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .product-grid .product-card {
+    padding: 8px;
+  }
+
+  .product-grid .product-image {
+    height: 150px;
+    margin-bottom: 6px;
+  }
+
+  .product-grid .product-card h2 {
+    font-size: 0.82rem;
+    line-height: 1.25;
+  }
+
+  .product-grid .product-card > p.muted {
+    font-size: 11px;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .product-grid .pc-color-dot {
+    width: 22px;
+    height: 22px;
+  }
+
+  .product-grid .pc-bottom-actions {
+    padding-top: 8px;
+    gap: 5px;
+  }
+
+  .product-grid .pc-bottom-btn {
+    font-size: 11px;
+    padding: 7px 4px;
+  }
+
+  .product-row-scroll .pc-bottom-btn {
+    font-size: 11px;
+    padding: 7px 4px;
+  }
+
+  .product-row-scroll .pc-bottom-actions {
+    padding-top: 8px;
+  }
 }
 
 @media (max-width: 420px) {
@@ -2911,7 +2978,15 @@ button {
   }
 
   .product-row-scroll {
-    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .product-grid {
+    gap: 8px;
+  }
+
+  .product-grid .product-image {
+    height: 128px;
   }
 
   .whatsapp-float {
@@ -3022,4 +3097,59 @@ button {
     position: sticky;
     top: 88px;
   }
+}
+
+/* ─── Store loading skeleton (matches product-grid breakpoints) ─── */
+
+@keyframes hz-store-skel-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.store-skel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (min-width: 768px) {
+  .store-skel-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+}
+
+.store-skel-card {
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 8px;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: hz-store-skel-pulse 1.15s ease-in-out infinite;
+}
+
+.store-skel-img {
+  width: 100%;
+  height: 150px;
+  border-radius: var(--radius-sm);
+  background: #e2e8f0;
+}
+
+@media (min-width: 768px) {
+  .store-skel-img {
+    height: 210px;
+  }
+}
+
+.store-skel-line {
+  height: 11px;
+  border-radius: 4px;
+  background: #e2e8f0;
 }

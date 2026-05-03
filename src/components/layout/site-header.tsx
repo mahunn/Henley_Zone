@@ -8,6 +8,7 @@ import { useWishlist } from "@/components/wishlist-provider";
 import { defaultBusiness } from "@/config/businesses";
 import { Product } from "@/types/commerce";
 import { filterProductsBySearch } from "@/lib/product-search";
+import { getProductsCatalog, getSyncedProductCatalog } from "@/lib/product-catalog-client";
 
 function SearchIcon() {
   return (
@@ -58,16 +59,13 @@ export function SiteHeader() {
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>(() => getSyncedProductCatalog() ?? []);
   const searchWrapRef = useRef<HTMLDivElement>(null);
 
-  // Fetch products for live search
+  // Shared catalog fetch (deduped with /store and CatalogPrefetch)
   useEffect(() => {
-    fetch("/api/products")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.products) setProducts(data.products);
-      })
+    void getProductsCatalog()
+      .then((list) => setProducts(list))
       .catch(() => {});
   }, []);
 
@@ -119,6 +117,21 @@ export function SiteHeader() {
     }, 30);
   };
 
+  /** Next.js Link often does not clear client-side hash on `/`; force hash home for hash-routed PDP. */
+  const clickHomeOrLogo = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (typeof window === "undefined") return;
+    const h = window.location.hash;
+    if (pathname === "/" && h.startsWith("#/product/")) {
+      e.preventDefault();
+      window.location.hash = "#/";
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      });
+      return;
+    }
+    scrollToTopAfterNav();
+  };
+
   return (
     <div className="main-header">
       {/* ── Topbar ── */}
@@ -143,7 +156,7 @@ export function SiteHeader() {
             href="/#/"
             className="logo-frame"
             aria-label={`${defaultBusiness.name} home`}
-            onClick={scrollToTopAfterNav}
+            onClick={clickHomeOrLogo}
           >
             <img
               src={logoSrc}
@@ -247,7 +260,7 @@ export function SiteHeader() {
         {/* ── Nav Links ── */}
         <nav className="header-nav-links" aria-label="Main navigation">
           <div className="header-nav-links-inner">
-            <Link href="/#/" className={navClass(onHomePage)} onClick={scrollToTopAfterNav}>
+            <Link href="/#/" className={navClass(onHomePage)} onClick={clickHomeOrLogo}>
               Home
             </Link>
             <Link href="/store" className={navClass(onStorePage && !activeCategory)} onClick={scrollToTopAfterNav}>

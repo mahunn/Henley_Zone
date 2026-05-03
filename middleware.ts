@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 
 const ADMIN_SESSION_COOKIE = "admin_session";
 
+function isAdminProtectedPath(pathname: string) {
+  return pathname.startsWith("/admin/orders") || pathname === "/admin/products";
+}
+
 export function middleware(request: NextRequest) {
-  if (!request.nextUrl.pathname.startsWith("/admin/orders")) {
+  if (!isAdminProtectedPath(request.nextUrl.pathname)) {
     return NextResponse.next();
   }
 
@@ -17,6 +21,6 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/orders/:path*"]
+  matcher: ["/admin/orders", "/admin/orders/:path*", "/admin/products"]
 };
 

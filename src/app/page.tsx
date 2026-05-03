@@ -1,14 +1,29 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import dynamic from "next/dynamic";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart-provider";
 import { useWishlist } from "@/components/wishlist-provider";
 import { CountdownTimer } from "@/components/shop/countdown-timer";
-import { ProductDetailView } from "@/components/shop/product-detail-view";
+
+const ProductDetailView = dynamic(
+  () => import("@/components/shop/product-detail-view").then((m) => m.ProductDetailView),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="container" style={{ padding: "48px 16px", textAlign: "center" }}>
+        <p style={{ color: "var(--color-text-secondary)" }}>Loading product…</p>
+      </div>
+    )
+  }
+);
 import { seedProducts } from "@/data/seed-products";
 import { categories } from "@/data/categories";
+import type { Product } from "@/types/commerce";
+import { getProductsCatalog, getSyncedProductCatalog } from "@/lib/product-catalog-client";
+import { mapProductToPdpDetail } from "@/lib/product-detail-mapper";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 interface ColorVariant {
@@ -30,9 +45,8 @@ interface StoreProduct {
   colors?: ColorVariant[];
 }
 
-/* ─── Real product catalogue (file-based only) ─────────────────── */
-const ALL_PRODUCTS: StoreProduct[] = [
-  ...seedProducts.map((p) => ({
+function productToStoreProduct(p: Product): StoreProduct {
+  return {
     id: p.id,
     slug: p.slug,
     name: p.name,
@@ -40,48 +54,11 @@ const ALL_PRODUCTS: StoreProduct[] = [
     image: p.imageUrl,
     price: p.price,
     colors: p.colors
-  }))
-];
+  };
+}
 
-/* ─── Detail product lookup ─────────────────────────────────── */
-function buildDetailProduct(slug: string) {
-  const found = seedProducts.find((p) => p.slug === slug);
-  if (found) {
-    // Use product's color variants as both swatches and gallery images
-    const hasColors = found.colors && found.colors.length > 0;
-    const colorSwatches = hasColors
-      ? found.colors!.map((c) => ({ id: c.id, label: c.label, swatchImage: c.image }))
-      : [{ id: "c1", label: "Default", swatchImage: found.imageUrl }];
-    const galleryImages = hasColors
-      ? found.colors!.map((c) => c.image)
-      : [found.imageUrl];
-
-    return {
-      id: found.id,
-      slug: found.slug,
-      name: found.name,
-      sku: `#${found.id.toUpperCase()}`,
-      brand: "Henley Zone",
-      categories: [found.category],
-      price: found.price,
-      originalPrice: undefined as number | undefined,
-      stock: found.stock,
-      badge: undefined as string | undefined,
-      colors: colorSwatches,
-      sizes: ["36", "38", "40", "42", "44", "46", "48"],
-      images: galleryImages,
-      descriptionPoints: found.description.split(".").filter(Boolean).map((s) => s.trim()),
-      specifications: [
-        { label: "Category", value: found.category },
-        { label: "Colors available", value: hasColors ? found.colors!.map((c) => c.label).join(", ") : "Default" },
-        { label: "Size range", value: "36 – 48" },
-        { label: "Material", value: "Premium Cotton" },
-        { label: "Care", value: "Machine wash cold" },
-        { label: "Origin", value: "Bangladesh" }
-      ]
-    };
-  }
-
+/* ─── Detail product lookup (catalog from API = seed + DB) ─────── */
+function buildDetailProduct(slug: string, catalog: Product[]) {
   // NAKSHI example from style.json
   if (slug === "nakshi-tw-7") {
     return {
@@ -123,41 +100,9 @@ function buildDetailProduct(slug: string) {
     };
   }
 
-  // Generic fallback
-  const generic = ALL_PRODUCTS.find((p) => p.slug === slug);
-  if (generic) {
-    return {
-      id: generic.id,
-      slug: generic.slug,
-      name: generic.name,
-      sku: `#${generic.id.toUpperCase()}`,
-      brand: "Henley Zone",
-      categories: [generic.category],
-      price: generic.price,
-      originalPrice: generic.originalPrice,
-      stock: 20,
-      badge: generic.badge,
-      colors: [
-        { id: "c1", label: "Default", swatchImage: generic.image }
-      ],
-      sizes: ["36", "38", "40", "42", "44", "46", "48"],
-      images: [generic.image],
-      descriptionPoints: [
-        "প্রিমিয়াম কোয়ালিটি পণ্য",
-        "কালার গ্যারান্টি প্রিন্ট",
-        "সাইজ ৩৬ থেকে ৪৮",
-        "ক্যাশ অন ডেলিভারি সুবিধা",
-        "সারা বাংলাদেশে ডেলিভারি"
-      ],
-      specifications: [
-        { label: "Category", value: generic.category },
-        { label: "Material", value: "Premium Cotton" },
-        { label: "Origin", value: "Bangladesh" }
-      ]
-    };
-  }
-
-  return null;
+  const found = catalog.find((p) => p.slug === slug);
+  if (!found) return null;
+  return mapProductToPdpDetail(found);
 }
 
 /* ─── fmt ────────────────────────────────────────────────────── */
@@ -205,7 +150,7 @@ function ProductCard({
   return (
     <div className="pc">
       <div className="pc-img-wrap">
-        <a href={`#/product/${product.slug}`} style={{ textDecoration: "none", display: "block" }}>
+        <a href={`/#/product/${product.slug}`} style={{ textDecoration: "none", display: "block" }}>
           <img src={displayImage} alt={`${product.name}${activeLabel ? ` – ${activeLabel}` : ""}`} className="pc-img" />
         </a>
         <button
@@ -245,7 +190,7 @@ function ProductCard({
 
       <div className="pc-body">
         <span className="pc-cat">{product.category}</span>
-        <a href={`#/product/${product.slug}`} className="pc-name" style={{ textDecoration: "none" }}>
+        <a href={`/#/product/${product.slug}`} className="pc-name" style={{ textDecoration: "none" }}>
           {product.name}
         </a>
         <div className="pc-stars">☆☆☆☆☆</div>
@@ -406,31 +351,34 @@ function DealsProductScroll({
 
 /* ─── HomePage ───────────────────────────────────────────────── */
 function HomePage({
+  catalog,
   onAddToCart,
   onBuyNow
 }: {
+  catalog: StoreProduct[];
   onAddToCart: (p: StoreProduct) => void;
   onBuyNow: (p: StoreProduct) => void;
 }) {
   // Deals countdown — 5 days from now
   const dealTarget = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
 
-  const newArrivals = ALL_PRODUCTS.slice(0, 5);
+  const newArrivals = catalog.slice(0, 5);
   const featured = [
-    ALL_PRODUCTS.find((p) => p.slug === "batik-print-two-piece"),
-    ALL_PRODUCTS.find((p) => p.slug === "cotton-gown-embroidery"),
-    ALL_PRODUCTS.find((p) => p.slug === "salwar-sequence-embroidery"),
-    ALL_PRODUCTS.find((p) => p.slug === "salwar-premium-cotton"),
-    ALL_PRODUCTS.find((p) => p.slug === "embroidered-frogs")
+    catalog.find((p) => p.slug === "batik-print-two-piece"),
+    catalog.find((p) => p.slug === "cotton-gown-embroidery"),
+    catalog.find((p) => p.slug === "salwar-sequence-embroidery"),
+    catalog.find((p) => p.slug === "salwar-premium-cotton"),
+    catalog.find((p) => p.slug === "embroidered-frogs")
   ].filter(Boolean) as StoreProduct[];
-  const [dealsProducts, setDealsProducts] = useState<StoreProduct[]>(ALL_PRODUCTS.slice(0, 2));
+  const [dealsProducts, setDealsProducts] = useState<StoreProduct[]>(() => catalog.slice(0, 2));
   useEffect(() => {
-    const shuffled = [...ALL_PRODUCTS].sort(() => Math.random() - 0.5);
+    if (catalog.length < 2) return;
+    const shuffled = [...catalog].sort(() => Math.random() - 0.5);
     setDealsProducts(shuffled.slice(0, 2));
-  }, []);
+  }, [catalog]);
   const flashDealProducts = [
-    ALL_PRODUCTS.find((p) => p.slug === "embroidered-frogs"),
-    ALL_PRODUCTS.find((p) => p.slug === "cotton-gown-embroidery")
+    catalog.find((p) => p.slug === "embroidered-frogs"),
+    catalog.find((p) => p.slug === "cotton-gown-embroidery")
   ].filter(Boolean) as StoreProduct[];
 
   return (
@@ -441,6 +389,11 @@ function HomePage({
           src="/banner-home.png"
           alt="Henley Zone collection banner"
           className="hero-banner-img"
+          width={1920}
+          height={640}
+          decoding="async"
+          fetchPriority="high"
+          loading="eager"
           onError={(e) => {
             (e.target as HTMLImageElement).style.display = "none";
           }}
@@ -512,7 +465,7 @@ function HomePage({
               {flashDealProducts.map((fd) => (
                 <a
                   key={fd.id}
-                  href={`#/product/${fd.slug}`}
+                  href={`/#/product/${fd.slug}`}
                   className="flash-card"
                   style={{ textDecoration: "none" }}
                 >
@@ -586,7 +539,15 @@ export default function Page() {
   const { addToCart, buyNow } = useCart();
   const [view, setView] = useState<"home" | "product">("home");
   const [productSlug, setProductSlug] = useState("");
-  const [hydrated, setHydrated] = useState(false);
+  const [catalog, setCatalog] = useState<Product[]>(() => getSyncedProductCatalog() ?? seedProducts);
+
+  useEffect(() => {
+    void getProductsCatalog()
+      .then(setCatalog)
+      .catch(() => {});
+  }, []);
+
+  const storeCatalog = useMemo(() => catalog.map(productToStoreProduct), [catalog]);
 
   // Parse hash and update view
   const parseHash = useCallback(() => {
@@ -600,29 +561,18 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
-    setHydrated(true);
     parseHash();
     window.addEventListener("hashchange", parseHash);
     return () => window.removeEventListener("hashchange", parseHash);
   }, [parseHash]);
 
-  // Intersection observer for reveal animations
   useEffect(() => {
-    if (!hydrated) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("in-view");
-          }
-        });
-      },
-      { threshold: 0.08 }
-    );
-    const els = document.querySelectorAll(".reveal");
-    els.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, [hydrated, view]);
+    if (view !== "product") return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    });
+  }, [view, productSlug]);
 
   function handleAddToCart(p: StoreProduct) {
     addToCart({
@@ -653,19 +603,19 @@ export default function Page() {
 
   // Product Detail View
   if (view === "product") {
-    const detail = buildDetailProduct(productSlug);
+    const detail = buildDetailProduct(productSlug, catalog);
     if (!detail) {
       return (
         <div className="container" style={{ padding: "48px 16px", textAlign: "center" }}>
           <h2 style={{ fontFamily: "var(--font-heading, serif)", marginBottom: 12 }}>
             Product not found
           </h2>
-          <a href="#/" className="btn">← Back to Home</a>
+          <a href="/#/" className="btn">← Back to Home</a>
         </div>
       );
     }
 
-    const related = ALL_PRODUCTS
+    const related = storeCatalog
       .filter((p) => p.slug !== productSlug)
       .slice(0, 6)
       .map((p) => ({
@@ -692,6 +642,6 @@ export default function Page() {
   }
 
   return (
-    <HomePage onAddToCart={handleAddToCart} onBuyNow={handleBuyNow} />
+    <HomePage catalog={storeCatalog} onAddToCart={handleAddToCart} onBuyNow={handleBuyNow} />
   );
 }

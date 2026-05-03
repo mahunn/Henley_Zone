@@ -8,6 +8,7 @@ import { formatCurrency } from "@/lib/money";
 import { defaultBusiness } from "@/config/businesses";
 import { Product } from "@/types/commerce";
 import { productMatchesSearch } from "@/lib/product-search";
+import { getProductsCatalog, getSyncedProductCatalog } from "@/lib/product-catalog-client";
 
 /* ─── Color-aware product card ───────────────────────────────── */
 function StoreCard({ product }: { product: Product }) {
@@ -140,10 +141,41 @@ function StoreCard({ product }: { product: Product }) {
   );
 }
 
+/* ─── Store skeleton (first paint / Suspense) ─────────────────── */
+function StoreGridSkeleton({ count = 8 }: { count?: number }) {
+  return (
+    <div className="store-skel-grid" aria-hidden>
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="store-skel-card">
+          <div className="store-skel-img" />
+          <div className="store-skel-line" style={{ width: "88%" }} />
+          <div className="store-skel-line" style={{ width: "100%" }} />
+          <div className="store-skel-line" style={{ width: "42%", height: 14 }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StorePageSuspenseFallback() {
+  return (
+    <main className="container" style={{ paddingBottom: 48 }}>
+      <h1 className="section-title" style={{ marginTop: 24 }}>Clothing Store</h1>
+      <p className="muted" style={{ marginBottom: 16 }}>
+        Cash on Delivery · সারা বাংলাদেশে ডেলিভারি
+      </p>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
+        <span className="chip chip-active">All</span>
+      </div>
+      <StoreGridSkeleton />
+    </main>
+  );
+}
+
 /* ─── Store Page ─────────────────────────────────────────────── */
 export default function StorePage() {
   return (
-    <Suspense fallback={<main className="container" style={{ paddingBottom: 48, paddingTop: 24 }}>Loading store...</main>}>
+    <Suspense fallback={<StorePageSuspenseFallback />}>
       <StorePageContent />
     </Suspense>
   );
@@ -151,26 +183,24 @@ export default function StorePage() {
 
 function StorePageContent() {
   const searchParams = useSearchParams();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>(() => getSyncedProductCatalog() ?? []);
+  const [loading, setLoading] = useState(() => getSyncedProductCatalog() === null);
   const [error, setError] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const router = useRouter();
 
   useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch("/api/products", { cache: "no-store" });
-        if (!res.ok) throw new Error("failed");
-        const data = (await res.json()) as { products: Product[] };
-        setProducts(data.products);
-      } catch {
+    void getProductsCatalog()
+      .then((list) => {
+        setProducts(list);
+        setError("");
+      })
+      .catch(() => {
         setError("Could not load products.");
-      } finally {
+      })
+      .finally(() => {
         setLoading(false);
-      }
-    }
-    void load();
+      });
   }, []);
 
   const categories = useMemo(
@@ -218,14 +248,17 @@ function StorePageContent() {
         ))}
       </div>
 
-      {loading && <p style={{ color: "var(--color-text-secondary)" }}>Loading products…</p>}
-      {error && <p style={{ color: "var(--color-badge-sale)" }}>{error}</p>}
-
-      <div className="product-grid">
-        {filtered.map((product) => (
-          <StoreCard key={product.id} product={product} />
-        ))}
-      </div>
+      {error && products.length === 0 ? (
+        <p style={{ color: "var(--color-badge-sale)" }}>{error}</p>
+      ) : loading && products.length === 0 ? (
+        <StoreGridSkeleton />
+      ) : (
+        <div className="product-grid">
+          {filtered.map((product) => (
+            <StoreCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
     </main>
   );
 }

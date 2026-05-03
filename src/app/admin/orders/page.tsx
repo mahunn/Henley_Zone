@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { defaultBusiness } from "@/config/businesses";
 import { formatCurrency } from "@/lib/money";
 import { Order } from "@/types/commerce";
@@ -21,6 +21,81 @@ function statusBadgeStyle(status: Order["status"]) {
   return { background: "#FEE2E2", color: "#991B1B" };
 }
 
+/** Local calendar date YYYY-MM-DD for grouping */
+function localDateKey(iso: string): string {
+  const d = new Date(iso);
+  const y = d.getFullYear();
+  const mo = d.getMonth() + 1;
+  const day = d.getDate();
+  return `${y}-${String(mo).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function formatDayHeading(ymd: string): string {
+  const [y, m, day] = ymd.split("-").map(Number);
+  const dt = new Date(y, m - 1, day);
+  return dt.toLocaleDateString(undefined, {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
+}
+
+function formatMonthOption(ym: string): string {
+  const [y, m] = ym.split("-").map(Number);
+  const dt = new Date(y, m - 1, 1);
+  return dt.toLocaleDateString(undefined, { year: "numeric", month: "long" });
+}
+
+function orderMatchesPeriod(order: Order, period: string): boolean {
+  if (period === "all") return true;
+  const t = new Date(order.createdAt).getTime();
+  if (Number.isNaN(t)) return true;
+
+  if (period === "today") {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    return t >= start.getTime() && t <= end.getTime();
+  }
+  if (period === "7d") return t >= Date.now() - 7 * 86400000;
+  if (period === "30d") return t >= Date.now() - 30 * 86400000;
+  if (period.startsWith("month:")) {
+    const rest = period.slice(6);
+    const parts = rest.split("-");
+    const y = Number(parts[0]);
+    const mo = Number(parts[1]);
+    if (!y || !mo) return true;
+    const start = new Date(y, mo - 1, 1);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(y, mo, 0, 23, 59, 59, 999);
+    return t >= start.getTime() && t <= end.getTime();
+  }
+  return true;
+}
+
+function groupOrdersByLocalDay(
+  sortedOrders: Order[],
+  sortBy: "latest" | "oldest" | "amountHigh" | "amountLow"
+): { key: string; heading: string; orders: Order[] }[] {
+  const map = new Map<string, Order[]>();
+  for (const o of sortedOrders) {
+    const key = localDateKey(o.createdAt);
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(o);
+  }
+  const keys = [...map.keys()].sort((a, b) => {
+    if (sortBy === "oldest") return a.localeCompare(b);
+    return b.localeCompare(a);
+  });
+  return keys.map((key) => ({
+    key,
+    heading: formatDayHeading(key),
+    orders: map.get(key)!
+  }));
+}
+
 export default function AdminOrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -32,6 +107,8 @@ export default function AdminOrdersPage() {
   const [sortBy, setSortBy] = useState<"latest" | "oldest" | "amountHigh" | "amountLow">(
     "latest"
   );
+  /** Time window: all | today | 7d | 30d | month:YYYY-MM (default: last 7 days) */
+  const [period, setPeriod] = useState<string>("7d");
   const [copyingId, setCopyingId] = useState<string | null>(null);
   const [copiedNotice, setCopiedNotice] = useState("");
 
@@ -94,7 +171,18 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const monthOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const o of orders) {
+      const d = new Date(o.createdAt);
+      if (Number.isNaN(d.getTime())) continue;
+      set.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    }
+    return [...set].sort((a, b) => b.localeCompare(a));
+  }, [orders]);
+
   const filteredOrders = orders
+    .filter((order) => orderMatchesPeriod(order, period))
     .filter((order) => (activeFilter === "all" ? true : order.status === activeFilter))
     .filter((order) => {
       const q = searchQuery.trim().toLowerCase();
@@ -117,6 +205,11 @@ export default function AdminOrdersPage() {
       }
       return a.total - b.total;
     });
+
+  const ordersByDay = useMemo(
+    () => groupOrdersByLocalDay(filteredOrders, sortBy),
+    [filteredOrders, sortBy]
+  );
 
   const formatOrderForClipboard = (order: Order) => {
     const lines = [
@@ -203,7 +296,9 @@ export default function AdminOrdersPage() {
       <div className="admin-orders-top">
         <div>
           <h1>Admin - COD Orders</h1>
-          <p>All orders placed from checkout are listed here.</p>
+          <p>
+            By default only the <strong>last 7 days</strong> of orders are shown. Change <strong>Time period</strong> for today, 30 days, all time, or a specific month. Orders are grouped by calendar day (newest days first).
+          </p>
         </div>
         <div className="admin-orders-actions">
           <button type="button" className="admin-copy-btn" onClick={handleCopyAll} disabled={copyingId === "all" || !filteredOrders.length}>
@@ -251,103 +346,167 @@ export default function AdminOrdersPage() {
               alignItems: "center"
             }}
           >
+            <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
+              <span style={{ fontWeight: 600, color: "#374151" }}>Time period</span>
+              <select
+                value={period}
+                onChange={(e) => setPeriod(e.target.value)}
+                aria-label="Filter orders by date range"
+                style={{ padding: "8px 10px", minWidth: 220, borderRadius: 8, border: "1px solid #d1d5db" }}
+              >
+                <optgroup label="Date range">
+                  <option value="7d">Last 7 days</option>
+                  <option value="today">Today only</option>
+                  <option value="30d">Last 30 days</option>
+                  <option value="all">All time</option>
+                </optgroup>
+                {monthOptions.length > 0 ? (
+                  <optgroup label="Single calendar month">
+                    {monthOptions.map((ym) => (
+                      <option key={ym} value={`month:${ym}`}>
+                        {formatMonthOption(ym)}
+                      </option>
+                    ))}
+                  </optgroup>
+                ) : null}
+              </select>
+            </label>
             <input
               type="text"
               placeholder="Search by order ID, customer, phone"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              style={{ padding: 8, minWidth: 280 }}
+              style={{ padding: 8, minWidth: 280, borderRadius: 8, border: "1px solid #d1d5db" }}
             />
-            <select
-              value={sortBy}
-              onChange={(event) =>
-                setSortBy(event.target.value as "latest" | "oldest" | "amountHigh" | "amountLow")
-              }
-              style={{ padding: 8 }}
-            >
-              <option value="latest">Sort: Latest first</option>
-              <option value="oldest">Sort: Oldest first</option>
-              <option value="amountHigh">Sort: Amount high to low</option>
-              <option value="amountLow">Sort: Amount low to high</option>
-            </select>
+            <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
+              <span style={{ fontWeight: 600, color: "#374151" }}>Order by</span>
+              <select
+                value={sortBy}
+                onChange={(event) =>
+                  setSortBy(event.target.value as "latest" | "oldest" | "amountHigh" | "amountLow")
+                }
+                style={{ padding: "8px 10px", minWidth: 200, borderRadius: 8, border: "1px solid #d1d5db" }}
+              >
+                <option value="latest">Date: newest first</option>
+                <option value="oldest">Date: oldest first</option>
+                <option value="amountHigh">Amount: high to low</option>
+                <option value="amountLow">Amount: low to high</option>
+              </select>
+            </label>
           </div>
         </>
       ) : null}
 
-      {!loading && orders.length && filteredOrders.length === 0 ? (
-        <p style={{ marginTop: 12 }}>No orders match your current filters.</p>
+      {!loading && orders.length > 0 && filteredOrders.length === 0 ? (
+        <p style={{ marginTop: 12, color: "#64748b" }}>
+          No orders match your current filters.
+          {period !== "all" ? (
+            <>
+              {" "}
+              Try setting <strong>Time period</strong> to <strong>All time</strong> or a different month.
+            </>
+          ) : null}
+        </p>
       ) : null}
 
-      <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
-        {filteredOrders.map((order) => (
-          <article
-            key={order.id}
-            style={{ border: "1px solid var(--color-border)", borderRadius: 12, padding: 16, background: "var(--color-surface)" }}
-          >
-            <div className="admin-order-head">
-              <p>
-                <strong>Order:</strong> {order.id}
-              </p>
-              <button
-                type="button"
-                className="admin-copy-btn"
-                onClick={() => void handleCopyOrder(order)}
-                disabled={copyingId === order.id}
-              >
-                {copyingId === order.id ? "Copying..." : "Copy"}
-              </button>
-            </div>
-            <p>
-              <strong>Date:</strong> {new Date(order.createdAt).toLocaleString()}
-            </p>
-            <p>
-              <strong>Customer:</strong> {order.customerName}
-            </p>
-            <p>
-              <strong>Phone:</strong> {order.phone}
-            </p>
-            <p>
-              <strong>Address:</strong> {order.address}
-            </p>
-            <p>
-              <strong>Total:</strong>{" "}
-              {formatCurrency(order.total, defaultBusiness.currency)}
-            </p>
-            <p>
-              <strong>Status:</strong>{" "}
-              <span
-                style={{
-                  display: "inline-block",
-                  padding: "3px 8px",
-                  borderRadius: 999,
-                  fontWeight: 600,
-                  ...statusBadgeStyle(order.status)
-                }}
-              >
-                {order.status}
+      <div style={{ marginTop: 16 }}>
+        {ordersByDay.map((group) => (
+          <section key={group.key} style={{ marginBottom: 28 }}>
+            <h2
+              style={{
+                margin: "0 0 12px",
+                padding: "10px 14px",
+                fontSize: "1.05rem",
+                fontWeight: 700,
+                color: "#0f172a",
+                background: "linear-gradient(90deg, #e0f2fe 0%, #f8fafc 100%)",
+                borderRadius: 10,
+                border: "1px solid #bae6fd"
+              }}
+            >
+              {group.heading}
+              <span style={{ fontWeight: 500, fontSize: 13, color: "#64748b", marginLeft: 8 }}>
+                ({group.orders.length} {group.orders.length === 1 ? "order" : "orders"})
               </span>
-            </p>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <label htmlFor={`status-${order.id}`}>Update status:</label>
-              <select
-                id={`status-${order.id}`}
-                value={order.status}
-                onChange={(event) =>
-                  void updateStatus(order.id, event.target.value as Order["status"])
-                }
-                disabled={updatingOrderId === order.id}
-              >
-                <option value="pending">pending</option>
-                <option value="confirmed">confirmed</option>
-                <option value="delivered">delivered</option>
-                <option value="cancelled">cancelled</option>
-              </select>
+            </h2>
+            <div style={{ display: "grid", gap: 12 }}>
+              {group.orders.map((order) => (
+                <article
+                  key={order.id}
+                  style={{
+                    border: "1px solid var(--color-border)",
+                    borderRadius: 12,
+                    padding: 16,
+                    background: "var(--color-surface)"
+                  }}
+                >
+                  <div className="admin-order-head">
+                    <p>
+                      <strong>Order:</strong> {order.id}
+                    </p>
+                    <button
+                      type="button"
+                      className="admin-copy-btn"
+                      onClick={() => void handleCopyOrder(order)}
+                      disabled={copyingId === order.id}
+                    >
+                      {copyingId === order.id ? "Copying..." : "Copy"}
+                    </button>
+                  </div>
+                  <p>
+                    <strong>Time:</strong> {new Date(order.createdAt).toLocaleString()}
+                  </p>
+                  <p>
+                    <strong>Customer:</strong> {order.customerName}
+                  </p>
+                  <p>
+                    <strong>Phone:</strong> {order.phone}
+                  </p>
+                  <p>
+                    <strong>Address:</strong> {order.address}
+                  </p>
+                  <p>
+                    <strong>Total:</strong>{" "}
+                    {formatCurrency(order.total, defaultBusiness.currency)}
+                  </p>
+                  <p>
+                    <strong>Status:</strong>{" "}
+                    <span
+                      style={{
+                        display: "inline-block",
+                        padding: "3px 8px",
+                        borderRadius: 999,
+                        fontWeight: 600,
+                        ...statusBadgeStyle(order.status)
+                      }}
+                    >
+                      {order.status}
+                    </span>
+                  </p>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <label htmlFor={`status-${order.id}`}>Update status:</label>
+                    <select
+                      id={`status-${order.id}`}
+                      value={order.status}
+                      onChange={(event) =>
+                        void updateStatus(order.id, event.target.value as Order["status"])
+                      }
+                      disabled={updatingOrderId === order.id}
+                    >
+                      <option value="pending">pending</option>
+                      <option value="confirmed">confirmed</option>
+                      <option value="delivered">delivered</option>
+                      <option value="cancelled">cancelled</option>
+                    </select>
+                  </div>
+                  <p>
+                    <strong>Items:</strong>{" "}
+                    {order.items.map((item) => `${item.name} x${item.quantity}`).join(", ")}
+                  </p>
+                </article>
+              ))}
             </div>
-            <p>
-              <strong>Items:</strong>{" "}
-              {order.items.map((item) => `${item.name} x${item.quantity}`).join(", ")}
-            </p>
-          </article>
+          </section>
         ))}
       </div>
     </main>

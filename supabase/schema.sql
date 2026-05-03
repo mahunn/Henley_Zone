@@ -7,6 +7,8 @@ create table if not exists products (
   stock integer not null default 0,
   image_url text not null,
   category text not null,
+  colors_json jsonb default '[]'::jsonb,
+  sizes_json jsonb default '[]'::jsonb,
   created_at timestamptz not null default now()
 );
 

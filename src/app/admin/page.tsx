@@ -44,6 +44,9 @@ export default function AdminPanelPage() {
         Welcome. Manage operations from here.
       </p>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <Link href="/admin/products" className="btn">
+          Add products
+        </Link>
         <Link href="/admin/orders" className="btn">
           Orders
         </Link>

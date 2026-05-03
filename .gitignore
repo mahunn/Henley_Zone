@@ -24,3 +24,7 @@ pnpm-debug.log*
 # typescript
 *.tsbuildinfo
 
+# Admin uploads (keep folder via .gitkeep)
+/public/uploads/catalog/*
+!/public/uploads/catalog/.gitkeep
+

@@ -1,17 +1,15 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import {
   createOrder,
   listOrders,
   updateOrderStatus
 } from "@/lib/orders-repository";
 import { Order } from "@/types/commerce";
-import { ADMIN_SESSION_COOKIE, isValidSessionCookie } from "@/lib/admin-auth";
+import { isAdminAuthorized } from "@/lib/admin-request";
 
 export async function GET() {
   try {
-    const isAuthorized = await isAdminAuthorized();
-    if (!isAuthorized) {
+    if (!(await isAdminAuthorized())) {
       return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
     }
 
@@ -23,12 +21,6 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
-
-async function isAdminAuthorized() {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
-  return isValidSessionCookie(sessionCookie);
 }
 
 export async function POST(request: Request) {
@@ -54,8 +46,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const isAuthorized = await isAdminAuthorized();
-    if (!isAuthorized) {
+    if (!(await isAdminAuthorized())) {
       return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
     }
 

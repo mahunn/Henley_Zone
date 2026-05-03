@@ -8,6 +8,7 @@ import { WishlistProvider } from "@/components/wishlist-provider";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { WhatsAppButton } from "@/components/shop/whatsapp-button";
+import { CatalogPrefetch } from "@/components/catalog-prefetch";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -38,6 +39,7 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <CartProvider>
           <WishlistProvider>
+            <CatalogPrefetch />
             <Suspense fallback={null}>
               <SiteHeader />
             </Suspense>
