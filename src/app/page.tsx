@@ -3,10 +3,10 @@
 import dynamic from "next/dynamic";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart-provider";
 import { useWishlist } from "@/components/wishlist-provider";
 import { CountdownTimer } from "@/components/shop/countdown-timer";
+import { animateFlyToCart } from "@/lib/cart-fly-animation";
 
 const ProductDetailView = dynamic(
   () => import("@/components/shop/product-detail-view").then((m) => m.ProductDetailView),
@@ -131,6 +131,8 @@ function ProductCard({
   const { toggleWishlist, isWishlisted } = useWishlist();
   const colors = product.colors ?? [];
   const [activeColorIdx, setActiveColorIdx] = useState(0);
+  const [justAdded, setJustAdded] = useState(false);
+  const cardImgRef = useRef<HTMLImageElement>(null);
 
   // The displayed image follows the selected color
   const displayImage =
@@ -151,7 +153,7 @@ function ProductCard({
     <div className="pc">
       <div className="pc-img-wrap">
         <a href={`/#/product/${product.slug}`} style={{ textDecoration: "none", display: "block" }}>
-          <img src={displayImage} alt={`${product.name}${activeLabel ? ` – ${activeLabel}` : ""}`} className="pc-img" />
+          <img ref={cardImgRef} src={displayImage} alt={`${product.name}${activeLabel ? ` – ${activeLabel}` : ""}`} className="pc-img" />
         </a>
         <button
           type="button"
@@ -222,13 +224,16 @@ function ProductCard({
         {/* Bottom Actions */}
         <div className="pc-bottom-actions">
           <button
-            className="pc-bottom-btn pc-btn-cart"
+            className={`pc-bottom-btn pc-btn-cart${justAdded ? " is-added" : ""}`}
             onClick={(e) => {
               e.preventDefault();
               onAddToCart({ ...product, image: displayImage });
+              animateFlyToCart(cardImgRef.current);
+              setJustAdded(true);
+              window.setTimeout(() => setJustAdded(false), 700);
             }}
           >
-            Add to Cart
+            {justAdded ? "Added ✓" : "Add to Cart"}
           </button>
           <button
             className="pc-bottom-btn pc-btn-buy"
@@ -535,8 +540,7 @@ function HomePage({
 
 /* ─── Main Page (Hash Router) ───────────────────────────────── */
 export default function Page() {
-  const router = useRouter();
-  const { addToCart, buyNow } = useCart();
+  const { addToCart } = useCart();
   const [view, setView] = useState<"home" | "product">("home");
   const [productSlug, setProductSlug] = useState("");
   const [catalog, setCatalog] = useState<Product[]>(() => getSyncedProductCatalog() ?? seedProducts);
@@ -588,17 +592,8 @@ export default function Page() {
   }
 
   function handleBuyNow(p: StoreProduct) {
-    buyNow({
-      id: p.id,
-      slug: p.slug,
-      name: p.name,
-      description: "",
-      price: p.price,
-      stock: 99,
-      imageUrl: p.image,
-      category: p.category
-    });
-    router.push("/checkout");
+    // Open PDP first so customer can choose size/color before checkout.
+    window.location.hash = `#/product/${p.slug}`;
   }
 
   // Product Detail View

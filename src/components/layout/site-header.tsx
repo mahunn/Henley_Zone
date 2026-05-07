@@ -261,7 +261,7 @@ export function SiteHeader() {
                 <span className="cart-badge">{wishlistCount}</span>
               )}
             </Link>
-            <Link className="icon-nav-btn" href="/cart" aria-label="Cart" title={`Cart (${mounted ? itemCount : 0})`}>
+            <Link className="icon-nav-btn" data-cart-icon="true" href="/cart" aria-label="Cart" title={`Cart (${mounted ? itemCount : 0})`}>
               <CartIcon />
               {mounted && itemCount > 0 && (
                 <span className="cart-badge">{itemCount}</span>

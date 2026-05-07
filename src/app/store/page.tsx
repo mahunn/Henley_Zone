@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCart } from "@/components/cart-provider";
 import { useWishlist } from "@/components/wishlist-provider";
@@ -9,14 +9,17 @@ import { defaultBusiness } from "@/config/businesses";
 import { Product } from "@/types/commerce";
 import { productMatchesSearch } from "@/lib/product-search";
 import { getProductsCatalog, getSyncedProductCatalog } from "@/lib/product-catalog-client";
+import { animateFlyToCart } from "@/lib/cart-fly-animation";
 
 /* ─── Color-aware product card ───────────────────────────────── */
 function StoreCard({ product }: { product: Product }) {
   const router = useRouter();
-  const { addToCart, buyNow } = useCart();
+  const { addToCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
   const colors = product.colors ?? [];
   const [activeIdx, setActiveIdx] = useState(0);
+  const [justAdded, setJustAdded] = useState(false);
+  const cardImgRef = useRef<HTMLImageElement>(null);
 
   const displayImage = colors.length > 0 ? colors[activeIdx].image : product.imageUrl;
   const activeLabel = colors.length > 0 ? colors[activeIdx].label : null;
@@ -35,6 +38,7 @@ function StoreCard({ product }: { product: Product }) {
       <div style={{ position: "relative" }}>
         <a href={`/#/product/${product.slug}`} style={{ display: "block" }}>
           <img
+            ref={cardImgRef}
             src={displayImage}
             alt={`${product.name}${activeLabel ? ` – ${activeLabel}` : ""}`}
             className="product-image"
@@ -120,18 +124,22 @@ function StoreCard({ product }: { product: Product }) {
       {/* Bottom Actions */}
       <div className="pc-bottom-actions" style={{ marginTop: "auto" }}>
         <button
-          className="pc-bottom-btn pc-btn-cart"
+          className={`pc-bottom-btn pc-btn-cart${justAdded ? " is-added" : ""}`}
           type="button"
-          onClick={() => addToCart(cartProduct)}
+          onClick={() => {
+            addToCart(cartProduct);
+            animateFlyToCart(cardImgRef.current);
+            setJustAdded(true);
+            window.setTimeout(() => setJustAdded(false), 700);
+          }}
         >
-          Add to Cart
+          {justAdded ? "Added ✓" : "Add to Cart"}
         </button>
         <button
           className="pc-bottom-btn pc-btn-buy"
           type="button"
           onClick={() => {
-            buyNow(cartProduct);
-            router.push("/checkout");
+            router.push(`/#/product/${product.slug}`);
           }}
         >
           Buy Now

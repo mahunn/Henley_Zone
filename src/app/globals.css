@@ -365,6 +365,16 @@ button {
   color: var(--color-primary);
 }
 
+.icon-nav-btn.cart-icon-pop {
+  animation: cartPop 0.26s ease;
+}
+
+@keyframes cartPop {
+  0% { transform: scale(1); }
+  55% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
 .cart-badge {
   position: absolute;
   top: -5px;
@@ -1872,6 +1882,13 @@ button {
   background: var(--color-primary-light);
 }
 
+.pc-btn-cart.is-added {
+  background: #dcfce7;
+  border-color: #22c55e;
+  color: #166534;
+  transform: translateY(1px) scale(0.98);
+}
+
 .pc-btn-buy {
   background: var(--color-primary);
   border: 1.5px solid var(--color-primary);
@@ -1892,20 +1909,25 @@ button {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: #25d366;
-  color: #fff;
+  background: rgba(255, 255, 255, 0.22);
+  color: var(--color-primary-dark);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.45);
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.22);
   z-index: 500;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s, color 0.2s;
   text-decoration: none;
 }
 
 .whatsapp-float:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 22px rgba(37, 211, 102, 0.55);
+  transform: scale(1.08);
+  background: rgba(255, 255, 255, 0.34);
+  color: var(--color-primary);
+  box-shadow: 0 10px 28px rgba(2, 132, 199, 0.28);
 }
 
 /* ─── Reveal Animations ──────────────────────────────────────────── */

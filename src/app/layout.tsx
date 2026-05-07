@@ -7,7 +7,7 @@ import { CartProvider } from "@/components/cart-provider";
 import { WishlistProvider } from "@/components/wishlist-provider";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { WhatsAppButton } from "@/components/shop/whatsapp-button";
+import { FloatingCartButton } from "@/components/shop/whatsapp-button";
 import { CatalogPrefetch } from "@/components/catalog-prefetch";
 
 const playfair = Playfair_Display({
@@ -45,7 +45,7 @@ export default function RootLayout({
             </Suspense>
             {children}
             <SiteFooter />
-            <WhatsAppButton />
+            <FloatingCartButton />
           </WishlistProvider>
         </CartProvider>
       </body>
