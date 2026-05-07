@@ -1909,9 +1909,9 @@ button {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.36);
   color: var(--color-primary-dark);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.62);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   display: flex;
@@ -1925,7 +1925,7 @@ button {
 
 .whatsapp-float:hover {
   transform: scale(1.08);
-  background: rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.48);
   color: var(--color-primary);
   box-shadow: 0 10px 28px rgba(2, 132, 199, 0.28);
 }

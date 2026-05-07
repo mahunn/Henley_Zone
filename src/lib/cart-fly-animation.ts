@@ -6,6 +6,7 @@
 export function animateFlyToCart(imageEl: HTMLElement | null) {
   if (typeof window === "undefined" || !imageEl) return;
   const headerEl = document.querySelector(".main-header") as HTMLElement | null;
+  const isMobile = window.matchMedia("(max-width: 767px)").matches;
 
   const from = imageEl.getBoundingClientRect();
   if (!from.width || !from.height) return;
@@ -33,6 +34,9 @@ export function animateFlyToCart(imageEl: HTMLElement | null) {
   const toY = navTop - (from.top + from.height / 2);
   const upY = Math.min(-90, toY);
   const driftX = 10;
+  const durationMs = isMobile ? 2200 : 980;
+  const firstStopOffset = isMobile ? 0.34 : 0.2;
+  const firstStopY = isMobile ? -4 : -8;
 
   requestAnimationFrame(() => {
     clone.animate(
@@ -45,10 +49,10 @@ export function animateFlyToCart(imageEl: HTMLElement | null) {
         },
         {
           // pop near the card first
-          transform: "translate(0px, -8px) scale(1.12)",
+          transform: `translate(0px, ${firstStopY}px) scale(1.12)`,
           opacity: 1,
           borderRadius: "12px",
-          offset: 0.2
+          offset: firstStopOffset
         },
         {
           // then fly upward and fade out
@@ -59,7 +63,7 @@ export function animateFlyToCart(imageEl: HTMLElement | null) {
         }
       ],
       {
-        duration: 980,
+        duration: durationMs,
         easing: "cubic-bezier(0.15, 0.85, 0.2, 1)",
         fill: "forwards"
       }
@@ -68,6 +72,6 @@ export function animateFlyToCart(imageEl: HTMLElement | null) {
 
   window.setTimeout(() => {
     clone.remove();
-  }, 1020);
+  }, durationMs + 60);
 }
 
