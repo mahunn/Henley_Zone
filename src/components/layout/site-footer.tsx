@@ -54,6 +54,9 @@ export function SiteFooter() {
               <Link href="/privacy-policy">Privacy Policy</Link>
               <Link href="/terms">Terms &amp; Service</Link>
             </div>
+            <Link href="/admin/login" className="footer-admin-login-mobile">
+              Admin Login
+            </Link>
           </div>
 
           {/* Newsletter */}

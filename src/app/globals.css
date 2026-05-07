@@ -132,6 +132,17 @@ button {
   z-index: 200;
   background: var(--color-surface);
   box-shadow: 0 1px 6px rgba(15, 23, 42, 0.07);
+  transform: translateY(0);
+  transition: transform 220ms ease;
+  will-change: transform;
+}
+
+.main-header.header-scroll-up {
+  transform: translateY(0);
+}
+
+.main-header.header-scroll-down {
+  transform: translateY(calc(-100% - 2px));
 }
 
 /* ─── Site Header ────────────────────────────────────────────────── */
@@ -2277,6 +2288,25 @@ button {
   opacity: 1;
 }
 
+.footer-admin-login-mobile {
+  display: none;
+  margin-top: 12px;
+  width: fit-content;
+  border: 1px solid rgba(14, 165, 233, 0.6);
+  color: #bae6fd;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.footer-admin-login-mobile:hover {
+  background: rgba(14, 165, 233, 0.16);
+  border-color: #38bdf8;
+  color: #e0f2fe;
+}
+
 .footer-newsletter-input {
   width: 100%;
   padding: 9px 12px;
@@ -2814,6 +2844,118 @@ button {
   gap: 8px;
 }
 
+/* ─── Variant Picker Modal ──────────────────────────────────────── */
+
+.variant-picker-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.variant-picker-modal {
+  width: min(420px, 100%);
+  max-height: min(680px, calc(100dvh - 28px));
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.variant-picker-content {
+  padding: 16px;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.variant-picker-swatches {
+  margin-top: 0;
+  margin-bottom: 12px;
+  border-top: none;
+  padding-top: 0;
+}
+
+.variant-picker-sizes {
+  margin-bottom: 0;
+}
+
+.variant-picker-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--color-border);
+  padding: 12px 16px 14px;
+  background: #fff;
+  flex-wrap: wrap;
+}
+
+.variant-picker-actions .btn {
+  min-width: 0;
+}
+
+.variant-picker-card-overlay {
+  position: absolute;
+  inset: 8px;
+  z-index: 40;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.variant-picker-card-modal {
+  width: min(320px, calc(100% - 8px));
+  max-height: calc(100% - 8px);
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.28);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.variant-picker-card-modal .variant-picker-content {
+  padding: 12px;
+}
+
+.variant-picker-card-modal .variant-picker-swatches .pc-color-dot {
+  width: 30px;
+  height: 30px;
+}
+
+.variant-picker-card-modal .variant-picker-sizes {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.variant-picker-card-modal .variant-picker-sizes .size-btn {
+  min-height: 40px;
+  font-size: 15px;
+}
+
+.variant-picker-card-modal .variant-picker-actions {
+  padding: 10px 12px 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.variant-picker-card-modal .variant-picker-actions .btn {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+}
+
 /* ─── Responsive ─────────────────────────────────────────────────── */
 
 @media (min-width: 640px) {
@@ -2836,6 +2978,14 @@ button {
   html,
   body {
     overflow-x: hidden;
+  }
+
+  .topbar {
+    display: none;
+  }
+
+  .main-header {
+    top: 0;
   }
 
   .container {
@@ -2977,6 +3127,61 @@ button {
   .product-row-scroll .pc-bottom-actions {
     padding-top: 8px;
   }
+
+  .variant-picker-overlay {
+    padding: 10px;
+    align-items: flex-end;
+  }
+
+  .variant-picker-modal {
+    width: 100%;
+    max-height: min(80dvh, calc(100dvh - 20px));
+    border-radius: 12px;
+  }
+
+  .variant-picker-content {
+    padding: 14px;
+  }
+
+  .variant-picker-actions {
+    padding: 10px 14px 12px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .variant-picker-actions .btn {
+    width: 100%;
+  }
+
+  .variant-picker-card-overlay {
+    inset: 6px;
+  }
+
+  .variant-picker-card-modal {
+    width: calc(100% - 4px);
+    max-height: calc(100% - 4px);
+    border-radius: 10px;
+  }
+
+  .variant-picker-card-modal .variant-picker-content {
+    padding: 10px;
+  }
+
+  .variant-picker-card-modal .variant-picker-sizes .size-btn {
+    min-height: 38px;
+    font-size: 14px;
+  }
+
+  .variant-picker-card-modal .variant-picker-actions .btn {
+    min-height: 38px;
+    font-size: 14px;
+  }
+
+  .footer-admin-login-mobile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 420px) {
@@ -3014,6 +3219,19 @@ button {
 
   .product-grid .product-image {
     height: 128px;
+  }
+
+  .variant-picker-overlay {
+    padding: 8px;
+  }
+
+  .variant-picker-modal {
+    max-height: calc(100dvh - 16px);
+  }
+
+  .variant-picker-card-modal .variant-picker-swatches .pc-color-dot {
+    width: 28px;
+    height: 28px;
   }
 
   .whatsapp-float {

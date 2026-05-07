@@ -188,6 +188,7 @@ export function ProductDetailView({ product, relatedProducts = [], onBack }: Pro
   const [activeSize, setActiveSize] = useState<string | null>(null);
   const [qty, setQty] = useState(1);
   const [activeTab, setActiveTab] = useState<"descriptions" | "specifications" | "reviews">("descriptions");
+  const [variantError, setVariantError] = useState("");
 
   // Always use the currently-selected color's image when adding to cart
   const selectedColorImage =
@@ -211,11 +212,29 @@ export function ProductDetailView({ product, relatedProducts = [], onBack }: Pro
   const wishlisted = isWishlisted(product.id, wishlistColorId);
 
   function handleAddToCart() {
-    for (let i = 0; i < qty; i++) addToCart(cartProduct);
+    if (!activeColor || !activeSize) {
+      setVariantError("Please select both color and size first.");
+      return;
+    }
+    setVariantError("");
+    for (let i = 0; i < qty; i++) {
+      addToCart(cartProduct, {
+        selectedColor: product.colors.find((c) => c.id === activeColor)?.label,
+        selectedSize: activeSize
+      });
+    }
   }
 
   function handleBuyNow() {
-    buyNow(cartProduct);
+    if (!activeColor || !activeSize) {
+      setVariantError("Please select both color and size first.");
+      return;
+    }
+    setVariantError("");
+    buyNow(cartProduct, {
+      selectedColor: product.colors.find((c) => c.id === activeColor)?.label,
+      selectedSize: activeSize
+    });
     router.push("/checkout");
   }
 
@@ -383,6 +402,11 @@ export function ProductDetailView({ product, relatedProducts = [], onBack }: Pro
               Buy Now
             </button>
           </div>
+          {variantError && (
+            <div className="form-error" style={{ marginTop: -4 }}>
+              <span>⚠</span> {variantError}
+            </div>
+          )}
 
           {/* Wishlist / Compare */}
           <div className="pdp-secondary-actions">

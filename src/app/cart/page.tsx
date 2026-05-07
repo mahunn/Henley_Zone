@@ -79,7 +79,7 @@ export default function CartPage() {
                 const fallbackSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='100'%3E%3Crect width='84' height='100' rx='8' fill='%23e0f2fe'/%3E%3Ctext x='42' y='57' text-anchor='middle' font-family='sans-serif' font-size='18' font-weight='700' fill='%230284c7'%3E${encodeURIComponent(initials)}%3C/text%3E%3C/svg%3E`;
 
                 return (
-                  <div key={item.productId} className="cart-item">
+                  <div key={item.key} className="cart-item">
                     {/* Thumbnail */}
                     <img
                       src={item.imageUrl ?? fallbackSvg}
@@ -91,6 +91,13 @@ export default function CartPage() {
                     {/* Info */}
                     <div>
                       <div className="cart-item-name">{item.name}</div>
+                      {(item.selectedColor || item.selectedSize) && (
+                        <div className="cart-item-unit-price" style={{ marginBottom: 4 }}>
+                          {item.selectedColor ? `Color: ${item.selectedColor}` : ""}
+                          {item.selectedColor && item.selectedSize ? " · " : ""}
+                          {item.selectedSize ? `Size: ${item.selectedSize}` : ""}
+                        </div>
+                      )}
                       <div className="cart-item-unit-price">
                         Unit: {formatCurrency(item.price, defaultBusiness.currency)}
                       </div>
@@ -100,7 +107,7 @@ export default function CartPage() {
                         <div className="qty-stepper">
                           <button
                             className="qty-btn"
-                            onClick={() => decreaseQty(item.productId)}
+                            onClick={() => decreaseQty(item.key)}
                             aria-label="Decrease quantity"
                           >
                             −
@@ -108,7 +115,7 @@ export default function CartPage() {
                           <div className="qty-display">{item.quantity}</div>
                           <button
                             className="qty-btn"
-                            onClick={() => increaseQty(item.productId)}
+                            onClick={() => increaseQty(item.key)}
                             aria-label="Increase quantity"
                           >
                             +
@@ -122,7 +129,7 @@ export default function CartPage() {
                           </span>
                           <button
                             className="cart-remove-btn"
-                            onClick={() => removeItem(item.productId)}
+                            onClick={() => removeItem(item.key)}
                             aria-label={`Remove ${item.name}`}
                             title="Remove item"
                           >
@@ -142,7 +149,11 @@ export default function CartPage() {
                 ← Continue Shopping
               </Link>
               <button
-                onClick={clearCart}
+                onClick={() => {
+                  if (window.confirm("Are you sure you want to clear all items from cart?")) {
+                    clearCart();
+                  }
+                }}
                 style={{
                   background: "none",
                   border: "1.5px solid #fecaca",

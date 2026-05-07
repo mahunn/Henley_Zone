@@ -11,6 +11,8 @@ import { productMatchesSearch } from "@/lib/product-search";
 import { getProductsCatalog, getSyncedProductCatalog } from "@/lib/product-catalog-client";
 import { animateFlyToCart } from "@/lib/cart-fly-animation";
 
+const CARD_SIZE_OPTIONS = ["36", "38", "40", "42", "44", "46", "48"];
+
 /* ─── Color-aware product card ───────────────────────────────── */
 function StoreCard({ product }: { product: Product }) {
   const router = useRouter();
@@ -20,6 +22,19 @@ function StoreCard({ product }: { product: Product }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const [justAdded, setJustAdded] = useState(false);
   const cardImgRef = useRef<HTMLImageElement>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const pickerIdRef = useRef(`${product.id}-${Math.random().toString(36).slice(2, 8)}`);
+  const sizes = product.sizes?.length ? product.sizes : CARD_SIZE_OPTIONS;
+
+  useEffect(() => {
+    const onOpen = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ id?: string }>).detail;
+      if (detail?.id !== pickerIdRef.current) setPickerOpen(false);
+    };
+    window.addEventListener("hz:variant-picker-open", onOpen as EventListener);
+    return () => window.removeEventListener("hz:variant-picker-open", onOpen as EventListener);
+  }, []);
 
   const displayImage = colors.length > 0 ? colors[activeIdx].image : product.imageUrl;
   const activeLabel = colors.length > 0 ? colors[activeIdx].label : null;
@@ -127,10 +142,11 @@ function StoreCard({ product }: { product: Product }) {
           className={`pc-bottom-btn pc-btn-cart${justAdded ? " is-added" : ""}`}
           type="button"
           onClick={() => {
-            addToCart(cartProduct);
-            animateFlyToCart(cardImgRef.current);
-            setJustAdded(true);
-            window.setTimeout(() => setJustAdded(false), 700);
+            setSelectedSize(null);
+            window.dispatchEvent(
+              new CustomEvent("hz:variant-picker-open", { detail: { id: pickerIdRef.current } })
+            );
+            setPickerOpen(true);
           }}
         >
           {justAdded ? "Added ✓" : "Add to Cart"}
@@ -145,6 +161,74 @@ function StoreCard({ product }: { product: Product }) {
           Buy Now
         </button>
       </div>
+      {pickerOpen && (
+        <div className="variant-picker-card-overlay">
+          <div
+            className="variant-picker-card-modal"
+          >
+            <div className="variant-picker-content">
+              <h3 style={{ marginBottom: 8, fontFamily: "var(--font-heading, serif)" }}>Choose options</h3>
+              <p style={{ marginBottom: 12, color: "var(--color-text-secondary)", fontSize: 13 }}>{product.name}</p>
+              {colors.length > 0 && (
+                <>
+                  <p className="selector-label" style={{ marginBottom: 8 }}>
+                    Color: {colors[activeIdx]?.label}
+                  </p>
+                  <div className="pc-color-swatches variant-picker-swatches">
+                    {colors.map((color, i) => (
+                      <button
+                        key={color.id}
+                        className={`pc-color-dot${activeIdx === i ? " active" : ""}`}
+                        onClick={() => setActiveIdx(i)}
+                        title={color.label}
+                        aria-label={color.label}
+                        aria-pressed={activeIdx === i}
+                      >
+                        <img src={color.image} alt={color.label} />
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+              <p className="selector-label" style={{ marginBottom: 8 }}>
+                Size: {selectedSize ?? "Select size"}
+              </p>
+              <div className="size-grid variant-picker-sizes">
+                {sizes.map((sz) => (
+                  <button
+                    key={sz}
+                    className={`size-btn${selectedSize === sz ? " active" : ""}`}
+                    onClick={() => setSelectedSize(sz)}
+                    aria-pressed={selectedSize === sz}
+                  >
+                    {sz}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="variant-picker-actions">
+              <button className="btn btn-secondary" onClick={() => setPickerOpen(false)}>Cancel</button>
+              <button
+                className="btn"
+                disabled={!selectedSize}
+                onClick={() => {
+                  const colorLabel = colors[activeIdx]?.label;
+                  addToCart(cartProduct, {
+                    selectedColor: colorLabel,
+                    selectedSize: selectedSize ?? undefined
+                  });
+                  animateFlyToCart(cardImgRef.current);
+                  setJustAdded(true);
+                  window.setTimeout(() => setJustAdded(false), 700);
+                  setPickerOpen(false);
+                }}
+              >
+                Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </article>
   );
 }

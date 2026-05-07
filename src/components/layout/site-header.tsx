@@ -55,6 +55,8 @@ export function SiteHeader() {
   const [mounted, setMounted] = useState(false);
   const [logoSrc, setLogoSrc] = useState("/logo.png");
   const [currentHash, setCurrentHash] = useState("");
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const lastScrollYRef = useRef(0);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -89,6 +91,34 @@ export function SiteHeader() {
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    lastScrollYRef.current = window.scrollY || 0;
+    const mobileMq = window.matchMedia("(max-width: 767px)");
+
+    const onScroll = () => {
+      const y = window.scrollY || 0;
+      const lastY = lastScrollYRef.current;
+      const delta = y - lastY;
+      const isMobile = mobileMq.matches;
+      const hideThreshold = isMobile ? 3 : 4;
+      const showThreshold = isMobile ? 1 : 4;
+
+      if (y <= 8) {
+        setIsHeaderVisible(true);
+      } else if (delta > hideThreshold) {
+        setIsHeaderVisible(false);
+      } else if (delta < -showThreshold) {
+        setIsHeaderVisible(true);
+      }
+
+      lastScrollYRef.current = y;
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -133,7 +163,7 @@ export function SiteHeader() {
   };
 
   return (
-    <div className="main-header">
+    <div className={`main-header ${isHeaderVisible ? "header-scroll-up" : "header-scroll-down"}`}>
       {/* ── Topbar ── */}
       <div className="topbar">
         <div className="topbar-inner container">

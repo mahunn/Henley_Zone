@@ -43,7 +43,10 @@ interface StoreProduct {
   discountPercent?: number;
   badge?: string;
   colors?: ColorVariant[];
+  sizes?: string[];
 }
+
+const CARD_SIZE_OPTIONS = ["36", "38", "40", "42", "44", "46", "48"];
 
 function productToStoreProduct(p: Product): StoreProduct {
   return {
@@ -53,7 +56,8 @@ function productToStoreProduct(p: Product): StoreProduct {
     category: p.category,
     image: p.imageUrl,
     price: p.price,
-    colors: p.colors
+    colors: p.colors,
+    sizes: p.sizes
   };
 }
 
@@ -125,14 +129,27 @@ function ProductCard({
   onBuyNow
 }: {
   product: StoreProduct;
-  onAddToCart: (p: StoreProduct) => void;
+  onAddToCart: (p: StoreProduct, opts?: { selectedColor?: string; selectedSize?: string }) => void;
   onBuyNow: (p: StoreProduct) => void;
 }) {
   const { toggleWishlist, isWishlisted } = useWishlist();
   const colors = product.colors ?? [];
+  const sizes = product.sizes?.length ? product.sizes : CARD_SIZE_OPTIONS;
   const [activeColorIdx, setActiveColorIdx] = useState(0);
   const [justAdded, setJustAdded] = useState(false);
   const cardImgRef = useRef<HTMLImageElement>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const pickerIdRef = useRef(`${product.id}-${Math.random().toString(36).slice(2, 8)}`);
+
+  useEffect(() => {
+    const onOpen = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ id?: string }>).detail;
+      if (detail?.id !== pickerIdRef.current) setPickerOpen(false);
+    };
+    window.addEventListener("hz:variant-picker-open", onOpen as EventListener);
+    return () => window.removeEventListener("hz:variant-picker-open", onOpen as EventListener);
+  }, []);
 
   // The displayed image follows the selected color
   const displayImage =
@@ -227,10 +244,11 @@ function ProductCard({
             className={`pc-bottom-btn pc-btn-cart${justAdded ? " is-added" : ""}`}
             onClick={(e) => {
               e.preventDefault();
-              onAddToCart({ ...product, image: displayImage });
-              animateFlyToCart(cardImgRef.current);
-              setJustAdded(true);
-              window.setTimeout(() => setJustAdded(false), 700);
+              setSelectedSize(null);
+              window.dispatchEvent(
+                new CustomEvent("hz:variant-picker-open", { detail: { id: pickerIdRef.current } })
+              );
+              setPickerOpen(true);
             }}
           >
             {justAdded ? "Added ✓" : "Add to Cart"}
@@ -246,6 +264,74 @@ function ProductCard({
           </button>
         </div>
       </div>
+      {pickerOpen && (
+        <div className="variant-picker-card-overlay">
+          <div
+            className="variant-picker-card-modal"
+          >
+            <div className="variant-picker-content">
+              <h3 style={{ marginBottom: 8, fontFamily: "var(--font-heading, serif)" }}>Choose options</h3>
+              <p style={{ marginBottom: 12, color: "var(--color-text-secondary)", fontSize: 13 }}>{product.name}</p>
+              {colors.length > 0 && (
+                <>
+                  <p className="selector-label" style={{ marginBottom: 8 }}>
+                    Color: {colors[activeColorIdx]?.label}
+                  </p>
+                  <div className="pc-color-swatches variant-picker-swatches">
+                    {colors.map((color, i) => (
+                      <button
+                        key={color.id}
+                        className={`pc-color-dot${activeColorIdx === i ? " active" : ""}`}
+                        onClick={() => setActiveColorIdx(i)}
+                        title={color.label}
+                        aria-label={color.label}
+                        aria-pressed={activeColorIdx === i}
+                      >
+                        <img src={color.image} alt={color.label} />
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+              <p className="selector-label" style={{ marginBottom: 8 }}>
+                Size: {selectedSize ?? "Select size"}
+              </p>
+              <div className="size-grid variant-picker-sizes">
+                {sizes.map((sz) => (
+                  <button
+                    key={sz}
+                    className={`size-btn${selectedSize === sz ? " active" : ""}`}
+                    onClick={() => setSelectedSize(sz)}
+                    aria-pressed={selectedSize === sz}
+                  >
+                    {sz}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="variant-picker-actions">
+              <button className="btn btn-secondary" onClick={() => setPickerOpen(false)}>Cancel</button>
+              <button
+                className="btn"
+                disabled={!selectedSize}
+                onClick={() => {
+                  const colorLabel = colors[activeColorIdx]?.label;
+                  onAddToCart(
+                    { ...product, image: displayImage, name: product.name },
+                    { selectedColor: colorLabel, selectedSize: selectedSize ?? undefined }
+                  );
+                  animateFlyToCart(cardImgRef.current);
+                  setJustAdded(true);
+                  window.setTimeout(() => setJustAdded(false), 700);
+                  setPickerOpen(false);
+                }}
+              >
+                Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -296,7 +382,7 @@ function ProductRowSection({
   title: string;
   products: StoreProduct[];
   viewAllHref?: string;
-  onAddToCart: (p: StoreProduct) => void;
+  onAddToCart: (p: StoreProduct, opts?: { selectedColor?: string; selectedSize?: string }) => void;
   onBuyNow: (p: StoreProduct) => void;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -334,7 +420,7 @@ function DealsProductScroll({
   onBuyNow
 }: {
   products: StoreProduct[];
-  onAddToCart: (p: StoreProduct) => void;
+  onAddToCart: (p: StoreProduct, opts?: { selectedColor?: string; selectedSize?: string }) => void;
   onBuyNow: (p: StoreProduct) => void;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -361,7 +447,7 @@ function HomePage({
   onBuyNow
 }: {
   catalog: StoreProduct[];
-  onAddToCart: (p: StoreProduct) => void;
+  onAddToCart: (p: StoreProduct, opts?: { selectedColor?: string; selectedSize?: string }) => void;
   onBuyNow: (p: StoreProduct) => void;
 }) {
   // Deals countdown — 5 days from now
@@ -578,7 +664,10 @@ export default function Page() {
     });
   }, [view, productSlug]);
 
-  function handleAddToCart(p: StoreProduct) {
+  function handleAddToCart(
+    p: StoreProduct,
+    opts?: { selectedColor?: string; selectedSize?: string }
+  ) {
     addToCart({
       id: p.id,
       slug: p.slug,
@@ -588,7 +677,7 @@ export default function Page() {
       stock: 99,
       imageUrl: p.image,
       category: p.category
-    });
+    }, opts);
   }
 
   function handleBuyNow(p: StoreProduct) {

@@ -33,6 +33,7 @@ function mapOrderRow(order: OrderRow, items: OrderItemRow[]): Order {
     id: order.id,
     items: items.map(
       (item): CartItem => ({
+        key: `${item.product_id}::legacy::${item.order_id}`,
         productId: item.product_id,
         name: item.product_name,
         price: item.unit_price,

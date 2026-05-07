@@ -19,11 +19,14 @@ export interface Product {
 }
 
 export interface CartItem {
+  key: string;
   productId: string;
   name: string;
   price: number;
   quantity: number;
   imageUrl?: string;
+  selectedColor?: string;
+  selectedSize?: string;
 }
 
 /** One saved wishlist row (variant = color option when applicable) */

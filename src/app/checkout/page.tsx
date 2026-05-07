@@ -137,7 +137,7 @@ export default function CheckoutPage() {
                     const initials = item.name.slice(0, 2).toUpperCase();
                     const fallbackSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='58'%3E%3Crect width='50' height='58' rx='6' fill='%23e0f2fe'/%3E%3Ctext x='25' y='34' text-anchor='middle' font-family='sans-serif' font-size='14' font-weight='700' fill='%230284c7'%3E${encodeURIComponent(initials)}%3C/text%3E%3C/svg%3E`;
                     return (
-                      <div key={item.productId} className="order-review-item">
+                      <div key={item.key} className="order-review-item">
                         <img
                           src={item.imageUrl ?? fallbackSvg}
                           alt={item.name}
@@ -147,6 +147,13 @@ export default function CheckoutPage() {
                         <div className="order-review-info">
                           <div className="order-review-name">{item.name}</div>
                           <div className="order-review-qty">Qty: {item.quantity}</div>
+                          {(item.selectedColor || item.selectedSize) && (
+                            <div className="order-review-qty">
+                              {item.selectedColor ? `Color: ${item.selectedColor}` : ""}
+                              {item.selectedColor && item.selectedSize ? " · " : ""}
+                              {item.selectedSize ? `Size: ${item.selectedSize}` : ""}
+                            </div>
+                          )}
                         </div>
                         <div className="order-review-price">
                           {formatCurrency(item.price * item.quantity, defaultBusiness.currency)}
