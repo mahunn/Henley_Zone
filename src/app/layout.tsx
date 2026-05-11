@@ -10,6 +10,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { FloatingCartButton } from "@/components/shop/whatsapp-button";
 import { CatalogPrefetch } from "@/components/catalog-prefetch";
 import { MetaFacebookPixel } from "@/components/analytics/meta-facebook-pixel";
+import { getMetaPixelEnv } from "@/lib/meta-pixel-config";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -35,6 +36,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { pixelId: metaPixelId, testEventCode: metaPixelTest } = getMetaPixelEnv();
+
   return (
     <html lang="en" className={`${playfair.variable} ${dmSans.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
@@ -44,9 +47,7 @@ export default function RootLayout({
             <Suspense fallback={null}>
               <SiteHeader />
             </Suspense>
-            <Suspense fallback={null}>
-              <MetaFacebookPixel />
-            </Suspense>
+            <MetaFacebookPixel pixelId={metaPixelId} testEventCode={metaPixelTest} />
             {children}
             <SiteFooter />
             <FloatingCartButton />
