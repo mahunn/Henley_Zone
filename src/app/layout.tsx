@@ -9,6 +9,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { FloatingCartButton } from "@/components/shop/whatsapp-button";
 import { CatalogPrefetch } from "@/components/catalog-prefetch";
+import { MetaFacebookPixel } from "@/components/analytics/meta-facebook-pixel";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -42,6 +43,9 @@ export default function RootLayout({
             <CatalogPrefetch />
             <Suspense fallback={null}>
               <SiteHeader />
+            </Suspense>
+            <Suspense fallback={null}>
+              <MetaFacebookPixel />
             </Suspense>
             {children}
             <SiteFooter />
