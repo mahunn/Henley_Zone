@@ -78,9 +78,13 @@ export async function saveAdminProductImage(file: File): Promise<{ url: string }
     });
 
     if (error) {
+      // If Supabase is present but Storage bucket/policy is not ready, fall back to Cloudinary when configured.
+      if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_UPLOAD_PRESET) {
+        return uploadToCloudinaryUnsigned(buf, file);
+      }
       const hint =
         error.message?.includes("Bucket not found") || error.message?.includes("not found")
-          ? ' Create a public bucket named "product-images" (see supabase/migrations) or use "Paste image URL" below.'
+          ? ' Create a public bucket named "product-images" (see supabase/migrations) or configure CLOUDINARY_CLOUD_NAME + CLOUDINARY_UPLOAD_PRESET.'
           : "";
       return { error: `${error.message || "Storage upload failed."}${hint}` };
     }
