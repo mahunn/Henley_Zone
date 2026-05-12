@@ -4,14 +4,14 @@
     "items": [
       {
         "productId": "p1",
-        "name": "Classic Polo Shirt",
-        "price": 1350,
+        "name": "Salwar Set (Sequence Embroidery)",
+        "price": 800,
         "quantity": 3
       }
     ],
-    "subtotal": 4050,
+    "subtotal": 2400,
     "deliveryFee": 80,
-    "total": 4130,
+    "total": 2480,
     "paymentMethod": "COD",
     "status": "pending",
     "customerName": "Mahin Ahmad",

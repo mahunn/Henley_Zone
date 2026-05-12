@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { defaultBusiness, businessTelHref, businessWhatsappChatUrl } from "@/config/businesses";
+import { FooterDeveloperCredit } from "@/components/layout/footer-developer-credit";
 
 export function SiteFooter() {
   return (
@@ -76,6 +77,8 @@ export function SiteFooter() {
             </button>
           </div>
         </div>
+
+        <FooterDeveloperCredit />
       </div>
 
       <div className="footer-bottom container">

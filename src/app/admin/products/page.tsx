@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Product, ProductColor } from "@/types/commerce";
 import { invalidateProductCatalog } from "@/lib/product-catalog-client";
+import { AdminProductsWorkspaceNav } from "@/components/admin/admin-products-workspace-nav";
 
 const AVAILABLE_SIZES = ["32", "34", "36", "38", "40", "42", "44", "46", "48"];
 type ColorImageRow = { label: string; image: string };
@@ -13,6 +14,7 @@ export default function AdminProductsPage() {
   const router = useRouter();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [existingCategories, setExistingCategories] = useState<string[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loadErr, setLoadErr] = useState("");
 
   const [name, setName] = useState("");
@@ -58,20 +60,31 @@ export default function AdminProductsPage() {
   }, [verify]);
 
   useEffect(() => {
-    async function loadCats() {
+    async function loadProductsAndCats() {
       try {
         const res = await fetch("/api/products", { cache: "no-store" });
         if (!res.ok) return;
         const data = (await res.json()) as { products: Product[] };
-        const cats = Array.from(new Set((data.products ?? []).map((p) => p.category))).sort();
+        const products = data.products ?? [];
+        setAllProducts(products);
+        const cats = Array.from(new Set(products.map((p) => p.category))).sort();
         setExistingCategories(cats);
         setLoadErr("");
       } catch {
         setLoadErr("Could not load categories.");
       }
     }
-    if (authorized) void loadCats();
+    if (authorized) void loadProductsAndCats();
   }, [authorized]);
+
+  async function reloadProductsAndCats() {
+    const res = await fetch("/api/products", { cache: "no-store" });
+    if (!res.ok) return;
+    const data = (await res.json()) as { products: Product[] };
+    const products = data.products ?? [];
+    setAllProducts(products);
+    setExistingCategories(Array.from(new Set(products.map((p) => p.category))).sort());
+  }
 
   function toggleSize(size: string) {
     setSelectedSizes((prev) =>
@@ -164,12 +177,7 @@ export default function AdminProductsPage() {
       setCategory("");
       setSelectedSizes([]);
       setColorImages([]);
-      const res2 = await fetch("/api/products", { cache: "no-store" });
-      if (res2.ok) {
-        const d2 = (await res2.json()) as { products: Product[] };
-        const cats = Array.from(new Set((d2.products ?? []).map((p) => p.category))).sort();
-        setExistingCategories(cats);
-      }
+      await reloadProductsAndCats();
     } catch {
       setError("Network error while saving.");
     } finally {
@@ -196,9 +204,12 @@ export default function AdminProductsPage() {
           ← Admin home
         </Link>
       </p>
+
+      <AdminProductsWorkspaceNav />
+
       <h1 style={{ marginBottom: 8, fontFamily: "var(--font-heading, serif)" }}>Add product</h1>
       <p style={{ marginBottom: 24, color: "var(--color-text-secondary)", lineHeight: 1.55 }}>
-        Add products under existing sections only (Two Pieces, Three Pieces, Salwar Kameez, etc). Upload images directly from device, paste full Bangla details, and keep the form simple for daily use.
+        Add products under existing sections only (Two Pieces, Three Pieces, Salwar Kameez, etc). Upload images directly from device, paste full Bangla details, and keep the form simple for daily use. To edit or remove products, switch to <strong>Manage catalog</strong> above.
       </p>
 
       {loadErr && <p className="form-error" style={{ marginBottom: 16 }}>{loadErr}</p>}

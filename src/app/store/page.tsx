@@ -40,6 +40,7 @@ function StoreCard({ product }: { product: Product }) {
   const activeLabel = colors.length > 0 ? colors[activeIdx].label : null;
   const activeColorId = colors.length > 0 ? colors[activeIdx].id : undefined;
   const wishlisted = isWishlisted(product.id, activeColorId);
+  const shortDescription = product.description.split(/\r?\n/)[0]?.trim() || "";
 
   const cartProduct = {
     ...product,
@@ -108,7 +109,7 @@ function StoreCard({ product }: { product: Product }) {
         {product.name}
       </h2>
       <p className="muted" style={{ fontSize: 13, margin: "0 0 6px" }}>
-        {product.description}
+        {shortDescription.length > 120 ? `${shortDescription.slice(0, 117)}...` : shortDescription}
       </p>
 
       <p style={{ margin: "0 0 8px", fontWeight: 700, color: "var(--color-primary-dark)", fontFamily: "var(--font-body, sans-serif)" }}>

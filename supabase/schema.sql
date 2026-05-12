@@ -38,6 +38,11 @@ create table if not exists order_items (
 create index if not exists idx_orders_created_at on orders(created_at desc);
 create index if not exists idx_order_items_order_id on order_items(order_id);
 
+create table if not exists catalog_suppressions (
+  product_id text primary key,
+  created_at timestamptz not null default now()
+);
+
 alter table orders drop constraint if exists orders_status_check;
 alter table orders
   add constraint orders_status_check

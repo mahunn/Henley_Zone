@@ -47,6 +47,9 @@ export default function AdminPanelPage() {
         <Link href="/admin/products" className="btn">
           Add products
         </Link>
+        <Link href="/admin/products/manage" className="btn btn-secondary">
+          Manage catalog
+        </Link>
         <Link href="/admin/orders" className="btn">
           Orders
         </Link>

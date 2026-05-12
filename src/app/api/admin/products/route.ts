@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthorized } from "@/lib/admin-request";
-import { createProduct, type CreateProductInput } from "@/lib/products-repository";
+import {
+  createProduct,
+  deleteProductById,
+  updateProductById,
+  type CreateProductInput,
+  type UpdateProductInput
+} from "@/lib/products-repository";
 import type { ProductColor } from "@/types/commerce";
 
 function parseBody(body: unknown): CreateProductInput | { error: string } {
@@ -54,6 +60,16 @@ function parseBody(body: unknown): CreateProductInput | { error: string } {
   };
 }
 
+function parseUpdateBody(body: unknown): (UpdateProductInput & { id: string }) | { error: string } {
+  if (!body || typeof body !== "object") return { error: "Invalid JSON body." };
+  const o = body as Record<string, unknown>;
+  const id = typeof o.id === "string" ? o.id : "";
+  if (!id.trim()) return { error: "Product id is required." };
+  const parsed = parseBody(body);
+  if ("error" in parsed) return parsed;
+  return { id: id.trim(), ...parsed };
+}
+
 export async function POST(request: Request) {
   try {
     if (!(await isAdminAuthorized())) {
@@ -77,6 +93,52 @@ export async function POST(request: Request) {
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to create product.";
     const status = message.includes("Slug already") ? 409 : 500;
+    return NextResponse.json({ message }, { status });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    if (!(await isAdminAuthorized())) {
+      return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
+    }
+    const url = new URL(request.url);
+    const id = url.searchParams.get("id")?.trim() || "";
+    if (!id) {
+      return NextResponse.json({ message: "Product id is required." }, { status: 400 });
+    }
+
+    await deleteProductById(id);
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Failed to delete product.";
+    const status = message.includes("cannot be deleted") ? 400 : 500;
+    return NextResponse.json({ message }, { status });
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    if (!(await isAdminAuthorized())) {
+      return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
+    }
+    let json: unknown;
+    try {
+      json = await request.json();
+    } catch {
+      return NextResponse.json({ message: "Invalid JSON." }, { status: 400 });
+    }
+
+    const parsed = parseUpdateBody(json);
+    if ("error" in parsed) {
+      return NextResponse.json({ message: parsed.error }, { status: 400 });
+    }
+
+    const product = await updateProductById(parsed.id, parsed);
+    return NextResponse.json({ ok: true, product });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Failed to update product.";
+    const status = message.includes("cannot be edited") ? 400 : 500;
     return NextResponse.json({ message }, { status });
   }
 }
