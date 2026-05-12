@@ -471,6 +471,12 @@ function HomePage({
     catalog.find((p) => p.slug === "embroidered-frogs"),
     catalog.find((p) => p.slug === "cotton-gown-embroidery")
   ].filter(Boolean) as StoreProduct[];
+  const twoPiecesProducts = catalog
+    .filter((p) => p.category === "Two Pieces")
+    .slice(0, 8);
+  const threePiecesProducts = catalog
+    .filter((p) => p.category === "Three Pieces")
+    .slice(0, 8);
 
   return (
     <main className="page-main">
@@ -545,6 +551,28 @@ function HomePage({
           onAddToCart={onAddToCart}
           onBuyNow={onBuyNow}
         />
+
+        {/* ── Two Pieces ── */}
+        {twoPiecesProducts.length > 0 && (
+          <ProductRowSection
+            title="Two Pieces"
+            products={twoPiecesProducts}
+            viewAllHref="/store?category=Two+Pieces"
+            onAddToCart={onAddToCart}
+            onBuyNow={onBuyNow}
+          />
+        )}
+
+        {/* ── Three Pieces ── */}
+        {threePiecesProducts.length > 0 && (
+          <ProductRowSection
+            title="Three Pieces"
+            products={threePiecesProducts}
+            viewAllHref="/store?category=Three+Pieces"
+            onAddToCart={onAddToCart}
+            onBuyNow={onBuyNow}
+          />
+        )}
 
         {/* ── Flash Deal ── */}
         {flashDealProducts.length === 2 && (

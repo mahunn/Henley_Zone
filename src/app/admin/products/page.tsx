@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Product, ProductColor } from "@/types/commerce";
 import { invalidateProductCatalog } from "@/lib/product-catalog-client";
 
-type ColorRow = { id: string; label: string; image: string };
-
-const emptyColor = (): ColorRow => ({ id: "", label: "", image: "" });
+const AVAILABLE_SIZES = ["32", "34", "36", "38", "40", "42", "44", "46", "48"];
+type ColorImageRow = { label: string; image: string };
 
 export default function AdminProductsPage() {
   const router = useRouter();
@@ -17,21 +16,18 @@ export default function AdminProductsPage() {
   const [loadErr, setLoadErr] = useState("");
 
   const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("20");
   const [imageUrl, setImageUrl] = useState("");
   const [category, setCategory] = useState("");
-  const [useNewCategory, setUseNewCategory] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [sizesInput, setSizesInput] = useState("36, 38, 40, 42, 44, 46, 48");
-  const [colors, setColors] = useState<ColorRow[]>([emptyColor()]);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [colorImages, setColorImages] = useState<ColorImageRow[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [uploadingPrimary, setUploadingPrimary] = useState(false);
-  const [uploadingColorIdx, setUploadingColorIdx] = useState<number | null>(null);
+  const [uploadingColorImages, setUploadingColorImages] = useState(false);
 
   async function uploadImageFile(file: File | undefined | null): Promise<string> {
     if (!file) throw new Error("No file selected.");
@@ -77,34 +73,36 @@ export default function AdminProductsPage() {
     if (authorized) void loadCats();
   }, [authorized]);
 
-  const effectiveCategory = useMemo(() => {
-    if (useNewCategory) return newCategoryName.trim();
-    return category.trim();
-  }, [useNewCategory, newCategoryName, category]);
-
-  function addColorRow() {
-    setColors((c) => [...c, emptyColor()]);
+  function toggleSize(size: string) {
+    setSelectedSizes((prev) =>
+      prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
+    );
   }
 
-  function removeColorRow(i: number) {
-    setColors((c) => (c.length <= 1 ? c : c.filter((_, j) => j !== i)));
+  function makeColorLabelFromFileName(fileName: string): string {
+    const base = fileName.replace(/\.[^/.]+$/, "");
+    const cleaned = base.replace(/[-_]+/g, " ").trim();
+    if (!cleaned) return "Color";
+    return cleaned
+      .split(/\s+/)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(" ");
   }
 
-  function updateColorRow(i: number, patch: Partial<ColorRow>) {
-    setColors((c) => c.map((row, j) => (j === i ? { ...row, ...patch } : row)));
+  function updateColorImageRow(i: number, patch: Partial<ColorImageRow>) {
+    setColorImages((prev) => prev.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
   }
 
-  function copyPrimaryToRow(i: number) {
-    if (!imageUrl.trim()) return;
-    updateColorRow(i, { image: imageUrl.trim() });
+  function removeColorImageRow(i: number) {
+    setColorImages((prev) => prev.filter((_, idx) => idx !== i));
   }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMessage("");
     setError("");
-    if (!effectiveCategory) {
-      setError("Choose an existing category or enter a new category name.");
+    if (!category.trim()) {
+      setError("Select one of the existing categories.");
       return;
     }
     const priceNum = Number(price);
@@ -118,21 +116,18 @@ export default function AdminProductsPage() {
       return;
     }
     if (!imageUrl.trim()) {
-      setError("Add a primary image by uploading a file or pasting an image URL.");
+      setError("Upload a primary image from your device.");
       return;
     }
-    const sizes = sizesInput
-      .split(/[,،\n]+/)
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const sizes = selectedSizes;
     if (sizes.length === 0) {
-      setError("Enter at least one size (comma-separated).");
+      setError("Select at least one available size.");
       return;
     }
 
-    const colorPayload: ProductColor[] = colors
+    const colorPayload: ProductColor[] = colorImages
       .map((row) => ({
-        id: row.id.trim() || row.label.trim().toLowerCase().replace(/\s+/g, "_"),
+        id: row.label.trim().toLowerCase().replace(/\s+/g, "_"),
         label: row.label.trim(),
         image: row.image.trim()
       }))
@@ -145,12 +140,11 @@ export default function AdminProductsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
-          slug: slug.trim() || undefined,
           description: description.trim(),
           price: priceNum,
           stock: stockNum,
           imageUrl: imageUrl.trim(),
-          category: effectiveCategory,
+          category: category.trim(),
           colors: colorPayload,
           sizes
         })
@@ -163,16 +157,13 @@ export default function AdminProductsPage() {
       invalidateProductCatalog();
       setMessage(`Product “${data.product?.name ?? name}” was created.`);
       setName("");
-      setSlug("");
       setDescription("");
       setPrice("");
       setStock("20");
       setImageUrl("");
       setCategory("");
-      setNewCategoryName("");
-      setSizesInput("36, 38, 40, 42, 44, 46, 48");
-      setColors([emptyColor()]);
-      setUseNewCategory(false);
+      setSelectedSizes([]);
+      setColorImages([]);
       const res2 = await fetch("/api/products", { cache: "no-store" });
       if (res2.ok) {
         const d2 = (await res2.json()) as { products: Product[] };
@@ -207,9 +198,7 @@ export default function AdminProductsPage() {
       </p>
       <h1 style={{ marginBottom: 8, fontFamily: "var(--font-heading, serif)" }}>Add product</h1>
       <p style={{ marginBottom: 24, color: "var(--color-text-secondary)", lineHeight: 1.55 }}>
-        Create a product in an existing category or type a new category name. For launch you can rely on <strong>paste image URL only</strong> (e.g. <code style={{ fontSize: 13 }}>/products/…</code> under <code style={{ fontSize: 13 }}>public/</code> or any https link) — no file-upload or Storage setup is required until you want it.
-        Optional later: <strong>upload images</strong> (JPEG/PNG/WebP/GIF, up to 5&nbsp;MB) via Supabase Storage or local <code style={{ fontSize: 13 }}>public/uploads/catalog/</code> — see <code style={{ fontSize: 13 }}>supabase/migrations</code> for the <code style={{ fontSize: 13 }}>product-images</code> bucket.
-        Saving new products to the database still needs Supabase and the <code style={{ fontSize: 13 }}>products</code> table (run migrations for <code style={{ fontSize: 13 }}>colors_json</code> / <code style={{ fontSize: 13 }}>sizes_json</code> if your table does not have them yet).
+        Add products under existing sections only (Two Pieces, Three Pieces, Salwar Kameez, etc). Upload images directly from device, paste full Bangla details, and keep the form simple for daily use.
       </p>
 
       {loadErr && <p className="form-error" style={{ marginBottom: 16 }}>{loadErr}</p>}
@@ -231,16 +220,9 @@ export default function AdminProductsPage() {
             placeholder="e.g. Printed Salwar Kameez"
           />
         </label>
-
-        <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <span style={{ fontWeight: 600 }}>URL slug (optional)</span>
-          <input
-            className="nav-search"
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            placeholder="auto-generated from name if left blank"
-          />
-        </label>
+        <p style={{ margin: 0, fontSize: 13, color: "var(--color-text-secondary)" }}>
+          Product link is created automatically from product name (no slug setup needed).
+        </p>
 
         <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <span style={{ fontWeight: 600 }}>Description</span>
@@ -322,135 +304,120 @@ export default function AdminProductsPage() {
               style={{ maxWidth: 200, maxHeight: 200, borderRadius: 8, objectFit: "cover", border: "1px solid var(--color-border)" }}
             />
           ) : null}
-          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontWeight: 500, fontSize: 14 }}>Or paste image URL</span>
-            <input
-              className="nav-search"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://… or /products/… (required if you did not upload)"
-            />
-          </label>
         </div>
 
         <fieldset style={{ border: "1px solid var(--color-border)", borderRadius: 10, padding: "14px 16px" }}>
           <legend style={{ fontWeight: 600, padding: "0 6px" }}>Category</legend>
-          <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, cursor: "pointer" }}>
-            <input
-              type="radio"
-              checked={!useNewCategory}
-              onChange={() => setUseNewCategory(false)}
-            />
-            Existing category
-          </label>
-          {!useNewCategory && (
-            <select
-              className="nav-search"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              style={{ marginBottom: 12 }}
-            >
-              <option value="">Select…</option>
-              {existingCategories.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          )}
-          <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, cursor: "pointer" }}>
-            <input
-              type="radio"
-              checked={useNewCategory}
-              onChange={() => setUseNewCategory(true)}
-            />
-            New category
-          </label>
-          {useNewCategory && (
-            <input
-              className="nav-search"
-              value={newCategoryName}
-              onChange={(e) => setNewCategoryName(e.target.value)}
-              placeholder="Type a new category name"
-            />
-          )}
+          <select
+            className="nav-search"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            <option value="">Select existing category…</option>
+            {existingCategories.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
         </fieldset>
 
         <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <span style={{ fontWeight: 600 }}>Sizes (comma-separated)</span>
-          <input
-            className="nav-search"
-            required
-            value={sizesInput}
-            onChange={(e) => setSizesInput(e.target.value)}
-            placeholder="36, 38, 40, 42 or S, M, L, XL"
-          />
+          <span style={{ fontWeight: 600 }}>Available sizes</span>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {AVAILABLE_SIZES.map((sz) => {
+              const active = selectedSizes.includes(sz);
+              return (
+                <button
+                  key={sz}
+                  type="button"
+                  onClick={() => toggleSize(sz)}
+                  style={{
+                    minWidth: 52,
+                    minHeight: 40,
+                    borderRadius: 10,
+                    border: active ? "1px solid var(--color-primary)" : "1px solid var(--color-border)",
+                    background: active ? "rgba(14,165,233,0.12)" : "#fff",
+                    color: active ? "var(--color-primary-dark)" : "var(--color-text-primary)",
+                    fontWeight: 700,
+                    cursor: "pointer"
+                  }}
+                  aria-pressed={active}
+                >
+                  {sz}
+                </button>
+              );
+            })}
+          </div>
         </label>
 
         <fieldset style={{ border: "1px solid var(--color-border)", borderRadius: 10, padding: "14px 16px" }}>
-          <legend style={{ fontWeight: 600, padding: "0 6px" }}>Color variants (optional)</legend>
-          <p style={{ margin: "0 0 12px", fontSize: 13, color: "var(--color-text-secondary)" }}>
-            Leave rows empty to show only the primary image. Each variant needs a label and an image (upload or URL).
+          <legend style={{ fontWeight: 600, padding: "0 6px" }}>Color images (optional)</legend>
+          <p style={{ margin: "0 0 10px", fontSize: 13, color: "var(--color-text-secondary)" }}>
+            Upload multiple color images in one go. Color name is auto-filled from file name and you can edit it.
           </p>
-          {colors.map((row, i) => (
-            <div
-              key={i}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 8,
-                marginBottom: 10,
-                paddingBottom: 10,
-                borderBottom: i < colors.length - 1 ? "1px solid var(--color-border)" : "none"
+          <label style={{ display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap", cursor: uploadingColorImages ? "wait" : "pointer" }}>
+            <input
+              type="file"
+              multiple
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              disabled={uploadingColorImages}
+              onChange={async (e) => {
+                const files = Array.from(e.target.files ?? []);
+                e.target.value = "";
+                if (files.length === 0) return;
+                setError("");
+                setUploadingColorImages(true);
+                try {
+                  const uploaded: ColorImageRow[] = [];
+                  for (const file of files) {
+                    const url = await uploadImageFile(file);
+                    uploaded.push({
+                      label: makeColorLabelFromFileName(file.name),
+                      image: url
+                    });
+                  }
+                  setColorImages((prev) => [...prev, ...uploaded]);
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : "Color image upload failed.");
+                } finally {
+                  setUploadingColorImages(false);
+                }
               }}
-            >
-              <input
-                className="nav-search"
-                placeholder="Color label"
-                value={row.label}
-                onChange={(e) => updateColorRow(i, { label: e.target.value })}
-              />
-              <input
-                className="nav-search"
-                placeholder="Image URL"
-                value={row.image}
-                onChange={(e) => updateColorRow(i, { image: e.target.value })}
-              />
-              <div style={{ gridColumn: "1 / -1", display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
-                  <span>Upload:</span>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    disabled={uploadingColorIdx === i}
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      e.target.value = "";
-                      if (!file) return;
-                      setError("");
-                      setUploadingColorIdx(i);
-                      try {
-                        const url = await uploadImageFile(file);
-                        updateColorRow(i, { image: url });
-                      } catch (err) {
-                        setError(err instanceof Error ? err.message : "Upload failed.");
-                      } finally {
-                        setUploadingColorIdx(null);
-                      }
-                    }}
+            />
+            {uploadingColorImages && (
+              <span style={{ fontSize: 13, color: "var(--color-text-secondary)" }}>Uploading color images…</span>
+            )}
+          </label>
+
+          {colorImages.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
+              {colorImages.map((row, i) => (
+                <div
+                  key={`${row.image}-${i}`}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "56px 1fr auto",
+                    gap: 10,
+                    alignItems: "center"
+                  }}
+                >
+                  <img
+                    src={row.image}
+                    alt={row.label}
+                    style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, border: "1px solid var(--color-border)" }}
                   />
-                  {uploadingColorIdx === i && <span style={{ color: "var(--color-text-secondary)" }}>…</span>}
-                </label>
-                <button type="button" className="btn btn-secondary" style={{ fontSize: 13 }} onClick={() => copyPrimaryToRow(i)}>
-                  Use primary image URL
-                </button>
-                <button type="button" className="btn btn-secondary" style={{ fontSize: 13 }} onClick={() => removeColorRow(i)}>
-                  Remove row
-                </button>
-              </div>
+                  <input
+                    className="nav-search"
+                    value={row.label}
+                    onChange={(e) => updateColorImageRow(i, { label: e.target.value })}
+                    placeholder="Color name"
+                  />
+                  <button type="button" className="btn btn-secondary" onClick={() => removeColorImageRow(i)}>
+                    Remove
+                  </button>
+                </div>
+              ))}
             </div>
-          ))}
-          <button type="button" className="btn btn-secondary" onClick={addColorRow}>
-            + Add color row
-          </button>
+          )}
         </fieldset>
 
         <button type="submit" className="btn" disabled={submitting}>

@@ -24,8 +24,17 @@ export const categories: CategoryItem[] = [
     title: "Two Pieces",
     description: "Comfortable and trendy two piece sets for daily wear.",
     icon: "🌿",
-    imageUrl: "/products/kurti/salwar2/deep_green.jpeg",
+    imageUrl: "/products/kurti/two-piece/blue.jpeg",
     accent: "#38bdf8"
+  },
+  {
+    id: "Three Pieces",
+    label: "Premium Set",
+    title: "Three Pieces",
+    description: "Pure cotton three piece sets with elegant print and embroidery.",
+    icon: "💫",
+    imageUrl: "/products/kurti/three-piece/purple.jpeg",
+    accent: "#0ea5e9"
   },
   {
     id: "Frogs",

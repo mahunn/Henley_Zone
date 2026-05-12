@@ -16,6 +16,31 @@ function extFromMime(mime: string): string {
   return "bin";
 }
 
+async function uploadToCloudinaryUnsigned(buf: Buffer, file: File): Promise<{ url: string } | { error: string }> {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
+  const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET?.trim();
+  if (!cloudName || !uploadPreset) {
+    return { error: "Cloudinary is not configured." };
+  }
+
+  const ext = extFromMime(file.type);
+  const fileName = `${randomUUID()}.${ext}`;
+  const endpoint = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+
+  const form = new FormData();
+  form.append("upload_preset", uploadPreset);
+  form.append("folder", "henley-zone-products");
+  form.append("file", new Blob([buf], { type: file.type }), fileName);
+
+  const res = await fetch(endpoint, { method: "POST", body: form });
+  const data = (await res.json()) as { secure_url?: string; error?: { message?: string } };
+  if (!res.ok || !data.secure_url) {
+    const msg = data.error?.message || "Cloudinary upload failed.";
+    return { error: msg };
+  }
+  return { url: data.secure_url };
+}
+
 /**
  * Saves an admin-uploaded product image to Supabase Storage when configured,
  * otherwise to `public/uploads/catalog/` (local / self-hosted only — not on Vercel).
@@ -63,10 +88,15 @@ export async function saveAdminProductImage(file: File): Promise<{ url: string }
     return { url: data.publicUrl };
   }
 
+  // Easy production fallback: Cloudinary unsigned upload
+  if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_UPLOAD_PRESET) {
+    return uploadToCloudinaryUnsigned(buf, file);
+  }
+
   if (process.env.VERCEL) {
     return {
       error:
-        "File upload on Vercel requires Supabase Storage. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, add the product-images bucket (see supabase/migrations), or paste an image URL instead."
+        "Upload is not configured for production yet. Easiest setup: add CLOUDINARY_CLOUD_NAME and CLOUDINARY_UPLOAD_PRESET in Vercel env vars, then redeploy."
     };
   }
 

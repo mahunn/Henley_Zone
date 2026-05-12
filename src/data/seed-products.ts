@@ -68,6 +68,7 @@ export const seedProducts: Product[] = [
     stock: 40,
     imageUrl: "/products/kurti/salwar3/blue.jpeg",
     category: "Two Pieces",
+    sizes: ["36", "38", "40", "42", "44", "46", "48"],
     colors: [
       { id: "blue",   label: "Blue",   image: "/products/kurti/salwar3/blue.jpeg"   },
       { id: "green",  label: "Green",  image: "/products/kurti/salwar3/green.jpeg"  },
@@ -75,6 +76,45 @@ export const seedProducts: Product[] = [
       { id: "pink",   label: "Pink",   image: "/products/kurti/salwar3/pink.jpeg"   },
       { id: "purple", label: "Purple", image: "/products/kurti/salwar3/purple.jpeg" },
       { id: "yellow", label: "Yellow", image: "/products/kurti/salwar3/yellow.jpeg" }
+    ]
+  },
+
+  /* ── Two Pieces (new catalog images from products/kurti/two-piece) ─ */
+  {
+    id: "p6",
+    slug: "premium-cotton-two-piece",
+    name: "Premium Cotton Two Piece",
+    description:
+      "স্টাইল ও কোয়ালিটির পারফেক্ট কম্বিনেশন। নিজস্ব ফ্যাক্টরিতে প্রস্তুত প্রিমিয়াম কটন ফেব্রিক্স, নিখুঁত সেলাই ও দীর্ঘস্থায়ী কালার। ১০০% ক্যাশ অন ডেলিভারি সুবিধা।",
+    price: 990,
+    stock: 32,
+    imageUrl: "/products/kurti/two-piece/blue.jpeg",
+    category: "Two Pieces",
+    sizes: ["36", "38", "40", "42", "44", "46", "48"],
+    colors: [
+      { id: "blue", label: "Blue", image: "/products/kurti/two-piece/blue.jpeg" },
+      { id: "pink", label: "Pink", image: "/products/kurti/two-piece/pink.jpeg" }
+    ]
+  },
+
+  /* ── Three Pieces — catalog images from products/kurti/three-piece ─ */
+  {
+    id: "p7",
+    slug: "pure-cotton-three-piece",
+    name: "Pure Cotton Three Piece",
+    description:
+      "থ্রি পিস কটন ড্রেস সেট। ১০০% পিওর কটন কাপড়, কালার গ্যারান্টি, স্কিন প্রিন্ট ও সুন্দর ম্যানুয়াল এমব্রয়ডারি। অগ্রিম ছাড়াই ক্যাশ অন ডেলিভারি।",
+    price: 1290,
+    stock: 36,
+    imageUrl: "/products/kurti/three-piece/purple.jpeg",
+    category: "Three Pieces",
+    sizes: ["36", "38", "40", "42", "44", "46"],
+    colors: [
+      { id: "orange", label: "Orange", image: "/products/kurti/three-piece/Orange.jpeg" },
+      { id: "olive", label: "Olive", image: "/products/kurti/three-piece/olive.jpeg" },
+      { id: "pink", label: "Pink", image: "/products/kurti/three-piece/pink.jpeg" },
+      { id: "purple", label: "Purple", image: "/products/kurti/three-piece/purple.jpeg" },
+      { id: "red", label: "Red", image: "/products/kurti/three-piece/red.jpeg" }
     ]
   },
 

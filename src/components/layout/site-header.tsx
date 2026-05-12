@@ -324,6 +324,13 @@ export function SiteHeader() {
               Two Pieces
             </Link>
             <Link
+              href="/store?category=Three+Pieces"
+              className={navClass(onStorePage && activeCategory === "Three Pieces")}
+              onClick={scrollToTopAfterNav}
+            >
+              Three Pieces
+            </Link>
+            <Link
               href="/store?category=Frogs"
               className={navClass(onStorePage && activeCategory === "Frogs")}
               onClick={scrollToTopAfterNav}
