@@ -2337,101 +2337,77 @@ button {
   opacity: 0.55;
 }
 
-.footer-dev-wrap {
-  padding-top: 24px;
-  margin-top: 8px;
-  border-top: 1px solid rgba(240, 0, 0, 0.18);
+.footer-newsletter-col {
+  min-width: 0;
 }
 
-/* mahinahmad.com theme: primary #f00000, surface #0a0a0a, muted #9ca3af */
-.footer-dev-section-label {
-  font-size: 11px;
+.footer-dev-inline {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.footer-dev-label {
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: #9ca3af;
-  margin-bottom: 10px;
+  letter-spacing: 0.18em;
+  color: #94a3b8;
+  margin-bottom: 8px;
 }
 
-.footer-dev-card {
+.footer-dev-link-row {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
-  width: 100%;
-  max-width: 440px;
-  padding: 14px 18px;
-  border-radius: 16px;
+  gap: 10px;
   text-decoration: none;
   color: inherit;
-  background: linear-gradient(145deg, #141416 0%, #0d0d10 100%);
-  border: 1px solid rgba(240, 0, 0, 0.28);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 8px 28px rgba(0, 0, 0, 0.35), 0 0 24px rgba(240, 0, 0, 0.12);
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  max-width: 100%;
 }
 
-.footer-dev-card:hover {
-  border-color: rgba(240, 0, 0, 0.55);
-  box-shadow: 0 0 0 1px rgba(240, 0, 0, 0.15), 0 12px 36px rgba(0, 0, 0, 0.45), 0 0 32px rgba(240, 0, 0, 0.22);
-  transform: translateY(-1px);
+.footer-dev-link-row:hover .footer-dev-domain {
+  text-decoration: underline;
+  color: #e2e8f0;
 }
 
-.footer-dev-text {
+.footer-dev-copy {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
   min-width: 0;
   text-align: left;
   flex: 1;
 }
 
-.footer-dev-name {
-  font-size: 1.2rem;
+.footer-dev-name-sm {
+  font-size: 0.95rem;
   font-weight: 700;
   color: #fff;
   font-family: var(--font-heading, serif);
   line-height: 1.2;
 }
 
-.footer-dev-url {
-  font-size: 13px;
+.footer-dev-domain {
+  font-size: 12px;
   font-weight: 600;
-  color: #f87171;
-  letter-spacing: 0.02em;
+  color: #94a3b8;
+  transition: color 0.15s;
 }
 
-.footer-dev-card:hover .footer-dev-url {
-  color: #fca5a5;
-  text-decoration: underline;
-}
-
-.footer-dev-avatar {
-  width: 88px;
-  height: 88px;
+.footer-dev-photo {
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
-  border: 2px solid rgba(240, 0, 0, 0.45);
-  background: #0a0a0a;
-  box-shadow: 0 0 16px rgba(240, 0, 0, 0.2);
-}
-
-@media (max-width: 420px) {
-  .footer-dev-card {
-    padding: 12px 14px;
-    gap: 12px;
-    max-width: none;
-  }
-
-  .footer-dev-avatar {
-    width: 72px;
-    height: 72px;
-  }
-
-  .footer-dev-name {
-    font-size: 1.05rem;
-  }
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* ─── Cart Page ──────────────────────────────────────────────────── */

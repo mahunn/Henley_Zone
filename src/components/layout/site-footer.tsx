@@ -60,8 +60,8 @@ export function SiteFooter() {
             </Link>
           </div>
 
-          {/* Newsletter */}
-          <div>
+          {/* Newsletter + developer credit (customer storefront only) */}
+          <div className="footer-newsletter-col">
             <div className="footer-col-title">Newsletter</div>
             <p className="footer-brand-text">
               নতুন পণ্য ও অফার পেতে সাবস্ক্রাইব করুন।
@@ -75,10 +75,9 @@ export function SiteFooter() {
             <button className="btn" style={{ width: "100%", justifyContent: "center" }}>
               Subscribe
             </button>
+            <FooterDeveloperCredit />
           </div>
         </div>
-
-        <FooterDeveloperCredit />
       </div>
 
       <div className="footer-bottom container">
