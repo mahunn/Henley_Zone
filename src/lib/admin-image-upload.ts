@@ -30,7 +30,8 @@ async function uploadToCloudinaryUnsigned(buf: Buffer, file: File): Promise<{ ur
   const form = new FormData();
   form.append("upload_preset", uploadPreset);
   form.append("folder", "henley-zone-products");
-  form.append("file", new Blob([buf], { type: file.type }), fileName);
+  // Use Uint8Array to satisfy BlobPart typing across Node runtimes (Vercel build).
+  form.append("file", new Blob([new Uint8Array(buf)], { type: file.type }), fileName);
 
   const res = await fetch(endpoint, { method: "POST", body: form });
   const data = (await res.json()) as { secure_url?: string; error?: { message?: string } };
