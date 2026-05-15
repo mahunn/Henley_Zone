@@ -1,6 +1,19 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import type { NextResponse } from "next/server";
 
 export const ADMIN_SESSION_COOKIE = "admin_session";
+
+/** Session cookie: no maxAge — kept until the browser is fully closed. */
+export function setAdminSessionCookie(response: NextResponse, sessionValue: string) {
+  response.cookies.set({
+    name: ADMIN_SESSION_COOKIE,
+    value: sessionValue,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/"
+  });
+}
 
 export function getAdminUsername() {
   return process.env.ADMIN_DASHBOARD_USERNAME;

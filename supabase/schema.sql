@@ -32,7 +32,9 @@ create table if not exists order_items (
   product_id text not null,
   product_name text not null,
   unit_price integer not null,
-  quantity integer not null check (quantity > 0)
+  quantity integer not null check (quantity > 0),
+  selected_color text,
+  selected_size text
 );
 
 create index if not exists idx_orders_created_at on orders(created_at desc);

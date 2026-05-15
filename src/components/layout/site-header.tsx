@@ -9,6 +9,7 @@ import { defaultBusiness, businessTelHref, businessWhatsappChatUrl } from "@/con
 import { Product } from "@/types/commerce";
 import { filterProductsBySearch } from "@/lib/product-search";
 import { getProductsCatalog, getSyncedProductCatalog } from "@/lib/product-catalog-client";
+import { HeaderLoginLink } from "@/components/layout/header-login-link";
 
 function SearchIcon() {
   return (
@@ -184,10 +185,7 @@ export function SiteHeader() {
             </a>
           </span>
           <div className="topbar-right">
-            <Link href="/login" style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <UserIcon />
-              Login
-            </Link>
+            <HeaderLoginLink icon={<UserIcon />} />
           </div>
         </div>
       </div>

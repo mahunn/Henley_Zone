@@ -61,8 +61,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    const order: Order = {
-      id: `ORD-${Date.now()}`,
+    const orderPayload: Omit<Order, "id"> = {
       items,
       subtotal,
       deliveryFee,
@@ -81,9 +80,18 @@ export default function CheckoutPage() {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(order)
+        body: JSON.stringify(orderPayload)
       });
-      if (!res.ok) { setError("Failed to place order. Please try again."); return; }
+      const data = (await res.json()) as { order?: Order; message?: string };
+      if (!res.ok) {
+        setError(data.message || "Failed to place order. Please try again.");
+        return;
+      }
+      const order = data.order ?? ({ ...orderPayload, id: "" } as Order);
+      if (!order.id) {
+        setError("Order was placed but no order id was returned. Please contact support.");
+        return;
+      }
       localStorage.setItem("latestOrder", JSON.stringify(order));
       clearCart();
       router.push("/checkout/success");

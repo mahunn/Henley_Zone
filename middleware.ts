@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 const ADMIN_SESSION_COOKIE = "admin_session";
 
 function isAdminProtectedPath(pathname: string) {
-  return pathname.startsWith("/admin/orders") || pathname === "/admin/products";
+  return pathname === "/admin" || pathname.startsWith("/admin/");
 }
 
 export function middleware(request: NextRequest) {
@@ -21,6 +21,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/orders", "/admin/orders/:path*", "/admin/products"]
+  matcher: ["/admin", "/admin/:path*"]
 };
-

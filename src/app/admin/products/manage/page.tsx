@@ -46,7 +46,7 @@ export default function AdminManageProductsPage() {
 
   const verify = useCallback(async () => {
     try {
-      const res = await fetch("/api/orders", { method: "GET", cache: "no-store" });
+      const res = await fetch("/api/admin/session", { method: "GET", cache: "no-store", credentials: "include" });
       if (res.status === 401) {
         router.replace("/login?type=admin");
         return;

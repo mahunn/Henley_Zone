@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
@@ -16,7 +16,24 @@ export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/admin/session", { method: "GET", cache: "no-store", credentials: "include" })
+      .then((res) => {
+        if (!cancelled && res.ok) {
+          router.replace("/admin");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setCheckingSession(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -35,6 +52,7 @@ export default function LoginPage() {
       const adminRes = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ username: identifier, password })
       });
 
@@ -67,6 +85,14 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  if (checkingSession) {
+    return (
+      <main className={`login-page ${inter.className}`}>
+        <p style={{ textAlign: "center", color: "var(--color-text-secondary)" }}>Checking session…</p>
+      </main>
+    );
+  }
 
   return (
     <main className={`login-page ${inter.className}`}>

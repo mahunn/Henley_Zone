@@ -42,3 +42,13 @@ export async function updateOrderStatus(
   return true;
 }
 
+export async function deleteOrderFromFile(orderId: string): Promise<boolean> {
+  const all = await readOrders();
+  const next = all.filter((order) => order.id !== orderId);
+  if (next.length === all.length) {
+    return false;
+  }
+  await fs.writeFile(ordersPath, JSON.stringify(next, null, 2), "utf8");
+  return true;
+}
+

@@ -1,8 +1,15 @@
 import {
+  deleteOrderFromFile,
   readOrders,
   updateOrderStatus as updateOrderStatusInFile,
   writeOrder
 } from "@/lib/orders-store";
+import {
+  formatMonthlyOrderId,
+  orderIdMonthPrefix,
+  parseMonthlyOrderSerial
+} from "@/lib/order-id";
+import { formatOrderItemLabel } from "@/lib/format-order-line";
 import { getSupabaseAdminClient } from "@/lib/supabase-server";
 import { CartItem, Order } from "@/types/commerce";
 
@@ -26,6 +33,8 @@ interface OrderItemRow {
   product_name: string;
   unit_price: number;
   quantity: number;
+  selected_color?: string | null;
+  selected_size?: string | null;
 }
 
 function mapOrderRow(order: OrderRow, items: OrderItemRow[]): Order {
@@ -33,11 +42,13 @@ function mapOrderRow(order: OrderRow, items: OrderItemRow[]): Order {
     id: order.id,
     items: items.map(
       (item): CartItem => ({
-        key: `${item.product_id}::legacy::${item.order_id}`,
+        key: `${item.product_id}::${item.selected_size ?? ""}::${item.selected_color ?? ""}::${item.order_id}`,
         productId: item.product_id,
         name: item.product_name,
         price: item.unit_price,
-        quantity: item.quantity
+        quantity: item.quantity,
+        selectedColor: item.selected_color?.trim() || undefined,
+        selectedSize: item.selected_size?.trim() || undefined
       })
     ),
     subtotal: order.subtotal,
@@ -51,6 +62,28 @@ function mapOrderRow(order: OrderRow, items: OrderItemRow[]): Order {
     note: order.note ?? undefined,
     createdAt: order.created_at
   };
+}
+
+/** Next id for the order month, e.g. ORD-2026050003 */
+export async function allocateNextOrderId(createdAt: string = new Date().toISOString()): Promise<string> {
+  const at = new Date(createdAt);
+  const when = Number.isNaN(at.getTime()) ? new Date() : at;
+  const yyyymm = orderIdMonthPrefix(when).slice(4);
+
+  const existing = await listOrders();
+  let maxSerial = 0;
+  for (const o of existing) {
+    const parsed = parseMonthlyOrderSerial(o.id);
+    if (parsed && parsed.yyyymm === yyyymm) {
+      maxSerial = Math.max(maxSerial, parsed.serial);
+    }
+  }
+  return formatMonthlyOrderId(when, maxSerial + 1);
+}
+
+function isMissingVariantColumnsError(message: string | undefined): boolean {
+  const m = (message ?? "").toLowerCase();
+  return m.includes("selected_color") || m.includes("selected_size") || m.includes("schema cache");
 }
 
 export async function createOrder(order: Order): Promise<void> {
@@ -75,22 +108,38 @@ export async function createOrder(order: Order): Promise<void> {
   });
 
   if (orderError) {
-    await writeOrder(order);
-    return;
+    throw new Error(orderError.message || "Could not save order.");
   }
 
-  const rows = order.items.map((item) => ({
+  const rowsWithVariants = order.items.map((item) => ({
     order_id: order.id,
     product_id: item.productId,
-    product_name: item.name,
+    product_name: formatOrderItemLabel(item),
     unit_price: item.price,
-    quantity: item.quantity
+    quantity: item.quantity,
+    selected_color: item.selectedColor?.trim() || null,
+    selected_size: item.selectedSize?.trim() || null
   }));
 
-  const { error: itemError } = await supabase.from("order_items").insert(rows);
-  if (itemError) {
-    await writeOrder(order);
+  let { error: itemError } = await supabase.from("order_items").insert(rowsWithVariants);
+
+  if (itemError && isMissingVariantColumnsError(itemError.message)) {
+    const rowsBasic = order.items.map((item) => ({
+      order_id: order.id,
+      product_id: item.productId,
+      product_name: formatOrderItemLabel(item),
+      unit_price: item.price,
+      quantity: item.quantity
+    }));
+    ({ error: itemError } = await supabase.from("order_items").insert(rowsBasic));
   }
+
+  if (itemError) {
+    await supabase.from("orders").delete().eq("id", order.id);
+    throw new Error(itemError.message || "Could not save order items.");
+  }
+
+  await writeOrder(order);
 }
 
 export async function listOrders(): Promise<Order[]> {
@@ -169,5 +218,47 @@ export async function updateOrderStatus(
   }
 
   return { updated: true };
+}
+
+export async function deleteOrder(
+  orderId: string
+): Promise<{ deleted: boolean; reason?: string }> {
+  const trimmedId = orderId.trim();
+  if (!trimmedId) {
+    return { deleted: false, reason: "Missing order id." };
+  }
+
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    const deleted = await deleteOrderFromFile(trimmedId);
+    return {
+      deleted,
+      reason: deleted ? undefined : "Order not found in local store."
+    };
+  }
+
+  await supabase.from("order_items").delete().eq("order_id", trimmedId);
+
+  const { data, error } = await supabase
+    .from("orders")
+    .delete()
+    .eq("id", trimmedId)
+    .select("id")
+    .limit(1);
+
+  if (error || !data?.length) {
+    const deletedInFile = await deleteOrderFromFile(trimmedId);
+    if (deletedInFile) {
+      return { deleted: true };
+    }
+    return {
+      deleted: false,
+      reason: error?.message || "Order not found."
+    };
+  }
+
+  await deleteOrderFromFile(trimmedId);
+  return { deleted: true };
 }
 

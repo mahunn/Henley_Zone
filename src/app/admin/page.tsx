@@ -11,7 +11,7 @@ export default function AdminPanelPage() {
   useEffect(() => {
     const verifySession = async () => {
       try {
-        const res = await fetch("/api/orders", { method: "GET", cache: "no-store" });
+        const res = await fetch("/api/admin/session", { method: "GET", cache: "no-store", credentials: "include" });
         if (res.status === 401) {
           router.replace("/login?type=admin");
           return;
@@ -24,7 +24,7 @@ export default function AdminPanelPage() {
   }, [router]);
 
   const logout = async () => {
-    await fetch("/api/admin/logout", { method: "POST" });
+    await fetch("/api/admin/logout", { method: "POST", credentials: "include" });
     router.push("/login?type=admin");
     router.refresh();
   };

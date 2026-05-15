@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthorized } from "@/lib/admin-request";
+import { withAdminSessionRefresh } from "@/lib/admin-session-response";
 import {
   createProduct,
   deleteProductById,
@@ -89,7 +90,7 @@ export async function POST(request: Request) {
     }
 
     const product = await createProduct(parsed);
-    return NextResponse.json({ ok: true, product }, { status: 201 });
+    return withAdminSessionRefresh(NextResponse.json({ ok: true, product }, { status: 201 }));
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to create product.";
     const status = message.includes("Slug already") ? 409 : 500;
@@ -109,7 +110,7 @@ export async function DELETE(request: Request) {
     }
 
     await deleteProductById(id);
-    return NextResponse.json({ ok: true });
+    return withAdminSessionRefresh(NextResponse.json({ ok: true }));
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to delete product.";
     const status = message.includes("cannot be deleted") ? 400 : 500;
@@ -135,7 +136,7 @@ export async function PUT(request: Request) {
     }
 
     const product = await updateProductById(parsed.id, parsed);
-    return NextResponse.json({ ok: true, product });
+    return withAdminSessionRefresh(NextResponse.json({ ok: true, product }));
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to update product.";
     const status = message.includes("cannot be edited") ? 400 : 500;

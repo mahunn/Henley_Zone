@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { defaultBusiness } from "@/config/businesses";
+import { formatOrderItemLabel } from "@/lib/format-order-line";
+import { formatOrderForClipboard } from "@/lib/format-order-summary";
 import { formatCurrency } from "@/lib/money";
 import { Order } from "@/types/commerce";
 import { useRouter } from "next/navigation";
@@ -111,10 +113,12 @@ export default function AdminOrdersPage() {
   const [period, setPeriod] = useState<string>("7d");
   const [copyingId, setCopyingId] = useState<string | null>(null);
   const [copiedNotice, setCopiedNotice] = useState("");
+  const [pendingDeleteIds, setPendingDeleteIds] = useState<string[]>([]);
+  const [applyingDeletes, setApplyingDeletes] = useState(false);
 
   const loadOrders = async () => {
     try {
-      const res = await fetch("/api/orders", { cache: "no-store" });
+      const res = await fetch("/api/orders", { cache: "no-store", credentials: "include" });
       if (res.status === 401) {
         router.replace("/login?type=admin");
         return;
@@ -137,7 +141,7 @@ export default function AdminOrdersPage() {
   }, [router]);
 
   const logout = async () => {
-    await fetch("/api/admin/logout", { method: "POST" });
+    await fetch("/api/admin/logout", { method: "POST", credentials: "include" });
     router.push("/login?type=admin");
     router.refresh();
   };
@@ -148,6 +152,7 @@ export default function AdminOrdersPage() {
       const res = await fetch("/api/orders", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ orderId, status })
       });
 
@@ -211,27 +216,62 @@ export default function AdminOrdersPage() {
     [filteredOrders, sortBy]
   );
 
-  const formatOrderForClipboard = (order: Order) => {
-    const lines = [
-      `Order ID: ${order.id}`,
-      `Date: ${new Date(order.createdAt).toLocaleString()}`,
-      `Customer: ${order.customerName}`,
-      `Phone: ${order.phone}`,
-      `Address: ${order.address}`,
-      `Status: ${order.status}`,
-      `Total: ${formatCurrency(order.total, defaultBusiness.currency)}`,
-      `Items:`
-    ];
-    for (const item of order.items) {
-      lines.push(
-        `- ${item.name} x${item.quantity} (${formatCurrency(
-          item.price,
-          defaultBusiness.currency
-        )})`
-      );
+  const togglePendingDelete = (orderId: string) => {
+    setPendingDeleteIds((prev) =>
+      prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]
+    );
+    setError("");
+  };
+
+  const clearPendingDeletes = () => {
+    setPendingDeleteIds([]);
+    setError("");
+  };
+
+  const applyPendingDeletes = async () => {
+    if (!pendingDeleteIds.length) return;
+    if (
+      !window.confirm(
+        `Permanently delete ${pendingDeleteIds.length} order(s)? This cannot be undone.`
+      )
+    ) {
+      return;
     }
-    if (order.note) lines.push(`Note: ${order.note}`);
-    return lines.join("\n");
+
+    setApplyingDeletes(true);
+    setError("");
+    const ids = [...pendingDeleteIds];
+
+    try {
+      const res = await fetch("/api/orders", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ orderIds: ids })
+      });
+      const data = (await res.json()) as {
+        message?: string;
+        deleted?: string[];
+        failed?: { id: string; reason: string }[];
+      };
+
+      if (!res.ok) {
+        setError(data.message || "Could not delete orders.");
+        if (data.deleted?.length) {
+          setOrders((prev) => prev.filter((o) => !data.deleted!.includes(o.id)));
+          setPendingDeleteIds(ids.filter((id) => !data.deleted!.includes(id)));
+        }
+        return;
+      }
+
+      const deletedSet = new Set(data.deleted ?? ids);
+      setOrders((prev) => prev.filter((o) => !deletedSet.has(o.id)));
+      setPendingDeleteIds([]);
+    } catch {
+      setError("Could not delete orders.");
+    } finally {
+      setApplyingDeletes(false);
+    }
   };
 
   const copyText = async (text: string) => {
@@ -430,28 +470,46 @@ export default function AdminOrdersPage() {
               </span>
             </h2>
             <div style={{ display: "grid", gap: 12 }}>
-              {group.orders.map((order) => (
+              {group.orders.map((order) => {
+                const markedForDelete = pendingDeleteIds.includes(order.id);
+                return (
                 <article
                   key={order.id}
                   style={{
-                    border: "1px solid var(--color-border)",
+                    border: markedForDelete ? "1px solid #fca5a5" : "1px solid var(--color-border)",
                     borderRadius: 12,
                     padding: 16,
-                    background: "var(--color-surface)"
+                    background: markedForDelete ? "#fef2f2" : "var(--color-surface)",
+                    opacity: markedForDelete ? 0.94 : 1
                   }}
                 >
                   <div className="admin-order-head">
-                    <p>
+                    <p style={{ textDecoration: markedForDelete ? "line-through" : undefined }}>
                       <strong>Order:</strong> {order.id}
+                      {markedForDelete ? (
+                        <span style={{ marginLeft: 8, fontSize: 12, color: "#b91c1c", fontWeight: 600 }}>
+                          marked for deletion
+                        </span>
+                      ) : null}
                     </p>
-                    <button
-                      type="button"
-                      className="admin-copy-btn"
-                      onClick={() => void handleCopyOrder(order)}
-                      disabled={copyingId === order.id}
-                    >
-                      {copyingId === order.id ? "Copying..." : "Copy"}
-                    </button>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <button
+                        type="button"
+                        className="admin-copy-btn"
+                        onClick={() => void handleCopyOrder(order)}
+                        disabled={copyingId === order.id || markedForDelete}
+                      >
+                        {copyingId === order.id ? "Copying..." : "Copy"}
+                      </button>
+                      <button
+                        type="button"
+                        className="admin-delete-btn"
+                        onClick={() => togglePendingDelete(order.id)}
+                        disabled={applyingDeletes || updatingOrderId === order.id}
+                      >
+                        {markedForDelete ? "Undo remove" : "Mark for removal"}
+                      </button>
+                    </div>
                   </div>
                   <p>
                     <strong>Time:</strong> {new Date(order.createdAt).toLocaleString()}
@@ -491,7 +549,7 @@ export default function AdminOrdersPage() {
                       onChange={(event) =>
                         void updateStatus(order.id, event.target.value as Order["status"])
                       }
-                      disabled={updatingOrderId === order.id}
+                      disabled={updatingOrderId === order.id || markedForDelete}
                     >
                       <option value="pending">pending</option>
                       <option value="confirmed">confirmed</option>
@@ -499,16 +557,66 @@ export default function AdminOrdersPage() {
                       <option value="cancelled">cancelled</option>
                     </select>
                   </div>
-                  <p>
-                    <strong>Items:</strong>{" "}
-                    {order.items.map((item) => `${item.name} x${item.quantity}`).join(", ")}
-                  </p>
+                  <div style={{ marginTop: 4 }}>
+                    <strong>Items:</strong>
+                    <ul style={{ margin: "8px 0 0", paddingLeft: 20, lineHeight: 1.55 }}>
+                      {order.items.map((item) => (
+                        <li key={item.key ?? `${item.productId}-${item.name}`}>
+                          {formatOrderItemLabel(item)} · Qty {item.quantity} ·{" "}
+                          {formatCurrency(item.price * item.quantity, defaultBusiness.currency)}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </article>
-              ))}
+              );
+              })}
             </div>
           </section>
         ))}
       </div>
+
+      {pendingDeleteIds.length > 0 ? (
+        <div
+          style={{
+            position: "sticky",
+            bottom: 0,
+            marginTop: 24,
+            padding: "14px 16px",
+            borderRadius: 10,
+            border: "1px solid #fca5a5",
+            background: "#fff",
+            boxShadow: "0 -8px 24px rgba(0,0,0,0.08)",
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 12,
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}
+        >
+          <p style={{ margin: 0, flex: "1 1 200px", color: "#7f1d1d", fontSize: 14 }}>
+            <strong>{pendingDeleteIds.length}</strong> order(s) marked for removal. Nothing is deleted until you save.
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <button
+              type="button"
+              className="admin-ghost-btn"
+              onClick={clearPendingDeletes}
+              disabled={applyingDeletes}
+            >
+              Clear marks
+            </button>
+            <button
+              type="button"
+              className="admin-delete-btn"
+              onClick={() => void applyPendingDeletes()}
+              disabled={applyingDeletes}
+            >
+              {applyingDeletes ? "Deleting…" : "Save deletions"}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }

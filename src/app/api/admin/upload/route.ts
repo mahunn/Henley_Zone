@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthorized } from "@/lib/admin-request";
+import { withAdminSessionRefresh } from "@/lib/admin-session-response";
 import { saveAdminProductImage } from "@/lib/admin-image-upload";
 
 export async function POST(request: Request) {
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: result.error }, { status: 400 });
     }
 
-    return NextResponse.json({ url: result.url });
+    return withAdminSessionRefresh(NextResponse.json({ url: result.url }));
   } catch {
     return NextResponse.json({ message: "Upload failed." }, { status: 500 });
   }
