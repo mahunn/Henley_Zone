@@ -10,7 +10,8 @@ import {
   parseMonthlyOrderSerial
 } from "@/lib/order-id";
 import { formatOrderItemLabel } from "@/lib/format-order-line";
-import { getSupabaseAdminClient } from "@/lib/supabase-server";
+import { canUseLocalOrderFileStore } from "@/lib/runtime-env";
+import { getSupabaseAdminClient, isSupabaseConfigured } from "@/lib/supabase-server";
 import { CartItem, Order } from "@/types/commerce";
 
 interface OrderRow {
@@ -86,7 +87,20 @@ function isMissingVariantColumnsError(message: string | undefined): boolean {
   return m.includes("selected_color") || m.includes("selected_size") || m.includes("schema cache");
 }
 
+function assertOrderPersistenceAvailable(): void {
+  if (isSupabaseConfigured()) {
+    return;
+  }
+  if (canUseLocalOrderFileStore()) {
+    return;
+  }
+  throw new Error(
+    "Order storage is not configured for production. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Vercel (or your host) environment variables."
+  );
+}
+
 export async function createOrder(order: Order): Promise<void> {
+  assertOrderPersistenceAvailable();
   const supabase = getSupabaseAdminClient();
 
   if (!supabase) {
@@ -138,14 +152,15 @@ export async function createOrder(order: Order): Promise<void> {
     await supabase.from("orders").delete().eq("id", order.id);
     throw new Error(itemError.message || "Could not save order items.");
   }
-
-  await writeOrder(order);
 }
 
 export async function listOrders(): Promise<Order[]> {
   const supabase = getSupabaseAdminClient();
 
   if (!supabase) {
+    if (!canUseLocalOrderFileStore()) {
+      return [];
+    }
     return readOrders();
   }
 
@@ -155,7 +170,10 @@ export async function listOrders(): Promise<Order[]> {
     .order("created_at", { ascending: false });
 
   if (ordersError || !ordersData) {
-    return readOrders();
+    if (canUseLocalOrderFileStore()) {
+      return readOrders();
+    }
+    throw new Error(ordersError?.message || "Could not load orders from database.");
   }
 
   const orderIds = (ordersData as OrderRow[]).map((row) => row.id);
@@ -169,7 +187,10 @@ export async function listOrders(): Promise<Order[]> {
     .in("order_id", orderIds);
 
   if (itemsError || !itemsData) {
-    return readOrders();
+    if (canUseLocalOrderFileStore()) {
+      return readOrders();
+    }
+    throw new Error(itemsError?.message || "Could not load order items from database.");
   }
 
   const itemsByOrderId = new Map<string, OrderItemRow[]>();
@@ -206,9 +227,11 @@ export async function updateOrderStatus(
     .limit(1);
 
   if (error || !data || data.length === 0) {
-    const updatedInFile = await updateOrderStatusInFile(orderId, status);
-    if (updatedInFile) {
-      return { updated: true };
+    if (canUseLocalOrderFileStore()) {
+      const updatedInFile = await updateOrderStatusInFile(orderId, status);
+      if (updatedInFile) {
+        return { updated: true };
+      }
     }
 
     return {
@@ -248,9 +271,11 @@ export async function deleteOrder(
     .limit(1);
 
   if (error || !data?.length) {
-    const deletedInFile = await deleteOrderFromFile(trimmedId);
-    if (deletedInFile) {
-      return { deleted: true };
+    if (canUseLocalOrderFileStore()) {
+      const deletedInFile = await deleteOrderFromFile(trimmedId);
+      if (deletedInFile) {
+        return { deleted: true };
+      }
     }
     return {
       deleted: false,
@@ -258,7 +283,6 @@ export async function deleteOrder(
     };
   }
 
-  await deleteOrderFromFile(trimmedId);
   return { deleted: true };
 }
 
