@@ -3548,6 +3548,54 @@ button {
   }
 }
 
+/* ─── Product page loading skeleton ─── */
+.pdp-skeleton-wrap {
+  padding: 24px 16px 48px;
+}
+
+.pdp-skeleton {
+  display: grid;
+  gap: 20px;
+}
+
+@media (min-width: 900px) {
+  .pdp-skeleton {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.pdp-skeleton-gallery {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-md);
+  background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  animation: hz-store-skel-pulse 1.2s ease-in-out infinite;
+}
+
+.pdp-skeleton-info {
+  display: grid;
+  gap: 12px;
+}
+
+.pdp-skeleton-line {
+  height: 14px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  animation: hz-store-skel-pulse 1.2s ease-in-out infinite;
+}
+
+.pdp-skeleton-line.wide {
+  height: 22px;
+  width: 72%;
+}
+
+.pdp-skeleton-line.short {
+  width: 40%;
+}
+
 /* ─── Store loading skeleton (matches product-grid breakpoints) ─── */
 
 @keyframes hz-store-skel-pulse {

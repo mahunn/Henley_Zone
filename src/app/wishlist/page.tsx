@@ -61,11 +61,11 @@ export default function WishlistPage() {
         <div className="cart-items-panel" style={{ maxWidth: 720 }}>
           {items.map((item) => (
             <div key={item.key} className="cart-item" style={{ gridTemplateColumns: "84px 1fr auto", alignItems: "center" }}>
-              <a href={`/#/product/${item.slug}`}>
+              <a href={`/product/${item.slug}`}>
                 <img src={item.imageUrl} alt="" className="cart-item-img" />
               </a>
               <div style={{ minWidth: 0 }}>
-                <a href={`/#/product/${item.slug}`} className="cart-item-name" style={{ textDecoration: "none", display: "block" }}>
+                <a href={`/product/${item.slug}`} className="cart-item-name" style={{ textDecoration: "none", display: "block" }}>
                   {item.name}
                 </a>
                 <div className="cart-item-unit-price" style={{ marginBottom: 6 }}>

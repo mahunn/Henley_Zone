@@ -31,6 +31,8 @@ interface DetailProduct {
 
 interface Props {
   product: DetailProduct;
+  /** Build product URL (default: legacy hash route). Prefer `/product/[slug]` for speed. */
+  productLink?: (slug: string) => string;
   relatedProducts?: {
     id: string;
     slug: string;
@@ -93,7 +95,13 @@ const BADGE_CLASS: Record<string, string> = {
 
 type RelatedProduct = NonNullable<Props["relatedProducts"]>[number];
 
-function RelatedProductCard({ rp }: { rp: RelatedProduct }) {
+function RelatedProductCard({
+  rp,
+  productLink
+}: {
+  rp: RelatedProduct;
+  productLink: (slug: string) => string;
+}) {
   const { toggleWishlist, isWishlisted } = useWishlist();
   const wishlisted = isWishlisted(rp.id, undefined);
   const disc =
@@ -105,7 +113,7 @@ function RelatedProductCard({ rp }: { rp: RelatedProduct }) {
   return (
     <div className="pc" style={{ textDecoration: "none" }}>
       <div className="pc-img-wrap">
-        <a href={`/#/product/${rp.slug}`} style={{ display: "block", textDecoration: "none" }}>
+        <a href={productLink(rp.slug)} style={{ display: "block", textDecoration: "none" }}>
           <img src={rp.image} alt={rp.name} className="pc-img" />
         </a>
         <button
@@ -139,7 +147,7 @@ function RelatedProductCard({ rp }: { rp: RelatedProduct }) {
       </div>
       <div className="pc-body">
         <span className="pc-cat">{rp.category}</span>
-        <a href={`/#/product/${rp.slug}`} className="pc-name" style={{ textDecoration: "none" }}>
+        <a href={productLink(rp.slug)} className="pc-name" style={{ textDecoration: "none" }}>
           {rp.name}
         </a>
         <div className="pc-price-row">
@@ -155,7 +163,12 @@ function fmt(price: number) {
   return `৳${price.toLocaleString("en-BD")}`;
 }
 
-export function ProductDetailView({ product, relatedProducts = [], onBack }: Props) {
+export function ProductDetailView({
+  product,
+  relatedProducts = [],
+  productLink = (slug) => `/#/product/${slug}`,
+  onBack
+}: Props) {
   const router = useRouter();
   const { addToCart, buyNow } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
@@ -553,7 +566,7 @@ export function ProductDetailView({ product, relatedProducts = [], onBack }: Pro
           </div>
           <div className="product-row-scroll">
             {relatedProducts.map((rp) => (
-              <RelatedProductCard key={rp.id} rp={rp} />
+              <RelatedProductCard key={rp.id} rp={rp} productLink={productLink} />
             ))}
           </div>
         </div>

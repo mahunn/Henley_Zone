@@ -8,8 +8,10 @@ import { formatCurrency } from "@/lib/money";
 import { defaultBusiness } from "@/config/businesses";
 import { Product } from "@/types/commerce";
 import { productMatchesSearch } from "@/lib/product-search";
+import { seedProducts } from "@/data/seed-products";
 import { getProductsCatalog, getSyncedProductCatalog } from "@/lib/product-catalog-client";
 import { animateFlyToCart } from "@/lib/cart-fly-animation";
+import { productPagePath } from "@/lib/product-url";
 
 const CARD_SIZE_OPTIONS = ["36", "38", "40", "42", "44", "46", "48"];
 
@@ -52,7 +54,7 @@ function StoreCard({ product }: { product: Product }) {
     <article className="product-card" style={{ position: "relative" }}>
       {/* Image — clicking goes to hash product detail */}
       <div style={{ position: "relative" }}>
-        <a href={`/#/product/${product.slug}`} style={{ display: "block" }}>
+        <a href={productPagePath(product.slug)} style={{ display: "block" }}>
           <img
             ref={cardImgRef}
             src={displayImage}
@@ -156,7 +158,7 @@ function StoreCard({ product }: { product: Product }) {
           className="pc-bottom-btn pc-btn-buy"
           type="button"
           onClick={() => {
-            router.push(`/#/product/${product.slug}`);
+            router.push(productPagePath(product.slug));
           }}
         >
           Buy Now
@@ -276,8 +278,8 @@ export default function StorePage() {
 
 function StorePageContent() {
   const searchParams = useSearchParams();
-  const [products, setProducts] = useState<Product[]>(() => getSyncedProductCatalog() ?? []);
-  const [loading, setLoading] = useState(() => getSyncedProductCatalog() === null);
+  const [products, setProducts] = useState<Product[]>(() => getSyncedProductCatalog() ?? [...seedProducts]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const router = useRouter();
@@ -290,10 +292,13 @@ function StorePageContent() {
       })
       .catch(() => {
         setError("Could not load products.");
-      })
-      .finally(() => {
-        setLoading(false);
       });
+
+    const onCatalog = () => {
+      void getProductsCatalog().then((list) => setProducts(list));
+    };
+    window.addEventListener("hz:catalog-updated", onCatalog);
+    return () => window.removeEventListener("hz:catalog-updated", onCatalog);
   }, []);
 
   const categories = useMemo(

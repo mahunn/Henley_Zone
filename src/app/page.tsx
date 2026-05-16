@@ -1,29 +1,17 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart-provider";
 import { useWishlist } from "@/components/wishlist-provider";
 import { CountdownTimer } from "@/components/shop/countdown-timer";
 import { animateFlyToCart } from "@/lib/cart-fly-animation";
-
-const ProductDetailView = dynamic(
-  () => import("@/components/shop/product-detail-view").then((m) => m.ProductDetailView),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="container" style={{ padding: "48px 16px", textAlign: "center" }}>
-        <p style={{ color: "var(--color-text-secondary)" }}>Loading product…</p>
-      </div>
-    )
-  }
-);
 import { seedProducts } from "@/data/seed-products";
 import { categories } from "@/data/categories";
 import type { Product } from "@/types/commerce";
 import { getProductsCatalog, getSyncedProductCatalog } from "@/lib/product-catalog-client";
-import { mapProductToPdpDetail } from "@/lib/product-detail-mapper";
+import { productPagePath } from "@/lib/product-url";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 interface ColorVariant {
@@ -59,54 +47,6 @@ function productToStoreProduct(p: Product): StoreProduct {
     colors: p.colors,
     sizes: p.sizes
   };
-}
-
-/* ─── Detail product lookup (catalog from API = seed + DB) ─────── */
-function buildDetailProduct(slug: string, catalog: Product[]) {
-  // NAKSHI example from style.json
-  if (slug === "nakshi-tw-7") {
-    return {
-      id: "nakshi-tw-7",
-      slug: "nakshi-tw-7",
-      name: "NAKSHI - TW-7",
-      sku: "#TH-7",
-      brand: "ANS FASHION",
-      categories: ["KURTI", "Two piece"],
-      price: 799,
-      originalPrice: undefined as number | undefined,
-      stock: 31,
-      badge: "Top",
-      colors: [
-        { id: "c1", label: "Olive Green", swatchImage: "https://placehold.co/52x62/6b7c5a/fff?text=GRN" },
-        { id: "c2", label: "Blue", swatchImage: "https://placehold.co/52x62/0ea5e9/fff?text=BLU" }
-      ],
-      sizes: ["36", "38", "40", "42", "44", "46", "48"],
-      images: [
-        "https://placehold.co/500x620/e0f2fe/0284c7?text=NAKSHI+TW7+Main",
-        "https://placehold.co/500x620/e0f2fe/0284c7?text=NAKSHI+TW7+Alt"
-      ],
-      descriptionPoints: [
-        "দারুণ স্টাইলিশ ও কোয়ালিটি পণ্য",
-        "প্রিমিয়াম সুতি কাপড়",
-        "মারাত্মক এমব্রয়ডারি",
-        "কালার গ্যারান্টি ক্লিন প্রিন্ট",
-        "সাদা সালোয়ার সহ",
-        "সাইজ ৩৬ থেকে ৪৮"
-      ],
-      specifications: [
-        { label: "Category", value: "KURTI / Two piece" },
-        { label: "Brand", value: "ANS FASHION" },
-        { label: "Size range", value: "36 – 48" },
-        { label: "Material", value: "Premium Cotton" },
-        { label: "Embroidery", value: "Sequence embroidery" },
-        { label: "SKU", value: "#TH-7" }
-      ]
-    };
-  }
-
-  const found = catalog.find((p) => p.slug === slug);
-  if (!found) return null;
-  return mapProductToPdpDetail(found);
 }
 
 /* ─── fmt ────────────────────────────────────────────────────── */
@@ -169,7 +109,7 @@ function ProductCard({
   return (
     <div className="pc">
       <div className="pc-img-wrap">
-        <a href={`/#/product/${product.slug}`} style={{ textDecoration: "none", display: "block" }}>
+        <a href={productPagePath(product.slug)} style={{ textDecoration: "none", display: "block" }}>
           <img ref={cardImgRef} src={displayImage} alt={`${product.name}${activeLabel ? ` – ${activeLabel}` : ""}`} className="pc-img" />
         </a>
         <button
@@ -209,7 +149,7 @@ function ProductCard({
 
       <div className="pc-body">
         <span className="pc-cat">{product.category}</span>
-        <a href={`/#/product/${product.slug}`} className="pc-name" style={{ textDecoration: "none" }}>
+        <a href={productPagePath(product.slug)} className="pc-name" style={{ textDecoration: "none" }}>
           {product.name}
         </a>
         <div className="pc-stars">☆☆☆☆☆</div>
@@ -584,7 +524,7 @@ function HomePage({
               {flashDealProducts.map((fd) => (
                 <a
                   key={fd.id}
-                  href={`/#/product/${fd.slug}`}
+                  href={productPagePath(fd.slug)}
                   className="flash-card"
                   style={{ textDecoration: "none" }}
                 >
@@ -652,45 +592,32 @@ function HomePage({
   );
 }
 
-/* ─── Main Page (Hash Router) ───────────────────────────────── */
+/* ─── Main Page ─────────────────────────────────────────────── */
 export default function Page() {
+  const router = useRouter();
   const { addToCart } = useCart();
-  const [view, setView] = useState<"home" | "product">("home");
-  const [productSlug, setProductSlug] = useState("");
   const [catalog, setCatalog] = useState<Product[]>(() => getSyncedProductCatalog() ?? seedProducts);
 
   useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.startsWith("#/product/")) {
+      const slug = hash.replace("#/product/", "").split("?")[0];
+      router.replace(productPagePath(slug));
+      return;
+    }
+
     void getProductsCatalog()
       .then(setCatalog)
       .catch(() => {});
-  }, []);
+
+    const onCatalog = () => {
+      void getProductsCatalog().then(setCatalog);
+    };
+    window.addEventListener("hz:catalog-updated", onCatalog);
+    return () => window.removeEventListener("hz:catalog-updated", onCatalog);
+  }, [router]);
 
   const storeCatalog = useMemo(() => catalog.map(productToStoreProduct), [catalog]);
-
-  // Parse hash and update view
-  const parseHash = useCallback(() => {
-    const hash = window.location.hash;
-    if (hash.startsWith("#/product/")) {
-      setProductSlug(hash.replace("#/product/", "").split("?")[0]);
-      setView("product");
-    } else {
-      setView("home");
-    }
-  }, []);
-
-  useEffect(() => {
-    parseHash();
-    window.addEventListener("hashchange", parseHash);
-    return () => window.removeEventListener("hashchange", parseHash);
-  }, [parseHash]);
-
-  useEffect(() => {
-    if (view !== "product") return;
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    });
-  }, [view, productSlug]);
 
   function handleAddToCart(
     p: StoreProduct,
@@ -709,48 +636,7 @@ export default function Page() {
   }
 
   function handleBuyNow(p: StoreProduct) {
-    // Open PDP first so customer can choose size/color before checkout.
-    window.location.hash = `#/product/${p.slug}`;
-  }
-
-  // Product Detail View
-  if (view === "product") {
-    const detail = buildDetailProduct(productSlug, catalog);
-    if (!detail) {
-      return (
-        <div className="container" style={{ padding: "48px 16px", textAlign: "center" }}>
-          <h2 style={{ fontFamily: "var(--font-heading, serif)", marginBottom: 12 }}>
-            Product not found
-          </h2>
-          <a href="/#/" className="btn">← Back to Home</a>
-        </div>
-      );
-    }
-
-    const related = storeCatalog
-      .filter((p) => p.slug !== productSlug)
-      .slice(0, 6)
-      .map((p) => ({
-        id: p.id,
-        slug: p.slug,
-        name: p.name,
-        category: p.category,
-        image: p.image,
-        price: p.price,
-        originalPrice: p.originalPrice,
-        discountPercent: p.discountPercent,
-        badge: p.badge
-      }));
-
-    return (
-      <ProductDetailView
-        product={detail}
-        relatedProducts={related}
-        onBack={() => {
-          window.location.hash = "#/";
-        }}
-      />
-    );
+    router.push(productPagePath(p.slug));
   }
 
   return (

@@ -10,6 +10,7 @@ import { Product } from "@/types/commerce";
 import { filterProductsBySearch } from "@/lib/product-search";
 import { getProductsCatalog, getSyncedProductCatalog } from "@/lib/product-catalog-client";
 import { HeaderLoginLink } from "@/components/layout/header-login-link";
+import { productPagePath } from "@/lib/product-url";
 
 function SearchIcon() {
   return (
@@ -235,7 +236,7 @@ export function SiteHeader() {
                         return (
                           <a
                             key={p.id}
-                            href={`/#/product/${p.slug}`}
+                            href={productPagePath(p.slug)}
                             className="search-dropdown-item"
                             onClick={() => {
                               setIsSearchFocused(false);
