@@ -1,6 +1,6 @@
 /* ─────────────────────────────────────────────────────────────────────
    Henley Zone Arif — Global Styles
-   Fonts injected via next/font (--font-heading, --font-body as CSS vars)
+   Fonts: Noto Sans Bengali (--font-bn) — primary for Bangladeshi customers
    ───────────────────────────────────────────────────────────────────── */
 
 :root {
@@ -36,6 +36,10 @@
   --color-badge-new: #22c55e;
   --color-badge-top: #f59e0b;
   --color-badge-flash: #8b5cf6;
+
+  /* Bangla-first typography (Noto Sans Bengali from layout) */
+  --font-body: var(--font-bn, "Noto Sans Bengali"), "Kalpurush", sans-serif;
+  --font-heading: var(--font-bn, "Noto Sans Bengali"), "Kalpurush", sans-serif;
 }
 
 /* ─── Reset ──────────────────────────────────────────────────────── */
@@ -52,16 +56,17 @@ html,
 body {
   background: var(--color-bg);
   color: var(--color-text-primary);
-  font-family: var(--font-body, "DM Sans", "Segoe UI", sans-serif);
-  font-size: 15px;
-  line-height: 1.6;
+  font-family: var(--font-bn, "Noto Sans Bengali"), "Kalpurush", "Hind Siliguri", "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading, "Playfair Display", Georgia, serif);
-  line-height: 1.2;
+  font-family: var(--font-bn, "Noto Sans Bengali"), "Kalpurush", "Hind Siliguri", sans-serif;
+  line-height: 1.35;
+  font-weight: 700;
 }
 
 a {

@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { defaultBusiness, businessTelHref, businessWhatsappChatUrl } from "@/config/businesses";
 import { FooterDeveloperCredit } from "@/components/layout/footer-developer-credit";
+import { bn } from "@/config/ui-bn";
 
 export function SiteFooter() {
   return (
     <footer className="site-footer">
       <div className="container">
         <div className="footer-grid">
-          {/* Brand column */}
           <div>
             <div className="footer-brand-name">{defaultBusiness.name}</div>
             <p className="footer-brand-text">
@@ -29,52 +29,47 @@ export function SiteFooter() {
                 WhatsApp
               </a>
               <br />
-              📍 Dhaka, Bangladesh
+              📍 {bn.footer.location}
             </p>
           </div>
 
-          {/* Categories */}
           <div>
-            <div className="footer-col-title">Categories</div>
+            <div className="footer-col-title">{bn.footer.categories}</div>
             <div className="footer-links">
-              <Link href="/store?category=Salwar+Kameez">Salwar Kameez</Link>
-              <Link href="/store?category=Two+Pieces">Two Pieces</Link>
-              <Link href="/store?category=Frogs">Frogs</Link>
-              <Link href="/store?category=Gown">Gown</Link>
-              <Link href="/store?category=Plazo">Plazo</Link>
-              <Link href="/store">All Products</Link>
+              <Link href="/store?category=Salwar+Kameez">{bn.categories["Salwar Kameez"]}</Link>
+              <Link href="/store?category=Two+Pieces">{bn.categories["Two Pieces"]}</Link>
+              <Link href="/store?category=Frogs">{bn.categories.Frogs}</Link>
+              <Link href="/store?category=Gown">{bn.categories.Gown}</Link>
+              <Link href="/store?category=Plazo">{bn.categories.Plazo}</Link>
+              <Link href="/store">{bn.footer.allProducts}</Link>
             </div>
           </div>
 
-          {/* Information */}
           <div>
-            <div className="footer-col-title">Information</div>
+            <div className="footer-col-title">{bn.footer.information}</div>
             <div className="footer-links">
-              <Link href="/contact">Contact Us</Link>
-              <Link href="/shipping-policy">Shipping Policy</Link>
-              <Link href="/return-policy">Return Policy</Link>
-              <Link href="/privacy-policy">Privacy Policy</Link>
-              <Link href="/terms">Terms &amp; Service</Link>
+              <Link href="/contact">{bn.footer.contact}</Link>
+              <Link href="/shipping-policy">{bn.footer.shipping}</Link>
+              <Link href="/return-policy">{bn.footer.returns}</Link>
+              <Link href="/privacy-policy">{bn.footer.privacy}</Link>
+              <Link href="/terms">{bn.footer.terms}</Link>
             </div>
             <Link href="/admin/login" className="footer-admin-login-mobile">
-              Admin Login
+              {bn.nav.admin} Login
             </Link>
           </div>
 
-          {/* Newsletter + developer credit (customer storefront only) */}
           <div className="footer-newsletter-col">
-            <div className="footer-col-title">Newsletter</div>
-            <p className="footer-brand-text">
-              নতুন পণ্য ও অফার পেতে সাবস্ক্রাইব করুন।
-            </p>
+            <div className="footer-col-title">{bn.footer.newsletter}</div>
+            <p className="footer-brand-text">{bn.footer.newsletterText}</p>
             <input
               type="email"
-              placeholder="Your e-mail"
+              placeholder={bn.footer.emailPlaceholder}
               className="footer-newsletter-input"
               aria-label="Email for newsletter"
             />
             <button className="btn" style={{ width: "100%", justifyContent: "center" }}>
-              Subscribe
+              {bn.footer.subscribe}
             </button>
             <FooterDeveloperCredit />
           </div>
@@ -82,7 +77,7 @@ export function SiteFooter() {
       </div>
 
       <div className="footer-bottom container">
-        © {new Date().getFullYear()} {defaultBusiness.name}. All rights reserved.
+        © {new Date().getFullYear()} {defaultBusiness.name}. {bn.footer.rights}
       </div>
     </footer>
   );

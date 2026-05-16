@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Playfair_Display, DM_Sans } from "next/font/google";
+import { Noto_Sans_Bengali } from "next/font/google";
 import "./globals.css";
 import { defaultBusiness } from "@/config/businesses";
 import { CartProvider } from "@/components/cart-provider";
@@ -12,17 +12,10 @@ import { CatalogPrefetch } from "@/components/catalog-prefetch";
 import { MetaFacebookPixel } from "@/components/analytics/meta-facebook-pixel";
 import { getMetaPixelEnv } from "@/lib/meta-pixel-config";
 
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-heading",
-  weight: ["400", "600", "700"],
-  display: "swap"
-});
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-body",
-  weight: ["300", "400", "500", "600", "700"],
+const notoBengali = Noto_Sans_Bengali({
+  subsets: ["bengali"],
+  variable: "--font-bn",
+  weight: ["400", "500", "600", "700"],
   display: "swap"
 });
 
@@ -39,7 +32,7 @@ export default function RootLayout({
   const { pixelId: metaPixelId, testEventCode: metaPixelTest } = getMetaPixelEnv();
 
   return (
-    <html lang="en" className={`${playfair.variable} ${dmSans.variable}`} suppressHydrationWarning>
+    <html lang="bn" className={notoBengali.variable} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <CartProvider>
           <WishlistProvider>

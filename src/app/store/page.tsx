@@ -12,6 +12,7 @@ import { seedProducts } from "@/data/seed-products";
 import { getProductsCatalog, getSyncedProductCatalog } from "@/lib/product-catalog-client";
 import { animateFlyToCart } from "@/lib/cart-fly-animation";
 import { productPagePath } from "@/lib/product-url";
+import { bn, categoryLabelBn } from "@/config/ui-bn";
 
 const CARD_SIZE_OPTIONS = ["36", "38", "40", "42", "44", "46", "48"];
 
@@ -152,7 +153,7 @@ function StoreCard({ product }: { product: Product }) {
             setPickerOpen(true);
           }}
         >
-          {justAdded ? "Added ✓" : "Add to Cart"}
+          {justAdded ? bn.product.addedToCart : bn.product.addToCart}
         </button>
         <button
           className="pc-bottom-btn pc-btn-buy"
@@ -161,7 +162,7 @@ function StoreCard({ product }: { product: Product }) {
             router.push(productPagePath(product.slug));
           }}
         >
-          Buy Now
+          {bn.product.buyNow}
         </button>
       </div>
       {pickerOpen && (
@@ -170,12 +171,12 @@ function StoreCard({ product }: { product: Product }) {
             className="variant-picker-card-modal"
           >
             <div className="variant-picker-content">
-              <h3 style={{ marginBottom: 8, fontFamily: "var(--font-heading, serif)" }}>Choose options</h3>
+              <h3 style={{ marginBottom: 8 }}>{bn.product.chooseOptions}</h3>
               <p style={{ marginBottom: 12, color: "var(--color-text-secondary)", fontSize: 13 }}>{product.name}</p>
               {colors.length > 0 && (
                 <>
                   <p className="selector-label" style={{ marginBottom: 8 }}>
-                    Color: {colors[activeIdx]?.label}
+                    {bn.product.color}: {colors[activeIdx]?.label}
                   </p>
                   <div className="pc-color-swatches variant-picker-swatches">
                     {colors.map((color, i) => (
@@ -194,7 +195,7 @@ function StoreCard({ product }: { product: Product }) {
                 </>
               )}
               <p className="selector-label" style={{ marginBottom: 8 }}>
-                Size: {selectedSize ?? "Select size"}
+                {bn.product.size}: {selectedSize ?? bn.product.selectSize}
               </p>
               <div className="size-grid variant-picker-sizes">
                 {sizes.map((sz) => (
@@ -210,7 +211,7 @@ function StoreCard({ product }: { product: Product }) {
               </div>
             </div>
             <div className="variant-picker-actions">
-              <button className="btn btn-secondary" onClick={() => setPickerOpen(false)}>Cancel</button>
+              <button className="btn btn-secondary" onClick={() => setPickerOpen(false)}>{bn.product.cancel}</button>
               <button
                 className="btn"
                 disabled={!selectedSize}
@@ -291,7 +292,7 @@ function StorePageContent() {
         setError("");
       })
       .catch(() => {
-        setError("Could not load products.");
+        setError(bn.store.loadError);
       });
 
     const onCatalog = () => {
@@ -333,7 +334,7 @@ function StorePageContent() {
           className={`chip${activeCategory === "all" ? " chip-active" : ""}`}
           onClick={() => { setActiveCategory("all"); router.push("/store"); }}
         >
-          All
+          {bn.categories.all}
         </button>
         {categories.map((cat) => (
           <button
@@ -341,7 +342,7 @@ function StorePageContent() {
             className={`chip${activeCategory === cat ? " chip-active" : ""}`}
             onClick={() => { setActiveCategory(cat); router.push(`/store?category=${encodeURIComponent(cat)}`); }}
           >
-            {cat}
+            {categoryLabelBn(cat)}
           </button>
         ))}
       </div>

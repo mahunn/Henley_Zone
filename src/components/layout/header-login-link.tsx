@@ -9,7 +9,7 @@ type HeaderLoginLinkProps = {
 
 export function HeaderLoginLink({ icon }: HeaderLoginLinkProps) {
   const [href, setHref] = useState("/login");
-  const [label, setLabel] = useState("Login");
+  const [label, setLabel] = useState("লগইন");
 
   useEffect(() => {
     let cancelled = false;
@@ -17,7 +17,7 @@ export function HeaderLoginLink({ icon }: HeaderLoginLinkProps) {
       .then((res) => {
         if (cancelled || !res.ok) return;
         setHref("/admin");
-        setLabel("Admin");
+        setLabel("অ্যাডমিন");
       })
       .catch(() => {});
     return () => {

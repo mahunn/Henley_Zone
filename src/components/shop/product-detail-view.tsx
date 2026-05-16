@@ -4,6 +4,7 @@ import { useState, useLayoutEffect } from "react";
 import { useCart } from "@/components/cart-provider";
 import { useWishlist } from "@/components/wishlist-provider";
 import { useRouter } from "next/navigation";
+import { bn } from "@/config/ui-bn";
 
 interface ProductColor {
   id: string;
@@ -226,7 +227,7 @@ export function ProductDetailView({
 
   function handleAddToCart() {
     if (!activeColor || !activeSize) {
-      setVariantError("Please select both color and size first.");
+      setVariantError(bn.product.selectColorSize);
       return;
     }
     setVariantError("");
@@ -240,7 +241,7 @@ export function ProductDetailView({
 
   function handleBuyNow() {
     if (!activeColor || !activeSize) {
-      setVariantError("Please select both color and size first.");
+      setVariantError(bn.product.selectColorSize);
       return;
     }
     setVariantError("");
@@ -318,7 +319,7 @@ export function ProductDetailView({
           {/* Rating + Stock */}
           <div className="pdp-rating-row">
             <StarRow count={0} />
-            <span className="pdp-in-stock">✓ In Stock ({product.stock} items)</span>
+            <span className="pdp-in-stock">✓ {bn.product.inStock} ({product.stock} {bn.product.items})</span>
           </div>
 
           {/* Price */}
@@ -334,14 +335,14 @@ export function ProductDetailView({
 
           {/* Brand link */}
           <div style={{ fontSize: 13, color: "var(--color-text-secondary)", fontFamily: "var(--font-body, sans-serif)" }}>
-            Brand: <span style={{ color: "var(--color-primary)", fontWeight: 600 }}>{product.brand}</span>
+            {bn.product.brand}: <span style={{ color: "var(--color-primary)", fontWeight: 600 }}>{product.brand}</span>
           </div>
 
           {/* Color Selector */}
           {product.colors.length > 0 && (
             <div>
               <p className="selector-label">
-                Color:{" "}
+                {bn.product.color}:{" "}
                 {activeColor
                   ? product.colors.find((c) => c.id === activeColor)?.label
                   : ""}
@@ -366,7 +367,7 @@ export function ProductDetailView({
           {/* Size Selector */}
           {product.sizes.length > 0 && (
             <div>
-              <p className="selector-label">Size: {activeSize ?? "Select size"}</p>
+              <p className="selector-label">{bn.product.size}: {activeSize ?? bn.product.selectSize}</p>
               <div className="size-grid">
                 {product.sizes.map((sz) => (
                   <button
@@ -409,10 +410,10 @@ export function ProductDetailView({
               </button>
             </div>
             <button className="btn" onClick={handleAddToCart}>
-              Add to Cart
+              {bn.product.addToCart}
             </button>
             <button className="btn btn-dark" onClick={handleBuyNow}>
-              Buy Now
+              {bn.product.buyNow}
             </button>
           </div>
           {variantError && (
@@ -486,7 +487,7 @@ export function ProductDetailView({
               className={`tab-btn${activeTab === tab ? " active" : ""}`}
               onClick={() => setActiveTab(tab)}
             >
-              {tab === "descriptions" ? "Descriptions" : tab === "specifications" ? "Specifications" : "Latest Reviews"}
+              {tab === "descriptions" ? bn.product.descriptions : tab === "specifications" ? bn.product.specifications : bn.product.reviews}
             </button>
           ))}
         </div>
@@ -562,7 +563,7 @@ export function ProductDetailView({
       {relatedProducts.length > 0 && (
         <div className="fancy-section" style={{ marginTop: 36 }}>
           <div className="fancy-title-row">
-            <h2 className="fancy-title">Related Products</h2>
+            <h2 className="fancy-title">{bn.product.related}</h2>
           </div>
           <div className="product-row-scroll">
             {relatedProducts.map((rp) => (

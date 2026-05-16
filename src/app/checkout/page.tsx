@@ -8,18 +8,19 @@ import { defaultBusiness } from "@/config/businesses";
 import { DELIVERY_FEE_INSIDE_DHAKA, DELIVERY_FEE_OUTSIDE_DHAKA } from "@/config/delivery";
 import { formatCurrency } from "@/lib/money";
 import { Order } from "@/types/commerce";
+import { bn } from "@/config/ui-bn";
 
 const DELIVERY_OPTIONS = [
   {
     id: "inside",
     icon: "🏙️",
-    title: "Inside Dhaka",
+    title: bn.checkout.insideDhaka,
     fee: DELIVERY_FEE_INSIDE_DHAKA
   },
   {
     id: "outside",
     icon: "🚚",
-    title: "Outside Dhaka",
+    title: bn.checkout.outsideDhaka,
     fee: DELIVERY_FEE_OUTSIDE_DHAKA
   }
 ] as const;
@@ -47,17 +48,17 @@ export default function CheckoutPage() {
     e.preventDefault();
     setError("");
 
-    if (!items.length) { setError("Your cart is empty."); return; }
+    if (!items.length) { setError(bn.checkout.errors.emptyCart); return; }
     if (!customerName.trim() || !cleanedPhone || !address.trim()) {
-      setError("Please fill in all required fields.");
+      setError(bn.checkout.errors.required);
       return;
     }
     if (!/^\+?[0-9]{10,15}$/.test(cleanedPhone)) {
-      setError("Please enter a valid phone number (10–15 digits).");
+      setError(bn.checkout.errors.phone);
       return;
     }
     if (!termsAccepted) {
-      setError("Please accept the terms & conditions to continue.");
+      setError(bn.checkout.errors.terms);
       return;
     }
 
@@ -84,19 +85,19 @@ export default function CheckoutPage() {
       });
       const data = (await res.json()) as { order?: Order; message?: string };
       if (!res.ok) {
-        setError(data.message || "Failed to place order. Please try again.");
+        setError(data.message || bn.checkout.errors.failed);
         return;
       }
       const order = data.order ?? ({ ...orderPayload, id: "" } as Order);
       if (!order.id) {
-        setError("Order was placed but no order id was returned. Please contact support.");
+        setError(bn.checkout.errors.noOrderId);
         return;
       }
       localStorage.setItem("latestOrder", JSON.stringify(order));
       clearCart();
       router.push("/checkout/success");
     } catch {
-      setError("Network error. Please check your connection and try again.");
+      setError(bn.checkout.errors.network);
     } finally {
       setSubmitting(false);
     }
@@ -107,21 +108,21 @@ export default function CheckoutPage() {
 
       {/* Breadcrumb */}
       <nav className="cart-breadcrumb" aria-label="Breadcrumb">
-        <Link href="/">Home</Link>
+        <Link href="/">{bn.checkout.breadcrumbHome}</Link>
         <span>›</span>
-        <Link href="/cart">Cart</Link>
+        <Link href="/cart">{bn.checkout.breadcrumbCart}</Link>
         <span>›</span>
-        <span style={{ color: "var(--color-text-primary)", fontWeight: 500 }}>Checkout</span>
+        <span style={{ color: "var(--color-text-primary)", fontWeight: 500 }}>{bn.checkout.breadcrumbCheckout}</span>
       </nav>
 
-      <h1 className="cart-page-title">Checkout</h1>
+      <h1 className="cart-page-title">{bn.checkout.title}</h1>
 
       {items.length === 0 ? (
         <div className="cart-empty-state">
-          <p style={{ color: "var(--color-text-secondary)", marginBottom: 20, fontFamily: "var(--font-body, sans-serif)" }}>
-            Your cart is empty. Add some products first.
+          <p style={{ color: "var(--color-text-secondary)", marginBottom: 20 }}>
+            {bn.checkout.empty}
           </p>
-          <Link href="/store" className="btn">Browse Products →</Link>
+          <Link href="/store" className="btn">{bn.checkout.browse}</Link>
         </div>
       ) : (
         <form onSubmit={submitOrder}>
@@ -134,10 +135,10 @@ export default function CheckoutPage() {
               <div style={{ background: "#fff", border: "1.5px solid var(--color-border)", borderRadius: 14, padding: "16px 20px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                   <h2 className="checkout-section-title" style={{ margin: 0, border: "none", padding: 0 }}>
-                    Your Order
+                    {bn.checkout.yourOrder}
                   </h2>
-                  <Link href="/cart" style={{ fontSize: 13, color: "var(--color-primary)", fontWeight: 600, fontFamily: "var(--font-body, sans-serif)" }}>
-                    Edit cart
+                  <Link href="/cart" style={{ fontSize: 13, color: "var(--color-primary)", fontWeight: 600 }}>
+                    {bn.checkout.editCart}
                   </Link>
                 </div>
                 <div className="order-review-list">
@@ -154,12 +155,12 @@ export default function CheckoutPage() {
                         />
                         <div className="order-review-info">
                           <div className="order-review-name">{item.name}</div>
-                          <div className="order-review-qty">Qty: {item.quantity}</div>
+                          <div className="order-review-qty">{bn.checkout.qty}: {item.quantity}</div>
                           {(item.selectedColor || item.selectedSize) && (
                             <div className="order-review-qty">
-                              {item.selectedColor ? `Color: ${item.selectedColor}` : ""}
+                              {item.selectedColor ? `${bn.product.color}: ${item.selectedColor}` : ""}
                               {item.selectedColor && item.selectedSize ? " · " : ""}
-                              {item.selectedSize ? `Size: ${item.selectedSize}` : ""}
+                              {item.selectedSize ? `${bn.product.size}: ${item.selectedSize}` : ""}
                             </div>
                           )}
                         </div>
@@ -174,15 +175,15 @@ export default function CheckoutPage() {
 
               {/* Billing Details Form */}
               <div style={{ background: "#fff", border: "1.5px solid var(--color-border)", borderRadius: 14, padding: "20px 20px 24px" }}>
-                <h2 className="checkout-section-title">Billing Information</h2>
+                <h2 className="checkout-section-title">{bn.checkout.billing}</h2>
                 <div className="billing-form">
                   <div className="form-group">
-                    <label htmlFor="co-name" className="form-label">Full Name *</label>
+                    <label htmlFor="co-name" className="form-label">{bn.checkout.fullName}</label>
                     <input
                       id="co-name"
                       type="text"
                       className="form-input"
-                      placeholder="e.g. Fatema Akter"
+                      placeholder={bn.checkout.namePlaceholder}
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
                       required
@@ -191,12 +192,12 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="co-phone" className="form-label">Phone Number *</label>
+                    <label htmlFor="co-phone" className="form-label">{bn.checkout.phone}</label>
                     <input
                       id="co-phone"
                       type="tel"
                       className="form-input"
-                      placeholder="e.g. 01XXXXXXXXX"
+                      placeholder={bn.checkout.phonePlaceholder}
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       required
@@ -205,11 +206,11 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="co-address" className="form-label">Full Address *</label>
+                    <label htmlFor="co-address" className="form-label">{bn.checkout.address}</label>
                     <textarea
                       id="co-address"
                       className="form-textarea"
-                      placeholder="House, Road, Area, District"
+                      placeholder={bn.checkout.addressPlaceholder}
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       required
@@ -219,11 +220,14 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="co-note" className="form-label">Order Note <span style={{ textTransform: "none", letterSpacing: 0, fontWeight: 400 }}>(optional)</span></label>
+                    <label htmlFor="co-note" className="form-label">
+                      {bn.checkout.note}{" "}
+                      <span style={{ textTransform: "none", letterSpacing: 0, fontWeight: 400 }}>{bn.checkout.noteOptional}</span>
+                    </label>
                     <textarea
                       id="co-note"
                       className="form-textarea"
-                      placeholder="Special instructions, color preference, etc."
+                      placeholder={bn.checkout.notePlaceholder}
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
                       rows={2}
@@ -237,19 +241,18 @@ export default function CheckoutPage() {
             <div>
               <div className="checkout-summary-card">
                 <h2 style={{ fontFamily: "var(--font-heading, serif)", fontSize: "1.15rem", fontWeight: 700, color: "var(--color-text-primary)", paddingBottom: 12, borderBottom: "1.5px solid var(--color-border)" }}>
-                  Order Summary
+                  {bn.checkout.summary}
                 </h2>
 
-                {/* Subtotal */}
                 <div className="totals-row">
-                  <span className="totals-label">Subtotal</span>
+                  <span className="totals-label">{bn.checkout.subtotal}</span>
                   <span className="totals-value">{formatCurrency(subtotal, defaultBusiness.currency)}</span>
                 </div>
 
                 {/* Delivery Area */}
                 <div>
                   <p style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--color-text-secondary)", marginBottom: 10, fontFamily: "var(--font-body, sans-serif)" }}>
-                    Delivery Area
+                    {bn.checkout.deliveryArea}
                   </p>
                   <div className="delivery-options">
                     {DELIVERY_OPTIONS.map((opt) => (
@@ -270,7 +273,7 @@ export default function CheckoutPage() {
 
                 {/* Shipping fee row */}
                 <div className="totals-row">
-                  <span className="totals-label">Delivery</span>
+                  <span className="totals-label">{bn.checkout.deliveryFee}</span>
                   <span className="totals-value">{formatCurrency(deliveryFee, defaultBusiness.currency)}</span>
                 </div>
 
@@ -278,7 +281,7 @@ export default function CheckoutPage() {
 
                 {/* Total */}
                 <div className="totals-total-row">
-                  <span className="totals-total-label">Total Payable</span>
+                  <span className="totals-total-label">{bn.checkout.totalPayable}</span>
                   <span className="totals-total-value">{formatCurrency(total, defaultBusiness.currency)}</span>
                 </div>
 
@@ -296,7 +299,7 @@ export default function CheckoutPage() {
                   fontWeight: 600,
                   fontFamily: "var(--font-body, sans-serif)"
                 }}>
-                  💵 Cash on Delivery (COD)
+                  💵 {bn.checkout.cod}
                 </div>
 
                 {/* Error */}
@@ -314,10 +317,11 @@ export default function CheckoutPage() {
                     onChange={(e) => setTermsAccepted(e.target.checked)}
                   />
                   <span>
-                    I agree to the{" "}
-                    <Link href="/terms" style={{ color: "var(--color-primary)", fontWeight: 600 }}>Terms & Conditions</Link>
-                    {" "}and{" "}
-                    <Link href="/return-policy" style={{ color: "var(--color-primary)", fontWeight: 600 }}>Return Policy</Link>
+                    {bn.checkout.terms}{" "}
+                    <Link href="/terms" style={{ color: "var(--color-primary)", fontWeight: 600 }}>{bn.checkout.termsLink}</Link>
+                    {" "}{bn.checkout.and}{" "}
+                    <Link href="/return-policy" style={{ color: "var(--color-primary)", fontWeight: 600 }}>{bn.checkout.returnLink}</Link>{" "}
+                    {bn.checkout.termsEnd}
                   </span>
                 </label>
 
@@ -328,7 +332,7 @@ export default function CheckoutPage() {
                   disabled={submitting || !items.length}
                   style={{ justifyContent: "center", padding: "14px 20px", fontSize: 15, fontWeight: 700 }}
                 >
-                  {submitting ? "Placing Order…" : "Confirm Order →"}
+                  {submitting ? bn.checkout.placing : bn.checkout.confirm}
                 </button>
               </div>
             </div>

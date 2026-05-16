@@ -11,6 +11,7 @@ import { filterProductsBySearch } from "@/lib/product-search";
 import { getProductsCatalog, getSyncedProductCatalog } from "@/lib/product-catalog-client";
 import { HeaderLoginLink } from "@/components/layout/header-login-link";
 import { productPagePath } from "@/lib/product-url";
+import { bn } from "@/config/ui-bn";
 
 function SearchIcon() {
   return (
@@ -170,7 +171,7 @@ export function SiteHeader() {
       <div className="topbar">
         <div className="topbar-inner container">
           <span style={{ opacity: 0.9, fontSize: "12.5px" }}>
-            📍 সারা বাংলাদেশে ক্যাশ অন ডেলিভারি পাওয়া যাচ্ছে
+            📍 {bn.brand.codBanner}
             {" · "}
             <a href={businessTelHref(defaultBusiness)} style={{ color: "inherit", textDecoration: "underline" }}>
               📞 {defaultBusiness.whatsappNumber}
@@ -212,14 +213,14 @@ export function SiteHeader() {
             <form onSubmit={handleSearchSubmit} style={{ display: "flex", width: "100%" }}>
               <input
                 type="search"
-                placeholder="পণ্য খুঁজুন..."
+                placeholder={bn.nav.searchPlaceholder}
                 className="nav-search"
                 aria-label="Search products"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setIsSearchFocused(true)}
               />
-              <button type="submit" className="nav-search-btn" aria-label="Search">
+              <button type="submit" className="nav-search-btn" aria-label={bn.nav.search}>
                 <SearchIcon />
               </button>
             </form>
@@ -281,8 +282,8 @@ export function SiteHeader() {
             <Link
               className={`icon-nav-btn${pathname === "/wishlist" ? " active" : ""}`}
               href="/wishlist"
-              aria-label={`Wishlist${mounted && wishlistCount > 0 ? ` (${wishlistCount})` : ""}`}
-              title="Wishlist"
+              aria-label={`${bn.nav.wishlist}${mounted && wishlistCount > 0 ? ` (${wishlistCount})` : ""}`}
+              title={bn.nav.wishlist}
               onClick={scrollToTopAfterNav}
             >
               <HeartIcon />
@@ -290,7 +291,7 @@ export function SiteHeader() {
                 <span className="cart-badge">{wishlistCount}</span>
               )}
             </Link>
-            <Link className="icon-nav-btn" data-cart-icon="true" href="/cart" aria-label="Cart" title={`Cart (${mounted ? itemCount : 0})`}>
+            <Link className="icon-nav-btn" data-cart-icon="true" href="/cart" aria-label={bn.nav.cart} title={`${bn.nav.cart} (${mounted ? itemCount : 0})`}>
               <CartIcon />
               {mounted && itemCount > 0 && (
                 <span className="cart-badge">{itemCount}</span>
@@ -303,55 +304,55 @@ export function SiteHeader() {
         <nav className="header-nav-links" aria-label="Main navigation">
           <div className="header-nav-links-inner">
             <Link href="/#/" className={navClass(onHomePage)} onClick={clickHomeOrLogo}>
-              Home
+              {bn.nav.home}
             </Link>
             <Link href="/store" className={navClass(onStorePage && !activeCategory)} onClick={scrollToTopAfterNav}>
-              Shop
+              {bn.nav.shop}
             </Link>
             <Link
               href="/store?category=Salwar+Kameez"
               className={navClass(onStorePage && activeCategory === "Salwar Kameez")}
               onClick={scrollToTopAfterNav}
             >
-              Salwar
+              {bn.categories["Salwar Kameez"]}
             </Link>
             <Link
               href="/store?category=Two+Pieces"
               className={navClass(onStorePage && activeCategory === "Two Pieces")}
               onClick={scrollToTopAfterNav}
             >
-              Two Pieces
+              {bn.categories["Two Pieces"]}
             </Link>
             <Link
               href="/store?category=Three+Pieces"
               className={navClass(onStorePage && activeCategory === "Three Pieces")}
               onClick={scrollToTopAfterNav}
             >
-              Three Pieces
+              {bn.categories["Three Pieces"]}
             </Link>
             <Link
               href="/store?category=Frogs"
               className={navClass(onStorePage && activeCategory === "Frogs")}
               onClick={scrollToTopAfterNav}
             >
-              Frogs
+              {bn.categories.Frogs}
             </Link>
             <Link
               href="/store?category=Gown"
               className={navClass(onStorePage && activeCategory === "Gown")}
               onClick={scrollToTopAfterNav}
             >
-              Gown
+              {bn.categories.Gown}
             </Link>
             <Link
               href="/store?category=Plazo"
               className={navClass(onStorePage && activeCategory === "Plazo")}
               onClick={scrollToTopAfterNav}
             >
-              Plazo
+              {bn.categories.Plazo}
             </Link>
             <Link href="/contact" className={navClass(pathname === "/contact")} onClick={scrollToTopAfterNav}>
-              Contact
+              {bn.nav.contact}
             </Link>
           </div>
         </nav>

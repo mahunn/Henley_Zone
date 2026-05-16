@@ -6,6 +6,7 @@ import { ProductDetailView } from "@/components/shop/product-detail-view";
 import { getProductsCatalog } from "@/lib/product-catalog-client";
 import { mapProductToPdpDetail, type PdpDetail } from "@/lib/product-detail-mapper";
 import { productPagePath } from "@/lib/product-url";
+import { bn } from "@/config/ui-bn";
 import { seedProducts } from "@/data/seed-products";
 import type { Product } from "@/types/commerce";
 
@@ -89,9 +90,9 @@ export function ProductDetailShell({
   if (!detail) {
     return (
       <div className="container" style={{ padding: "48px 16px", textAlign: "center" }}>
-        <h2 style={{ fontFamily: "var(--font-heading, serif)", marginBottom: 12 }}>Product not found</h2>
+        <h2 style={{ marginBottom: 12 }}>{bn.product.notFound}</h2>
         <a href="/store" className="btn">
-          Browse store
+          {bn.product.browseStore}
         </a>
       </div>
     );

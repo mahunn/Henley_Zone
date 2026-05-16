@@ -12,6 +12,7 @@ import { categories } from "@/data/categories";
 import type { Product } from "@/types/commerce";
 import { getProductsCatalog, getSyncedProductCatalog } from "@/lib/product-catalog-client";
 import { productPagePath } from "@/lib/product-url";
+import { bn } from "@/config/ui-bn";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 interface ColorVariant {
@@ -191,7 +192,7 @@ function ProductCard({
               setPickerOpen(true);
             }}
           >
-            {justAdded ? "Added ✓" : "Add to Cart"}
+            {justAdded ? bn.product.addedToCart : bn.product.addToCart}
           </button>
           <button
             className="pc-bottom-btn pc-btn-buy"
@@ -200,7 +201,7 @@ function ProductCard({
               onBuyNow({ ...product, image: displayImage });
             }}
           >
-            Buy Now
+            {bn.product.buyNow}
           </button>
         </div>
       </div>
@@ -437,7 +438,7 @@ function HomePage({
         />
         <div className="hero-banner-cta-desktop">
           <Link href="/store" className="hero-banner-shop-btn">
-            Shop Now →
+            {bn.home.shopNow}
           </Link>
         </div>
       </div>
@@ -451,7 +452,7 @@ function HomePage({
         {/* ── Categories ── */}
         <section className="fancy-section reveal">
           <div className="fancy-title-row">
-            <h2 className="fancy-title">Shop by Category</h2>
+            <h2 className="fancy-title">{bn.home.shopByCategory}</h2>
           </div>
           <CategoryScrollSection />
         </section>
@@ -477,7 +478,7 @@ function HomePage({
 
         {/* ── New Arrival ── */}
         <ProductRowSection
-          title="New Arrival"
+          title={bn.home.newArrival}
           products={newArrivals}
           viewAllHref="/store?sort=newest"
           onAddToCart={onAddToCart}
@@ -518,7 +519,7 @@ function HomePage({
         {flashDealProducts.length === 2 && (
           <section className="fancy-section reveal">
             <div className="fancy-title-row">
-              <h2 className="fancy-title">Flash Deal</h2>
+              <h2 className="fancy-title">{bn.home.flashDeal}</h2>
             </div>
             <div className="flash-grid">
               {flashDealProducts.map((fd) => (

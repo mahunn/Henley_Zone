@@ -5,6 +5,7 @@ import { useCart } from "@/components/cart-provider";
 import { formatCurrency } from "@/lib/money";
 import { defaultBusiness } from "@/config/businesses";
 import { DELIVERY_FEE_INSIDE_DHAKA, DELIVERY_FEE_OUTSIDE_DHAKA } from "@/config/delivery";
+import { bn } from "@/config/ui-bn";
 
 function TrashIcon() {
   return (
@@ -27,16 +28,16 @@ export default function CartPage() {
 
       {/* Breadcrumb */}
       <nav className="cart-breadcrumb" aria-label="Breadcrumb">
-        <Link href="/">Home</Link>
+        <Link href="/">{bn.nav.home}</Link>
         <span>›</span>
-        <span style={{ color: "var(--color-text-primary)", fontWeight: 500 }}>Cart</span>
+        <span style={{ color: "var(--color-text-primary)", fontWeight: 500 }}>{bn.nav.cart}</span>
       </nav>
 
       <h1 className="cart-page-title">
-        Shopping Cart
+        {bn.cart.title}
         {items.length > 0 && (
           <span className="cart-page-count">
-            ({items.length} {items.length === 1 ? "item" : "items"})
+            ({items.length} {items.length === 1 ? bn.cart.item : bn.cart.items})
           </span>
         )}
       </h1>
@@ -60,12 +61,12 @@ export default function CartPage() {
             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
           </svg>
           <h2 style={{ fontFamily: "var(--font-heading, serif)", fontSize: "1.3rem", marginBottom: 8, color: "var(--color-text-primary)" }}>
-            Your cart is empty
+            {bn.cart.emptyTitle}
           </h2>
-          <p style={{ color: "var(--color-text-secondary)", fontSize: 14, marginBottom: 28, fontFamily: "var(--font-body, sans-serif)" }}>
-            Looks like you haven&apos;t added anything yet.
+          <p style={{ color: "var(--color-text-secondary)", fontSize: 14, marginBottom: 28 }}>
+            {bn.cart.emptyText}
           </p>
-          <Link href="/store" className="btn">Browse Products →</Link>
+          <Link href="/store" className="btn">{bn.cart.browse}</Link>
         </div>
       ) : (
         <div className="cart-layout">
@@ -93,13 +94,13 @@ export default function CartPage() {
                       <div className="cart-item-name">{item.name}</div>
                       {(item.selectedColor || item.selectedSize) && (
                         <div className="cart-item-unit-price" style={{ marginBottom: 4 }}>
-                          {item.selectedColor ? `Color: ${item.selectedColor}` : ""}
+                          {item.selectedColor ? `${bn.product.color}: ${item.selectedColor}` : ""}
                           {item.selectedColor && item.selectedSize ? " · " : ""}
-                          {item.selectedSize ? `Size: ${item.selectedSize}` : ""}
+                          {item.selectedSize ? `${bn.product.size}: ${item.selectedSize}` : ""}
                         </div>
                       )}
                       <div className="cart-item-unit-price">
-                        Unit: {formatCurrency(item.price, defaultBusiness.currency)}
+                        {bn.cart.unit}: {formatCurrency(item.price, defaultBusiness.currency)}
                       </div>
 
                       <div className="cart-item-footer">
@@ -146,11 +147,11 @@ export default function CartPage() {
             {/* Cart actions */}
             <div className="cart-actions-row">
               <Link href="/store" className="btn btn-secondary" style={{ fontSize: 13.5 }}>
-                ← Continue Shopping
+                {bn.cart.continueShopping}
               </Link>
               <button
                 onClick={() => {
-                  if (window.confirm("Are you sure you want to clear all items from cart?")) {
+                  if (window.confirm(bn.cart.clearConfirm)) {
                     clearCart();
                   }
                 }}
@@ -167,7 +168,7 @@ export default function CartPage() {
                   transition: "background 0.18s"
                 }}
               >
-                Clear Cart
+                {bn.cart.clearCart}
               </button>
             </div>
 
@@ -189,11 +190,11 @@ export default function CartPage() {
           {/* ── Right: Totals ── */}
           <div>
             <div className="cart-totals-card">
-              <h2 className="cart-totals-title">Order Summary</h2>
+              <h2 className="cart-totals-title">{bn.cart.summary}</h2>
               <hr className="totals-divider" />
 
               <div className="totals-row">
-                <span className="totals-label">Subtotal ({items.reduce((s, i) => s + i.quantity, 0)} items)</span>
+                <span className="totals-label">{bn.cart.subtotal} ({items.reduce((s, i) => s + i.quantity, 0)} {bn.cart.items})</span>
                 <span className="totals-value">{formatCurrency(subtotal, defaultBusiness.currency)}</span>
               </div>
               <div className="totals-row">
@@ -211,13 +212,13 @@ export default function CartPage() {
                   fontFamily: "var(--font-body, sans-serif)"
                 }}
               >
-                Inside Dhaka / outside Dhaka — you choose at checkout.
+                {bn.cart.deliveryNote}
               </p>
 
               <hr className="totals-divider" />
 
               <div className="totals-total-row">
-                <span className="totals-total-label">Total</span>
+                <span className="totals-total-label">{bn.cart.total}</span>
                 <span className="totals-total-value">
                   {items.length === 0
                     ? formatCurrency(subtotal, defaultBusiness.currency)
@@ -233,7 +234,7 @@ export default function CartPage() {
                 className="btn"
                 style={{ textAlign: "center", justifyContent: "center", padding: "13px 20px", fontSize: 15, fontWeight: 700 }}
               >
-                Proceed to Checkout →
+                {bn.cart.checkout}
               </Link>
 
               <p style={{
@@ -250,7 +251,7 @@ export default function CartPage() {
                   <rect x="3" y="11" width="18" height="11" rx="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
-                Cash on Delivery · সারা বাংলাদেশে
+                {bn.brand.codShort}
               </p>
             </div>
           </div>
