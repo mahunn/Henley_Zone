@@ -2309,7 +2309,9 @@ button {
 .product-grid {
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  /* auto-fill (not auto-fit) keeps spare tracks so a single card does not stretch full width */
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  justify-content: start;
 }
 
 .product-card {
@@ -3566,8 +3568,9 @@ button {
 
 @media (min-width: 768px) {
   .store-skel-grid {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 16px;
+    justify-content: start;
   }
 }
 
