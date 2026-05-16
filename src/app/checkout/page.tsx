@@ -132,9 +132,9 @@ export default function CheckoutPage() {
             <div className="checkout-panel">
 
               {/* Order Items Review */}
-              <div style={{ background: "#fff", border: "1.5px solid var(--color-border)", borderRadius: 14, padding: "16px 20px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <h2 className="checkout-section-title" style={{ margin: 0, border: "none", padding: 0 }}>
+              <div className="checkout-card">
+                <div className="checkout-card-head">
+                  <h2 className="checkout-section-title">
                     {bn.checkout.yourOrder}
                   </h2>
                   <Link href="/cart" style={{ fontSize: 13, color: "var(--color-primary)", fontWeight: 600 }}>
@@ -174,7 +174,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Billing Details Form */}
-              <div style={{ background: "#fff", border: "1.5px solid var(--color-border)", borderRadius: 14, padding: "20px 20px 24px" }}>
+              <div className="checkout-card checkout-card--form">
                 <h2 className="checkout-section-title">{bn.checkout.billing}</h2>
                 <div className="billing-form">
                   <div className="form-group">

@@ -40,6 +40,10 @@
   /* Bangla-first typography (Noto Sans Bengali from layout) */
   --font-body: var(--font-bn, "Noto Sans Bengali"), "Kalpurush", sans-serif;
   --font-heading: var(--font-bn, "Noto Sans Bengali"), "Kalpurush", sans-serif;
+
+  /* Horizontal page gutter — never below 16px (incl. Facebook/Messenger in-app browser) */
+  --page-max: 1100px;
+  --page-gutter: clamp(16px, 4.5vw, 24px);
 }
 
 /* ─── Reset ──────────────────────────────────────────────────────── */
@@ -52,6 +56,11 @@
   padding: 0;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 html,
 body {
   background: var(--color-bg);
@@ -61,6 +70,8 @@ body {
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+  max-width: 100%;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -87,9 +98,12 @@ button {
 /* ─── Layout ─────────────────────────────────────────────────────── */
 
 .container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 16px;
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-left: max(var(--page-gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--page-gutter), env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
 }
 
 /* ─── Topbar ─────────────────────────────────────────────────────── */
@@ -162,10 +176,11 @@ button {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px;
-  max-width: 1100px;
+  padding: 10px max(var(--page-gutter), env(safe-area-inset-right, 0px)) 10px max(var(--page-gutter), env(safe-area-inset-left, 0px));
+  max-width: var(--page-max);
   margin: 0 auto;
   width: 100%;
+  box-sizing: border-box;
 }
 
 /* Logo */
@@ -416,12 +431,14 @@ button {
 .header-nav-links-inner {
   display: flex;
   align-items: center;
-  max-width: 1100px;
+  max-width: var(--page-max);
   margin: 0 auto;
-  padding: 0 16px;   /* must match .site-header-nav horizontal padding */
+  padding-left: max(var(--page-gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--page-gutter), env(safe-area-inset-right, 0px));
   overflow-x: auto;
   scrollbar-width: none;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .header-nav-links-inner::-webkit-scrollbar {
@@ -2057,8 +2074,8 @@ button {
 
 .whatsapp-float {
   position: fixed;
-  bottom: 24px;
-  right: 20px;
+  bottom: max(24px, calc(env(safe-area-inset-bottom, 0px) + 16px));
+  right: max(20px, calc(env(safe-area-inset-right, 0px) + 12px));
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -2823,14 +2840,46 @@ button {
 /* ─── Checkout Page ──────────────────────────────────────────────── */
 
 .checkout-page-wrap {
-  padding: 20px 0 56px;
+  padding: 20px 0 calc(56px + env(safe-area-inset-bottom, 0px));
 }
 
 .checkout-layout {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 28px;
   align-items: start;
+  max-width: 100%;
+}
+
+.checkout-layout > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.checkout-card {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 14px;
+  padding: 16px 20px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.checkout-card--form {
+  padding: 20px 20px 24px;
+}
+
+.checkout-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.checkout-card-head .checkout-section-title {
+  margin: 0;
+  border: none;
+  padding: 0;
 }
 
 .checkout-section-title {
@@ -2847,6 +2896,8 @@ button {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* Order review compact list */
@@ -2934,6 +2985,8 @@ button {
 .form-input,
 .form-textarea {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   padding: 12px 14px;
   border: 1.5px solid var(--color-border);
   border-radius: 10px;
@@ -2965,8 +3018,14 @@ button {
 /* Delivery area selectable cards */
 .delivery-options {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+@media (max-width: 380px) {
+  .delivery-options {
+    grid-template-columns: 1fr;
+  }
 }
 
 .delivery-card {
@@ -3193,11 +3252,6 @@ button {
 }
 
 @media (max-width: 767px) {
-  html,
-  body {
-    overflow-x: hidden;
-  }
-
   .topbar {
     display: none;
   }
@@ -3206,19 +3260,12 @@ button {
     top: 0;
   }
 
-  .container {
-    padding: 0 8px;
-  }
-
   .site-header-nav {
-    padding: 8px;
+    padding-top: 8px;
+    padding-bottom: 8px;
     gap: 8px;
     flex-wrap: wrap;
     align-items: center;
-  }
-
-  .header-nav-links-inner {
-    padding: 0 8px;
   }
 
   .logo-frame {
@@ -3444,8 +3491,8 @@ button {
   }
 
   .whatsapp-float {
-    right: 12px;
-    bottom: 14px;
+    right: max(12px, calc(env(safe-area-inset-right, 0px) + 8px));
+    bottom: max(14px, calc(env(safe-area-inset-bottom, 0px) + 10px));
     width: 46px;
     height: 46px;
   }
@@ -3457,9 +3504,10 @@ button {
 }
 
 @media (min-width: 768px) {
-  .container {
-    padding: 0 24px;
+  :root {
+    --page-gutter: clamp(20px, 3vw, 28px);
   }
+
   .hero-banner-img {
     height: clamp(230px, 34vw, 380px);
   }
@@ -3467,7 +3515,8 @@ button {
     font-size: 2.6rem;
   }
   .site-header-nav {
-    padding: 13px 24px;
+    padding-top: 13px;
+    padding-bottom: 13px;
   }
   .logo-frame {
     max-width: 200px;
@@ -3545,7 +3594,7 @@ button {
     grid-template-columns: 1fr 320px;
   }
   .checkout-layout {
-    grid-template-columns: 1fr 380px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 380px);
   }
   .checkout-summary-card {
     position: sticky;
@@ -3555,7 +3604,7 @@ button {
 
 /* ─── Product page loading skeleton ─── */
 .pdp-skeleton-wrap {
-  padding: 24px 16px 48px;
+  padding: 24px 0 48px;
 }
 
 .pdp-skeleton {
