@@ -34,6 +34,7 @@ export function productMatchesSearch(product: Product, rawQuery: string) {
   const gownAliases = ["gown", "gaun", "gwon", "gon", "gwn"];
 
   const salwarAliases = ["salwar", "salowar", "slwar", "salwr"];
+  const plazoAliases = ["plazo", "plazoo", "pajama", "pajamas", "palazzo"];
 
   if (hasAlias(query, twoPieceAliases)) {
     return (
@@ -50,6 +51,10 @@ export function productMatchesSearch(product: Product, rawQuery: string) {
 
   if (hasAlias(query, salwarAliases)) {
     return category.includes("salwar");
+  }
+
+  if (hasAlias(query, plazoAliases)) {
+    return category.includes("plazo");
   }
 
   return productText.includes(query);

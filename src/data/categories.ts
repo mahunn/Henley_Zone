@@ -53,6 +53,15 @@ export const categories: CategoryItem[] = [
     icon: "🌸",
     imageUrl: "/products/kurti/gown1/navy-blue.jpeg",
     accent: "#0284c7"
+  },
+  {
+    id: "Plazo",
+    label: "Comfort Wear",
+    title: "Plazo",
+    description: "Embroidered plazo — premium fabric, free fit, long sizes 38–40.",
+    icon: "👖",
+    imageUrl: "/products/plazo/plazo1/img1.jpeg",
+    accent: "#7c3aed"
   }
 ];
 

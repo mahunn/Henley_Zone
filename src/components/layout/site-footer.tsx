@@ -41,6 +41,7 @@ export function SiteFooter() {
               <Link href="/store?category=Two+Pieces">Two Pieces</Link>
               <Link href="/store?category=Frogs">Frogs</Link>
               <Link href="/store?category=Gown">Gown</Link>
+              <Link href="/store?category=Plazo">Plazo</Link>
               <Link href="/store">All Products</Link>
             </div>
           </div>

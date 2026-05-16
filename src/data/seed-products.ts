@@ -129,6 +129,7 @@ export const seedProducts: Product[] = [
     stock: 45,
     imageUrl: "/products/kurti/gown1/navy-blue.jpeg",
     category: "Gown",
+    sizes: ["36", "38", "40", "42", "44", "46", "48"],
     colors: [
       { id: "brown",       label: "Brown",       image: "/products/kurti/gown1/brown.jpeg"       },
       { id: "light-blue",  label: "Light Blue",  image: "/products/kurti/gown1/light-blue.jpeg"  },
@@ -136,6 +137,44 @@ export const seedProducts: Product[] = [
       { id: "navy-blue",   label: "Navy Blue",   image: "/products/kurti/gown1/navy-blue.jpeg"   },
       { id: "olive-green", label: "Olive Green", image: "/products/kurti/gown1/olive-green.jpeg" },
       { id: "orange",      label: "Orange",      image: "/products/kurti/gown1/orange.jpeg"      }
+    ]
+  },
+
+  /* ── Gown (gawn2) — 4 colors ────────────────────────────── */
+  {
+    id: "p9",
+    slug: "trending-gown-mirror-print",
+    name: "Trending Gown (Mirror Work)",
+    description:
+      "🔥 ২৫% ডিস্কাউন্টে এই সিজনের মোস্ট ট্রেন্ডিং গাউন। পরলেই লুক হবে একদম স্টার-লেভেল। বুকজুড়ে স্টাইলিশ মিরর ওয়ার্ক, ট্রেন্ডি প্রিন্ট — ক্লাসি + এলিগেন্ট ভাইব। ১০০% কালার গ্যারান্টি। সাইজ ৩৬–৪৮ (পারফেক্ট ফিট গ্যারান্টি)। সারা বাংলাদেশে ফুল ক্যাশ অন ডেলিভারি। WhatsApp: 01581708578। স্টক লিমিটেড — আজই অর্ডার কনফার্ম করুন!",
+    price: 700,
+    stock: 40,
+    imageUrl: "/products/kurti/gawn2/blue.jpeg",
+    category: "Gown",
+    sizes: ["36", "38", "40", "42", "44", "46", "48"],
+    colors: [
+      { id: "black",  label: "Black",  image: "/products/kurti/gawn2/black.jpeg"  },
+      { id: "blue",   label: "Blue",   image: "/products/kurti/gawn2/blue.jpeg"   },
+      { id: "red",    label: "Red",    image: "/products/kurti/gawn2/red.jpeg"    },
+      { id: "yellow", label: "Yellow", image: "/products/kurti/gawn2/yellow.jpeg" }
+    ]
+  },
+
+  /* ── Plazo (plazo1) — 2 designs ───────────────────────────── */
+  {
+    id: "p8",
+    slug: "embroidered-plazo-comfort-fit",
+    name: "Embroidered Plazo",
+    description:
+      "🔥 এমব্রয়ডারি প্লাজো — স্টাইল আর কমফোর্টের পারফেক্ট কম্বো। প্রিমিয়াম কোয়ালিটি ফ্যাব্রিক: নরম, হালকা ও আরামদায়ক। ফ্রি সাইজ (সবার জন্য পারফেক্ট ফিট)। লং সাইজ (Long Size): ৩৮, ৩৯, ৪০। আজকের স্পেশাল অফার: ২৫% ডিস্কাউন্ট। সারা বাংলাদেশে ফুল ক্যাশ অন ডেলিভারি। WhatsApp: 01581708578। স্টক লিমিটেড!",
+    price: 450,
+    stock: 50,
+    imageUrl: "/products/plazo/plazo1/img1.jpeg",
+    category: "Plazo",
+    sizes: ["38", "39", "40"],
+    colors: [
+      { id: "design-1", label: "Design 1", image: "/products/plazo/plazo1/img1.jpeg" },
+      { id: "design-2", label: "Design 2", image: "/products/plazo/plazo1/img2.jpeg" }
     ]
   }
 ];

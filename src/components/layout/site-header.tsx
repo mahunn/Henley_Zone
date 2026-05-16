@@ -342,6 +342,13 @@ export function SiteHeader() {
             >
               Gown
             </Link>
+            <Link
+              href="/store?category=Plazo"
+              className={navClass(onStorePage && activeCategory === "Plazo")}
+              onClick={scrollToTopAfterNav}
+            >
+              Plazo
+            </Link>
             <Link href="/contact" className={navClass(pathname === "/contact")} onClick={scrollToTopAfterNav}>
               Contact
             </Link>
