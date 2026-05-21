@@ -4,6 +4,8 @@ import { useState, useLayoutEffect } from "react";
 import { useCart } from "@/components/cart-provider";
 import { useWishlist } from "@/components/wishlist-provider";
 import { useRouter } from "next/navigation";
+import { HorizontalScrollRow } from "@/components/shop/horizontal-scroll-row";
+import { ProductImageLightbox } from "@/components/shop/product-image-lightbox";
 import { ProductImage } from "@/components/shop/product-image";
 import { bn } from "@/config/ui-bn";
 
@@ -111,6 +113,7 @@ export function ProductDetailView({
   const { addToCart, buyNow } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
   const [activeImg, setActiveImg] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -194,6 +197,109 @@ export function ProductDetailView({
       ? Math.round((1 - product.price / product.originalPrice) * 100)
       : null;
 
+  const showGalleryThumbs = product.images.length > 1;
+  const showColorSwatches = product.colors.length > 0 && !showGalleryThumbs;
+  const showVariantPicker = showGalleryThumbs || showColorSwatches || product.sizes.length > 0;
+
+  const variantPicker = showVariantPicker ? (
+    <section className="pdp-variant-picker" aria-label="Choose color and size">
+      {(showGalleryThumbs || showColorSwatches) && (
+        <div className="pdp-variant-row pdp-variant-row--color">
+          {product.colors.length > 0 && (
+            <p className="selector-label pdp-variant-label">
+              {bn.product.color}:{" "}
+              <strong>{activeColor ? product.colors.find((c) => c.id === activeColor)?.label : "—"}</strong>
+            </p>
+          )}
+          {showGalleryThumbs && (
+            <HorizontalScrollRow
+              trackClassName="pdp-thumbnails"
+              scrollStep={84}
+              minItemsForArrows={3}
+              ariaLabel={bn.product.colorsAria}
+            >
+              {product.images.map((img, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={`pdp-thumb-btn${activeImg === i ? " active" : ""}`}
+                  onClick={() => handleThumbClick(i)}
+                  title={product.colors[i]?.label}
+                  aria-label={product.colors[i]?.label ?? `View image ${i + 1}`}
+                  aria-pressed={activeImg === i}
+                >
+                  <ProductImage
+                    src={img}
+                    alt={product.colors[i]?.label ?? `View ${i + 1}`}
+                    className="pdp-thumb"
+                    width={68}
+                    height={68}
+                    sizes="68px"
+                  />
+                </button>
+              ))}
+            </HorizontalScrollRow>
+          )}
+          {showColorSwatches && (
+            <HorizontalScrollRow
+              trackClassName="color-swatches"
+              scrollStep={72}
+              minItemsForArrows={3}
+              ariaLabel={bn.product.colorsAria}
+            >
+              {product.colors.map((color) => (
+                <button
+                  key={color.id}
+                  type="button"
+                  className={`swatch-btn${activeColor === color.id ? " active" : ""}`}
+                  onClick={() => handleColorSelect(color.id)}
+                  title={color.label}
+                  aria-label={color.label}
+                  aria-pressed={activeColor === color.id}
+                >
+                  <ProductImage
+                    src={color.swatchImage}
+                    alt={color.label}
+                    className="swatch-img"
+                    width={48}
+                    height={48}
+                    sizes="48px"
+                  />
+                </button>
+              ))}
+            </HorizontalScrollRow>
+          )}
+        </div>
+      )}
+
+      {product.sizes.length > 0 && (
+        <div className="pdp-variant-row pdp-variant-row--size">
+          <p className="selector-label pdp-variant-label">
+            {bn.product.size}: <strong>{activeSize ?? bn.product.selectSize}</strong>
+          </p>
+          <HorizontalScrollRow
+            trackClassName="size-grid"
+            scrollStep={88}
+            minItemsForArrows={5}
+            ariaLabel={bn.product.sizesAria}
+          >
+            {product.sizes.map((sz) => (
+              <button
+                key={sz}
+                type="button"
+                className={`size-btn${activeSize === sz ? " active" : ""}`}
+                onClick={() => setActiveSize(sz)}
+                aria-pressed={activeSize === sz}
+              >
+                {sz}
+              </button>
+            ))}
+          </HorizontalScrollRow>
+        </div>
+      )}
+    </section>
+  ) : null;
+
   return (
     <div className="pdp-wrap container">
       {/* Breadcrumb */}
@@ -216,134 +322,71 @@ export function ProductDetailView({
 
       {/* Main: Gallery + Info */}
       <div className="pdp-main">
-        {/* Gallery */}
-        <div className="pdp-gallery">
-          <ProductImage
-            src={product.images[activeImg]}
-            alt={product.name}
-            className="pdp-main-img"
-            width={800}
-            height={1000}
-            sizes="(max-width: 767px) 100vw, 44vw"
-            priority
-          />
-          {product.images.length > 1 && (
-            <div className="pdp-thumbnails">
-              {product.images.map((img, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  className={`pdp-thumb-btn${activeImg === i ? " active" : ""}`}
-                  onClick={() => handleThumbClick(i)}
-                  title={product.colors[i]?.label}
-                  aria-label={product.colors[i]?.label ?? `View image ${i + 1}`}
-                  aria-pressed={activeImg === i}
-                >
-                  <ProductImage
-                    src={img}
-                    alt={product.colors[i]?.label ?? `View ${i + 1}`}
-                    className="pdp-thumb"
-                    width={68}
-                    height={68}
-                    sizes="68px"
-                  />
-                </button>
-              ))}
+        <div className="pdp-gallery-col">
+          <div className="pdp-gallery">
+            <div className="pdp-main-img-wrap">
+              <button
+                type="button"
+                className="pdp-main-img-btn"
+                onClick={() => setLightboxOpen(true)}
+                aria-label={bn.product.viewFullImage}
+              >
+                <ProductImage
+                  src={product.images[activeImg]}
+                  alt={product.name}
+                  className="pdp-main-img"
+                  fill
+                  sizes="(max-width: 767px) 360px, 44vw"
+                  priority
+                />
+              </button>
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Info */}
-        <div className="pdp-info">
-          {/* Badge */}
-          {product.badge && (
-            <div className="pdp-badge-row">
-              <span className={`pc-badge ${BADGE_CLASS[product.badge] ?? "pc-badge-new"}`}>
-                {product.badge}
+        <div className="pdp-main-right">
+          <div className="pdp-info-summary">
+            {product.badge && (
+              <div className="pdp-badge-row">
+                <span className={`pc-badge ${BADGE_CLASS[product.badge] ?? "pc-badge-new"}`}>
+                  {product.badge}
+                </span>
+              </div>
+            )}
+
+            {product.categories[0] && (
+              <p className="pdp-category">{product.categories[0]}</p>
+            )}
+
+            <h1 className="pdp-title">{product.name}</h1>
+
+            <div className="pdp-rating-row">
+              <StarRow count={0} />
+              <span className="pdp-in-stock">
+                ✓ {bn.product.inStock} ({product.stock} {bn.product.items})
               </span>
             </div>
-          )}
 
-          {/* Title */}
-          <h1 className="pdp-title">{product.name}</h1>
-
-          {/* Rating + Stock */}
-          <div className="pdp-rating-row">
-            <StarRow count={0} />
-            <span className="pdp-in-stock">✓ {bn.product.inStock} ({product.stock} {bn.product.items})</span>
-          </div>
-
-          {/* Price */}
-          <div className="pdp-price-row">
-            <span className="pdp-price">{fmt(product.price)}</span>
-            {product.originalPrice && (
-              <span className="pdp-original-price">{fmt(product.originalPrice)}</span>
-            )}
-            {discountPct && (
-              <span className="pc-badge pc-badge-sale">-{discountPct}%</span>
-            )}
-          </div>
-
-          {/* Brand link */}
-          <div style={{ fontSize: 13, color: "var(--color-text-secondary)", fontFamily: "var(--font-body, sans-serif)" }}>
-            {bn.product.brand}: <span style={{ color: "var(--color-primary)", fontWeight: 600 }}>{product.brand}</span>
-          </div>
-
-          {/* Color Selector */}
-          {product.colors.length > 0 && (
-            <div>
-              <p className="selector-label">
-                {bn.product.color}:{" "}
-                {activeColor
-                  ? product.colors.find((c) => c.id === activeColor)?.label
-                  : ""}
-              </p>
-              <div className="color-swatches">
-                {product.colors.map((color) => (
-                  <button
-                    key={color.id}
-                    className={`swatch-btn${activeColor === color.id ? " active" : ""}`}
-                    onClick={() => handleColorSelect(color.id)}
-                    title={color.label}
-                    aria-label={color.label}
-                    aria-pressed={activeColor === color.id}
-                  >
-                    <ProductImage
-                      src={color.swatchImage}
-                      alt={color.label}
-                      className="swatch-img"
-                      width={48}
-                      height={48}
-                      sizes="48px"
-                    />
-                  </button>
-                ))}
-              </div>
+            <div className="pdp-price-row">
+              <span className="pdp-price">{fmt(product.price)}</span>
+              {product.originalPrice && (
+                <span className="pdp-original-price">{fmt(product.originalPrice)}</span>
+              )}
+              {discountPct && (
+                <span className="pc-badge pc-badge-sale">-{discountPct}%</span>
+              )}
             </div>
-          )}
 
-          {/* Size Selector */}
-          {product.sizes.length > 0 && (
-            <div>
-              <p className="selector-label">{bn.product.size}: {activeSize ?? bn.product.selectSize}</p>
-              <div className="size-grid">
-                {product.sizes.map((sz) => (
-                  <button
-                    key={sz}
-                    className={`size-btn${activeSize === sz ? " active" : ""}`}
-                    onClick={() => setActiveSize(sz)}
-                    aria-pressed={activeSize === sz}
-                  >
-                    {sz}
-                  </button>
-                ))}
-              </div>
+            <div className="pdp-brand-line">
+              {bn.product.brand}: <span>{product.brand}</span>
             </div>
-          )}
+          </div>
 
-          {/* Qty + Actions */}
-          <div className="pdp-actions-row">
-            <div className="qty-stepper">
+          {variantPicker}
+
+          <div className="pdp-info-body">
+          <div className="pdp-cta-block">
+            <div className="qty-stepper pdp-qty">
               <button
                 className="qty-btn"
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
@@ -367,12 +410,14 @@ export function ProductDetailView({
                 +
               </button>
             </div>
-            <button className="btn" onClick={handleAddToCart}>
-              {bn.product.addToCart}
-            </button>
-            <button className="btn btn-dark" onClick={handleBuyNow}>
-              {bn.product.buyNow}
-            </button>
+            <div className="pdp-actions-row">
+              <button type="button" className="btn pdp-btn-add" onClick={handleAddToCart}>
+                {bn.product.addToCart}
+              </button>
+              <button type="button" className="btn pdp-btn-buy" onClick={handleBuyNow}>
+                {bn.product.buyNow}
+              </button>
+            </div>
           </div>
           {variantError && (
             <div className="form-error" style={{ marginTop: -4 }}>
@@ -431,8 +476,18 @@ export function ProductDetailView({
               </button>
             ))}
           </div>
+          </div>
         </div>
       </div>
+
+      <ProductImageLightbox
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        images={product.images}
+        index={activeImg}
+        onIndexChange={handleThumbClick}
+        alt={product.name}
+      />
 
       {/* Tabs */}
       <div className="pdp-tabs-section">

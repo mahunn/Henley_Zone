@@ -19,6 +19,8 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
+    /** Must list every `quality` used in ProductImage — prevents SSR/client hydration mismatch. */
+    qualities: [75],
     formats: ["image/avif", "image/webp"],
     deviceSizes: [384, 640, 750, 828, 1080],
     imageSizes: [48, 68, 96, 128, 180, 256],

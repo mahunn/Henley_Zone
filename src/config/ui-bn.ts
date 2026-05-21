@@ -49,7 +49,15 @@ export const bn = {
     brand: "ব্র্যান্ড",
     notFound: "পণ্যটি পাওয়া যায়নি",
     browseStore: "শপে যান",
-    loading: "পণ্য লোড হচ্ছে..."
+    loading: "পণ্য লোড হচ্ছে...",
+    colorsAria: "রঙ বেছে নিন",
+    sizesAria: "সাইজ বেছে নিন",
+    viewFullImage: "পূর্ণ ছবি দেখুন",
+    closeImage: "বন্ধ করুন"
+  },
+  scroll: {
+    previous: "আগের অপশন",
+    next: "পরের অপশন"
   },
   store: {
     title: "পোশাকের শপ",
