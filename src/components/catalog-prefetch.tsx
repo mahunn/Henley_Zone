@@ -1,16 +1,23 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { getProductsCatalog } from "@/lib/product-catalog-client";
+import { usePathname, useRouter } from "next/navigation";
+import { deferCatalogRefresh, getProductsCatalog } from "@/lib/product-catalog-client";
 
-/** Warms catalog + key routes as soon as the shell mounts (Facebook ad traffic). */
+/** Warms catalog + checkout on non-product routes; product pages already have server data. */
 export function CatalogPrefetch() {
   const router = useRouter();
+  const pathname = usePathname() ?? "";
+  const isProductPage = pathname.startsWith("/product/");
+
   useEffect(() => {
-    void getProductsCatalog().catch(() => {});
-    router.prefetch("/store");
+    if (isProductPage) {
+      void deferCatalogRefresh().catch(() => {});
+    } else {
+      void getProductsCatalog().catch(() => {});
+      router.prefetch("/store");
+    }
     router.prefetch("/checkout");
-  }, [router]);
+  }, [router, isProductPage]);
   return null;
 }

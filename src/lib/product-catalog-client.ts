@@ -10,7 +10,7 @@ export function getSyncedProductCatalog(): Product[] | null {
 }
 
 function refreshCatalogFromApi(): Promise<Product[]> {
-  return fetch("/api/products", { cache: "no-store" })
+  return fetch("/api/products")
     .then((r) => {
       if (!r.ok) throw new Error("fetch failed");
       return r.json() as Promise<{ products: Product[] }>;
@@ -49,4 +49,24 @@ export function getProductsCatalog(): Promise<Product[]> {
 export function invalidateProductCatalog() {
   memoryCache = null;
   inflight = null;
+}
+
+/** Defer Supabase sync until after first paint (product pages with server data). */
+export function deferCatalogRefresh(): Promise<Product[]> {
+  if (memoryCache && memoryCache !== seedProducts) {
+    return Promise.resolve(memoryCache);
+  }
+
+  memoryCache = [...seedProducts];
+
+  return new Promise((resolve) => {
+    const run = () => {
+      void getProductsCatalog().then(resolve);
+    };
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      window.requestIdleCallback(run, { timeout: 2500 });
+    } else {
+      setTimeout(run, 800);
+    }
+  });
 }

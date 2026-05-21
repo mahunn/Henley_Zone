@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCart } from "@/components/cart-provider";
@@ -55,14 +56,16 @@ function StoreCard({ product }: { product: Product }) {
     <article className="product-card" style={{ position: "relative" }}>
       {/* Image — clicking goes to hash product detail */}
       <div style={{ position: "relative" }}>
-        <a href={productPagePath(product.slug)} style={{ display: "block" }}>
+        <Link href={productPagePath(product.slug)} prefetch style={{ display: "block" }}>
           <img
             ref={cardImgRef}
             src={displayImage}
             alt={`${product.name}${activeLabel ? ` – ${activeLabel}` : ""}`}
             className="product-image"
+            loading="lazy"
+            decoding="async"
           />
-        </a>
+        </Link>
         <button
           type="button"
           className={`store-wish-btn${wishlisted ? " active" : ""}`}

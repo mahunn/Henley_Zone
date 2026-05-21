@@ -3,6 +3,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { defaultBusiness } from "@/config/businesses";
 import { formatOrderItemLabel } from "@/lib/format-order-line";
+import { AdminIconButton, AdminIconToolbar } from "@/components/admin/admin-icon-button";
+import {
+  IconCopy,
+  IconCopyAll,
+  IconLogout,
+  IconPhone,
+  IconSpinner,
+  IconTrash,
+  IconUndo,
+  IconWhatsapp
+} from "@/components/admin/admin-icons";
+import { customerTelHref, customerWhatsappUrl } from "@/lib/customer-contact";
 import { formatOrderForClipboard } from "@/lib/format-order-summary";
 import { formatCurrency } from "@/lib/money";
 import { Order } from "@/types/commerce";
@@ -340,14 +352,19 @@ export default function AdminOrdersPage() {
             By default only the <strong>last 7 days</strong> of orders are shown. Change <strong>Time period</strong> for today, 30 days, all time, or a specific month. Orders are grouped by calendar day (newest days first).
           </p>
         </div>
-        <div className="admin-orders-actions">
-          <button type="button" className="admin-copy-btn" onClick={handleCopyAll} disabled={copyingId === "all" || !filteredOrders.length}>
-            {copyingId === "all" ? "Copying..." : "Copy All"}
-          </button>
-          <button type="button" className="admin-ghost-btn" onClick={logout}>
-            Log out
-          </button>
-        </div>
+        <AdminIconToolbar className="admin-orders-actions">
+          <AdminIconButton
+            variant="primary"
+            label={copyingId === "all" ? "Copying all orders" : "Copy all filtered orders"}
+            onClick={handleCopyAll}
+            disabled={copyingId === "all" || !filteredOrders.length}
+          >
+            {copyingId === "all" ? <IconSpinner /> : <IconCopyAll />}
+          </AdminIconButton>
+          <AdminIconButton variant="ghost" label="Log out" onClick={logout}>
+            <IconLogout />
+          </AdminIconButton>
+        </AdminIconToolbar>
       </div>
 
       {loading ? <p>Loading orders...</p> : null}
@@ -492,24 +509,24 @@ export default function AdminOrdersPage() {
                         </span>
                       ) : null}
                     </p>
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      <button
-                        type="button"
-                        className="admin-copy-btn"
+                    <AdminIconToolbar>
+                      <AdminIconButton
+                        variant="primary"
+                        label={copyingId === order.id ? "Copying order" : `Copy order ${order.id}`}
                         onClick={() => void handleCopyOrder(order)}
                         disabled={copyingId === order.id || markedForDelete}
                       >
-                        {copyingId === order.id ? "Copying..." : "Copy"}
-                      </button>
-                      <button
-                        type="button"
-                        className="admin-delete-btn"
+                        {copyingId === order.id ? <IconSpinner /> : <IconCopy />}
+                      </AdminIconButton>
+                      <AdminIconButton
+                        variant={markedForDelete ? "warning" : "danger"}
+                        label={markedForDelete ? "Undo removal mark" : "Mark order for removal"}
                         onClick={() => togglePendingDelete(order.id)}
                         disabled={applyingDeletes || updatingOrderId === order.id}
                       >
-                        {markedForDelete ? "Undo remove" : "Mark for removal"}
-                      </button>
-                    </div>
+                        {markedForDelete ? <IconUndo /> : <IconTrash />}
+                      </AdminIconButton>
+                    </AdminIconToolbar>
                   </div>
                   <p>
                     <strong>Time:</strong> {new Date(order.createdAt).toLocaleString()}
@@ -520,6 +537,28 @@ export default function AdminOrdersPage() {
                   <p>
                     <strong>Phone:</strong> {order.phone}
                   </p>
+                  {customerTelHref(order.phone) ? (
+                    <AdminIconToolbar className="admin-order-contact">
+                      <AdminIconButton
+                        href={customerTelHref(order.phone)}
+                        variant="call"
+                        label={`Call ${order.customerName}`}
+                      >
+                        <IconPhone />
+                      </AdminIconButton>
+                      <AdminIconButton
+                        href={customerWhatsappUrl(
+                          order.phone,
+                          `Hi ${order.customerName}, regarding your order ${order.id}.`
+                        )}
+                        variant="whatsapp"
+                        label={`WhatsApp ${order.customerName}`}
+                        external
+                      >
+                        <IconWhatsapp />
+                      </AdminIconButton>
+                    </AdminIconToolbar>
+                  ) : null}
                   <p>
                     <strong>Address:</strong> {order.address}
                   </p>
@@ -597,24 +636,24 @@ export default function AdminOrdersPage() {
           <p style={{ margin: 0, flex: "1 1 200px", color: "#7f1d1d", fontSize: 14 }}>
             <strong>{pendingDeleteIds.length}</strong> order(s) marked for removal. Nothing is deleted until you save.
           </p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <button
-              type="button"
-              className="admin-ghost-btn"
+          <AdminIconToolbar>
+            <AdminIconButton
+              variant="ghost"
+              label="Clear removal marks"
               onClick={clearPendingDeletes}
               disabled={applyingDeletes}
             >
-              Clear marks
-            </button>
-            <button
-              type="button"
-              className="admin-delete-btn"
+              <IconUndo />
+            </AdminIconButton>
+            <AdminIconButton
+              variant="danger"
+              label={applyingDeletes ? "Deleting orders" : "Save deletions permanently"}
               onClick={() => void applyPendingDeletes()}
               disabled={applyingDeletes}
             >
-              {applyingDeletes ? "Deleting…" : "Save deletions"}
-            </button>
-          </div>
+              {applyingDeletes ? <IconSpinner /> : <IconTrash />}
+            </AdminIconButton>
+          </AdminIconToolbar>
         </div>
       ) : null}
     </main>

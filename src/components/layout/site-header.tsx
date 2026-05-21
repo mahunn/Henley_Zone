@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { deferCatalogRefresh } from "@/lib/product-catalog-client";
 import { useCart } from "@/components/cart-provider";
 import { useWishlist } from "@/components/wishlist-provider";
 import { defaultBusiness, businessTelHref, businessWhatsappChatUrl } from "@/config/businesses";
@@ -67,12 +68,15 @@ export function SiteHeader() {
   const [products, setProducts] = useState<Product[]>(() => getSyncedProductCatalog() ?? []);
   const searchWrapRef = useRef<HTMLDivElement>(null);
 
+  const isProductPage = (pathname ?? "").startsWith("/product/");
+
   // Shared catalog fetch (deduped with /store and CatalogPrefetch)
   useEffect(() => {
-    void getProductsCatalog()
+    const load = isProductPage ? deferCatalogRefresh : getProductsCatalog;
+    void load()
       .then((list) => setProducts(list))
       .catch(() => {});
-  }, []);
+  }, [isProductPage]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

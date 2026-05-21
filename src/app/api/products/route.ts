@@ -1,12 +1,5 @@
-import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
-import { listProducts } from "@/lib/products-repository";
-
-const getCachedProducts = unstable_cache(
-  async () => listProducts(),
-  ["store-catalog-products"],
-  { revalidate: 45 }
-);
+import { getCachedProducts } from "@/lib/products-catalog-server";
 
 export async function GET() {
   try {

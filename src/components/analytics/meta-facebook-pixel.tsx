@@ -14,13 +14,14 @@ type Props = {
   /** From server `layout` — avoids Turbopack/client bundles missing `.env.local` for `process.env`. */
   pixelId?: string;
   testEventCode?: string;
+  strategy?: "afterInteractive" | "lazyOnload" | "beforeInteractive" | "worker";
 };
 
 /**
  * Meta Pixel — inline script via `dangerouslySetInnerHTML` (reliable with Next 15 + Turbopack).
  * `pixelId` must be supplied from the server layout after reading `NEXT_PUBLIC_META_PIXEL_ID`.
  */
-export function MetaFacebookPixel({ pixelId, testEventCode }: Props) {
+export function MetaFacebookPixel({ pixelId, testEventCode, strategy = "afterInteractive" }: Props) {
   const pathname = usePathname();
   const skipNextRoutePageView = useRef(true);
 
@@ -55,7 +56,7 @@ fbq('track', 'PageView');
   return (
     <Script
       id="meta-fb-pixel"
-      strategy="afterInteractive"
+      strategy={strategy}
       dangerouslySetInnerHTML={{ __html: initSnippet }}
     />
   );

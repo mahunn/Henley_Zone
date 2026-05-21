@@ -1,8 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  IconClipboardList,
+  IconLogout,
+  IconPackage,
+  IconPlus
+} from "@/components/admin/admin-icons";
 
 export default function AdminPanelPage() {
   const router = useRouter();
@@ -43,20 +48,37 @@ export default function AdminPanelPage() {
       <p style={{ marginBottom: 24, color: "var(--color-text-secondary)" }}>
         Welcome. Manage operations from here.
       </p>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <Link href="/admin/products" className="btn">
+      <nav className="admin-nav-grid" aria-label="Admin navigation">
+        <a href="/admin/products" className="admin-nav-tile">
+          <span className="admin-nav-tile__icon">
+            <IconPlus size={22} />
+          </span>
           Add products
-        </Link>
-        <Link href="/admin/products/manage" className="btn btn-secondary">
+        </a>
+        <a href="/admin/products/manage" className="admin-nav-tile">
+          <span className="admin-nav-tile__icon">
+            <IconPackage size={22} />
+          </span>
           Manage catalog
-        </Link>
-        <Link href="/admin/orders" className="btn">
+        </a>
+        <a href="/admin/orders" className="admin-nav-tile">
+          <span className="admin-nav-tile__icon">
+            <IconClipboardList size={22} />
+          </span>
           Orders
-        </Link>
-        <button type="button" className="btn btn-secondary" onClick={logout}>
+        </a>
+        <button
+          type="button"
+          className="admin-nav-tile admin-nav-tile--logout"
+          onClick={logout}
+          style={{ cursor: "pointer", border: "1px solid #e2e8f0" }}
+        >
+          <span className="admin-nav-tile__icon">
+            <IconLogout size={22} />
+          </span>
           Log out
         </button>
-      </div>
+      </nav>
     </main>
   );
 }

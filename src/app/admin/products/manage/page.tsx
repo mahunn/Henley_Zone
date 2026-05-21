@@ -1,11 +1,21 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Product, ProductColor } from "@/types/commerce";
 import { invalidateProductCatalog } from "@/lib/product-catalog-client";
 import { AdminProductsWorkspaceNav } from "@/components/admin/admin-products-workspace-nav";
+import { AdminIconButton, AdminIconLink, AdminIconToolbar } from "@/components/admin/admin-icon-button";
+import {
+  IconEdit,
+  IconHome,
+  IconSave,
+  IconSpinner,
+  IconTrash,
+  IconUndo,
+  IconUpload,
+  IconX
+} from "@/components/admin/admin-icons";
 
 const AVAILABLE_SIZES = ["32", "34", "36", "38", "40", "42", "44", "46", "48"];
 type ColorImageRow = { label: string; image: string };
@@ -273,9 +283,9 @@ export default function AdminManageProductsPage() {
   return (
     <main style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px 120px" }}>
       <p style={{ marginBottom: 16 }}>
-        <Link href="/admin" className="btn btn-secondary" style={{ display: "inline-block" }}>
-          ← Admin home
-        </Link>
+        <AdminIconLink href="/admin" variant="ghost" label="Admin home">
+          <IconHome />
+        </AdminIconLink>
       </p>
 
       <AdminProductsWorkspaceNav />
@@ -307,8 +317,10 @@ export default function AdminManageProductsPage() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8 }}>
               <input className="nav-search" value={editing.imageUrl} onChange={(e) => setEditing({ ...editing, imageUrl: e.target.value })} placeholder="Primary image URL" />
-              <label className="btn btn-secondary" style={{ cursor: "pointer" }}>
-                Upload image
+              <label className="admin-icon-btn admin-icon-btn--ghost" style={{ cursor: "pointer" }} title="Upload primary image" aria-label="Upload primary image">
+                <span className="admin-icon-btn__glyph">
+                  <IconUpload />
+                </span>
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp,image/gif"
@@ -346,20 +358,37 @@ export default function AdminManageProductsPage() {
                   <img src={row.image} alt={row.label} style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, border: "1px solid var(--color-border)" }} />
                   <input className="nav-search" value={row.label} onChange={(e) => updateEditColor(i, { label: e.target.value })} placeholder="Color name" />
                   <input className="nav-search" value={row.image} onChange={(e) => updateEditColor(i, { image: e.target.value })} placeholder="Color image URL" />
-                  <button type="button" className="btn btn-secondary" onClick={() => removeEditColor(i)}>
-                    Remove
-                  </button>
+                  <AdminIconButton
+                    type="button"
+                    variant="danger"
+                    label={`Remove color ${row.label}`}
+                    onClick={() => removeEditColor(i)}
+                  >
+                    <IconTrash />
+                  </AdminIconButton>
                 </div>
               ))}
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button type="button" className="btn" onClick={handleSaveEdit} disabled={savingEdit}>
-                {savingEdit ? "Saving…" : "Save changes"}
-              </button>
-              <button type="button" className="btn btn-secondary" onClick={() => setEditing(null)} disabled={savingEdit}>
-                Cancel
-              </button>
-            </div>
+            <AdminIconToolbar>
+              <AdminIconButton
+                type="button"
+                variant="success"
+                label={savingEdit ? "Saving product" : "Save product changes"}
+                onClick={handleSaveEdit}
+                disabled={savingEdit}
+              >
+                {savingEdit ? <IconSpinner /> : <IconSave />}
+              </AdminIconButton>
+              <AdminIconButton
+                type="button"
+                variant="ghost"
+                label="Cancel editing"
+                onClick={() => setEditing(null)}
+                disabled={savingEdit}
+              >
+                <IconX />
+              </AdminIconButton>
+            </AdminIconToolbar>
           </div>
         </div>
       )}
@@ -391,12 +420,24 @@ export default function AdminManageProductsPage() {
                     {marked ? " · marked for deletion" : ""}
                   </div>
                 </div>
-                <button type="button" className="btn btn-secondary" onClick={() => startEditing(p)} disabled={marked} title={marked ? "Undo removal to edit" : "Edit product"}>
-                  Edit
-                </button>
-                <button type="button" className={marked ? "btn" : "btn btn-secondary"} onClick={() => togglePendingDelete(p.id)} disabled={applyingDeletes}>
-                  {marked ? "Undo remove" : "Mark for removal"}
-                </button>
+                <AdminIconButton
+                  type="button"
+                  variant="primary"
+                  label={marked ? "Undo removal to edit" : `Edit ${p.name}`}
+                  onClick={() => startEditing(p)}
+                  disabled={marked}
+                >
+                  <IconEdit />
+                </AdminIconButton>
+                <AdminIconButton
+                  type="button"
+                  variant={marked ? "warning" : "danger"}
+                  label={marked ? "Undo removal mark" : `Mark ${p.name} for removal`}
+                  onClick={() => togglePendingDelete(p.id)}
+                  disabled={applyingDeletes}
+                >
+                  {marked ? <IconUndo /> : <IconTrash />}
+                </AdminIconButton>
               </div>
             );
           })}
@@ -425,14 +466,26 @@ export default function AdminManageProductsPage() {
             <strong>{pendingDeleteIds.length}</strong> product(s) marked for removal. The catalog is unchanged until you
             save.
           </p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <button type="button" className="btn btn-secondary" onClick={clearPendingDeletes} disabled={applyingDeletes}>
-              Clear marks
-            </button>
-            <button type="button" className="btn" onClick={() => void applyPendingDeletes()} disabled={applyingDeletes}>
-              {applyingDeletes ? "Deleting…" : "Save deletions"}
-            </button>
-          </div>
+          <AdminIconToolbar>
+            <AdminIconButton
+              type="button"
+              variant="ghost"
+              label="Clear removal marks"
+              onClick={clearPendingDeletes}
+              disabled={applyingDeletes}
+            >
+              <IconUndo />
+            </AdminIconButton>
+            <AdminIconButton
+              type="button"
+              variant="danger"
+              label={applyingDeletes ? "Deleting products" : "Save deletions permanently"}
+              onClick={() => void applyPendingDeletes()}
+              disabled={applyingDeletes}
+            >
+              {applyingDeletes ? <IconSpinner /> : <IconTrash />}
+            </AdminIconButton>
+          </AdminIconToolbar>
         </div>
       )}
     </main>

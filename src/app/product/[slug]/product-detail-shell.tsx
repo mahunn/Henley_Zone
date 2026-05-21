@@ -1,16 +1,18 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ProductDetailView } from "@/components/shop/product-detail-view";
-import { getProductsCatalog } from "@/lib/product-catalog-client";
+import type { RelatedProductItem } from "@/components/shop/related-products-section";
+import { deferCatalogRefresh, getProductsCatalog } from "@/lib/product-catalog-client";
 import { mapProductToPdpDetail, type PdpDetail } from "@/lib/product-detail-mapper";
 import { productPagePath } from "@/lib/product-url";
 import { bn } from "@/config/ui-bn";
 import { seedProducts } from "@/data/seed-products";
 import type { Product } from "@/types/commerce";
 
-function productToRelated(p: Product) {
+function productToRelated(p: Product): RelatedProductItem {
   return {
     id: p.id,
     slug: p.slug,
@@ -21,21 +23,32 @@ function productToRelated(p: Product) {
   };
 }
 
+const RelatedProductsLazy = dynamic(
+  () =>
+    import("@/components/shop/related-products-section").then((m) => m.RelatedProductsSection),
+  { ssr: false, loading: () => null }
+);
+
 export function ProductDetailShell({
   slug,
-  initialDetail
+  initialDetail,
+  initialRelated = [],
+  skipCatalogUntilIdle = false
 }: {
   slug: string;
   initialDetail: PdpDetail | null;
+  initialRelated?: RelatedProductItem[];
+  /** When server already sent product HTML, defer API catalog sync until browser is idle */
+  skipCatalogUntilIdle?: boolean;
 }) {
   const router = useRouter();
   const [catalog, setCatalog] = useState<Product[]>(() => [...seedProducts]);
   const [detail, setDetail] = useState<PdpDetail | null>(initialDetail);
+  const [related, setRelated] = useState<RelatedProductItem[]>(initialRelated);
   const [resolving, setResolving] = useState(!initialDetail);
 
   useEffect(() => {
     router.prefetch("/checkout");
-    router.prefetch("/store");
   }, [router]);
 
   useEffect(() => {
@@ -48,11 +61,30 @@ export function ProductDetailShell({
       if (found) {
         setDetail(mapProductToPdpDetail(found));
         setResolving(false);
+      } else if (!initialDetail) {
+        setResolving(false);
       }
+      setRelated(
+        products
+          .filter((p) => p.slug !== slug)
+          .slice(0, 6)
+          .map(productToRelated)
+      );
     };
 
-    void getProductsCatalog().then(applyCatalog);
+    if (skipCatalogUntilIdle) {
+      deferCatalogRefresh().then(applyCatalog);
+      const onUpdate = () => {
+        void getProductsCatalog().then(applyCatalog);
+      };
+      window.addEventListener("hz:catalog-updated", onUpdate);
+      return () => {
+        cancelled = true;
+        window.removeEventListener("hz:catalog-updated", onUpdate);
+      };
+    }
 
+    void getProductsCatalog().then(applyCatalog);
     const onUpdate = () => {
       void getProductsCatalog().then(applyCatalog);
     };
@@ -61,9 +93,9 @@ export function ProductDetailShell({
       cancelled = true;
       window.removeEventListener("hz:catalog-updated", onUpdate);
     };
-  }, [slug]);
+  }, [slug, initialDetail, skipCatalogUntilIdle]);
 
-  const related = useMemo(
+  const relatedFallback = useMemo(
     () =>
       catalog
         .filter((p) => p.slug !== slug)
@@ -71,6 +103,8 @@ export function ProductDetailShell({
         .map(productToRelated),
     [catalog, slug]
   );
+
+  const relatedToShow = related.length ? related : relatedFallback;
 
   if (resolving && !detail) {
     return (
@@ -99,11 +133,20 @@ export function ProductDetailShell({
   }
 
   return (
-    <ProductDetailView
-      product={detail}
-      relatedProducts={related}
-      productLink={(s) => productPagePath(s)}
-      onBack={() => router.push("/store")}
-    />
+    <>
+      <ProductDetailView
+        product={detail}
+        productLink={(s) => productPagePath(s)}
+        onBack={() => router.push("/store")}
+        renderRelated={false}
+      />
+      <div className="container">
+        <RelatedProductsLazy
+          title={bn.product.related}
+          relatedProducts={relatedToShow}
+          productLink={(s) => productPagePath(s)}
+        />
+      </div>
+    </>
   );
 }

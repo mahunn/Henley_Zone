@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Product, ProductColor } from "@/types/commerce";
 import { invalidateProductCatalog } from "@/lib/product-catalog-client";
 import { AdminProductsWorkspaceNav } from "@/components/admin/admin-products-workspace-nav";
+import { AdminIconButton, AdminIconLink } from "@/components/admin/admin-icon-button";
+import { IconCheck, IconHome, IconSpinner, IconTrash } from "@/components/admin/admin-icons";
 
 const AVAILABLE_SIZES = ["32", "34", "36", "38", "40", "42", "44", "46", "48"];
 type ColorImageRow = { label: string; image: string };
@@ -200,9 +201,9 @@ export default function AdminProductsPage() {
   return (
     <main style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px" }}>
       <p style={{ marginBottom: 16 }}>
-        <Link href="/admin" className="btn btn-secondary" style={{ display: "inline-block" }}>
-          ← Admin home
-        </Link>
+        <AdminIconLink href="/admin" variant="ghost" label="Admin home">
+          <IconHome />
+        </AdminIconLink>
       </p>
 
       <AdminProductsWorkspaceNav />
@@ -422,18 +423,23 @@ export default function AdminProductsPage() {
                     onChange={(e) => updateColorImageRow(i, { label: e.target.value })}
                     placeholder="Color name"
                   />
-                  <button type="button" className="btn btn-secondary" onClick={() => removeColorImageRow(i)}>
-                    Remove
-                  </button>
+                  <AdminIconButton
+                    type="button"
+                    variant="danger"
+                    label={`Remove color ${row.label}`}
+                    onClick={() => removeColorImageRow(i)}
+                  >
+                    <IconTrash />
+                  </AdminIconButton>
                 </div>
               ))}
             </div>
           )}
         </fieldset>
 
-        <button type="submit" className="btn" disabled={submitting}>
-          {submitting ? "Saving…" : "Create product"}
-        </button>
+        <AdminIconButton type="submit" variant="success" size="lg" label={submitting ? "Creating product" : "Create product"} disabled={submitting}>
+          {submitting ? <IconSpinner size={22} /> : <IconCheck size={22} />}
+        </AdminIconButton>
       </form>
     </main>
   );

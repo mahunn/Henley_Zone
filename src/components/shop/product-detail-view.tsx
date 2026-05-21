@@ -4,6 +4,7 @@ import { useState, useLayoutEffect } from "react";
 import { useCart } from "@/components/cart-provider";
 import { useWishlist } from "@/components/wishlist-provider";
 import { useRouter } from "next/navigation";
+import { ProductImage } from "@/components/shop/product-image";
 import { bn } from "@/config/ui-bn";
 
 interface ProductColor {
@@ -46,6 +47,8 @@ interface Props {
     badge?: string;
   }[];
   onBack?: () => void;
+  /** When false, related block is rendered elsewhere (lazy-loaded for faster LCP). */
+  renderRelated?: boolean;
 }
 
 function StarRow({ count = 0 }: { count?: number }) {
@@ -94,81 +97,15 @@ const BADGE_CLASS: Record<string, string> = {
   Feature: "pc-badge-feature"
 };
 
-type RelatedProduct = NonNullable<Props["relatedProducts"]>[number];
-
-function RelatedProductCard({
-  rp,
-  productLink
-}: {
-  rp: RelatedProduct;
-  productLink: (slug: string) => string;
-}) {
-  const { toggleWishlist, isWishlisted } = useWishlist();
-  const wishlisted = isWishlisted(rp.id, undefined);
-  const disc =
-    rp.discountPercent ??
-    (rp.originalPrice && rp.originalPrice > rp.price
-      ? Math.round((1 - rp.price / rp.originalPrice) * 100)
-      : null);
-
-  return (
-    <div className="pc" style={{ textDecoration: "none" }}>
-      <div className="pc-img-wrap">
-        <a href={productLink(rp.slug)} style={{ display: "block", textDecoration: "none" }}>
-          <img src={rp.image} alt={rp.name} className="pc-img" />
-        </a>
-        <button
-          type="button"
-          className={`pc-wish-btn${wishlisted ? " active" : ""}`}
-          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          title={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleWishlist({
-              productId: rp.id,
-              slug: rp.slug,
-              name: rp.name,
-              price: rp.price,
-              imageUrl: rp.image,
-              category: rp.category
-            });
-          }}
-        >
-          <svg viewBox="0 0 24 24" fill={wishlisted ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
-        </button>
-        <div className="pc-badges">
-          {disc && <span className="pc-badge pc-badge-sale">-{disc}%</span>}
-          {rp.badge && (
-            <span className={`pc-badge ${BADGE_CLASS[rp.badge] ?? "pc-badge-new"}`}>{rp.badge}</span>
-          )}
-        </div>
-      </div>
-      <div className="pc-body">
-        <span className="pc-cat">{rp.category}</span>
-        <a href={productLink(rp.slug)} className="pc-name" style={{ textDecoration: "none" }}>
-          {rp.name}
-        </a>
-        <div className="pc-price-row">
-          <span className="pc-price">{fmt(rp.price)}</span>
-          {rp.originalPrice && <span className="pc-original-price">{fmt(rp.originalPrice)}</span>}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function fmt(price: number) {
   return `৳${price.toLocaleString("en-BD")}`;
 }
 
 export function ProductDetailView({
   product,
-  relatedProducts = [],
   productLink = (slug) => `/#/product/${slug}`,
-  onBack
+  onBack,
+  renderRelated: _renderRelated = true
 }: Props) {
   const router = useRouter();
   const { addToCart, buyNow } = useCart();
@@ -281,22 +218,36 @@ export function ProductDetailView({
       <div className="pdp-main">
         {/* Gallery */}
         <div className="pdp-gallery">
-          <img
+          <ProductImage
             src={product.images[activeImg]}
             alt={product.name}
             className="pdp-main-img"
+            width={800}
+            height={1000}
+            sizes="(max-width: 767px) 100vw, 44vw"
+            priority
           />
           {product.images.length > 1 && (
             <div className="pdp-thumbnails">
               {product.images.map((img, i) => (
-                <img
+                <button
                   key={i}
-                  src={img}
-                  alt={product.colors[i]?.label ?? `View ${i + 1}`}
-                  className={`pdp-thumb${activeImg === i ? " active" : ""}`}
+                  type="button"
+                  className={`pdp-thumb-btn${activeImg === i ? " active" : ""}`}
                   onClick={() => handleThumbClick(i)}
                   title={product.colors[i]?.label}
-                />
+                  aria-label={product.colors[i]?.label ?? `View image ${i + 1}`}
+                  aria-pressed={activeImg === i}
+                >
+                  <ProductImage
+                    src={img}
+                    alt={product.colors[i]?.label ?? `View ${i + 1}`}
+                    className="pdp-thumb"
+                    width={68}
+                    height={68}
+                    sizes="68px"
+                  />
+                </button>
               ))}
             </div>
           )}
@@ -357,7 +308,14 @@ export function ProductDetailView({
                     aria-label={color.label}
                     aria-pressed={activeColor === color.id}
                   >
-                    <img src={color.swatchImage} alt={color.label} className="swatch-img" />
+                    <ProductImage
+                      src={color.swatchImage}
+                      alt={color.label}
+                      className="swatch-img"
+                      width={48}
+                      height={48}
+                      sizes="48px"
+                    />
                   </button>
                 ))}
               </div>
@@ -559,19 +517,6 @@ export function ProductDetailView({
         </div>
       </div>
 
-      {/* Related Products */}
-      {relatedProducts.length > 0 && (
-        <div className="fancy-section" style={{ marginTop: 36 }}>
-          <div className="fancy-title-row">
-            <h2 className="fancy-title">{bn.product.related}</h2>
-          </div>
-          <div className="product-row-scroll">
-            {relatedProducts.map((rp) => (
-              <RelatedProductCard key={rp.id} rp={rp} productLink={productLink} />
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
