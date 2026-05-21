@@ -28,10 +28,10 @@ export const bn = {
     Plazo: "প্লাজো"
   },
   product: {
-    addToCart: "কার্টে যোগ করুন",
-    addedToCart: "যোগ হয়েছে ✓",
-    buyNow: "এখনই অর্ডার করুন",
-    orderNow: "অর্ডার করুন",
+    addToCart: "Add to Cart",
+    addedToCart: "Added ✓",
+    buyNow: "Buy Now",
+    orderNow: "Buy Now",
     chooseOptions: "সাইজ ও রঙ বেছে নিন",
     color: "রঙ",
     size: "সাইজ",
@@ -40,7 +40,7 @@ export const bn = {
     inStock: "স্টকে আছে",
     items: "টি",
     cancel: "বাতিল",
-    confirmAdd: "কার্টে যোগ করুন",
+    confirmAdd: "Add to Cart",
     selectColorSize: "আগে রঙ ও সাইজ বেছে নিন।",
     related: "আরও পণ্য",
     descriptions: "বিবরণ",

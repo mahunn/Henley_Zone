@@ -411,10 +411,10 @@ export function ProductDetailView({
               </button>
             </div>
             <div className="pdp-actions-row">
-              <button type="button" className="btn pdp-btn-add" onClick={handleAddToCart}>
+              <button type="button" className="btn hz-btn-add" onClick={handleAddToCart}>
                 {bn.product.addToCart}
               </button>
-              <button type="button" className="btn pdp-btn-buy" onClick={handleBuyNow}>
+              <button type="button" className="btn hz-btn-buy" onClick={handleBuyNow}>
                 {bn.product.buyNow}
               </button>
             </div>

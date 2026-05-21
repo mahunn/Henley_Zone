@@ -2040,8 +2040,8 @@ button {
   gap: 10px;
 }
 
-.pdp-actions-row .btn.pdp-btn-add,
-.pdp-actions-row .btn.pdp-btn-buy {
+.pdp-actions-row .btn.hz-btn-add,
+.pdp-actions-row .btn.hz-btn-buy {
   flex: 1 1 0;
   min-width: 0;
   border-radius: 999px;
@@ -2482,47 +2482,32 @@ button {
   display: flex;
   gap: 6px;
   margin-top: auto;
-  padding-top: 12px;
+  padding-top: 8px;
 }
 
 .pc-bottom-btn {
   flex: 1;
-  padding: 9px 0;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
+  min-width: 0;
+  min-height: 36px;
+  padding: 9px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
   font-family: var(--font-body, sans-serif);
   cursor: pointer;
   text-align: center;
-  transition: background 0.18s, color 0.18s, border-color 0.18s;
-}
-
-.pc-btn-cart {
-  background: #fff;
-  border: 1.5px solid var(--color-primary);
-  color: var(--color-primary);
-}
-
-.pc-btn-cart:hover {
-  background: var(--color-primary-light);
+  line-height: 1.25;
+  border: none;
+  transition: background 0.18s, color 0.18s, transform 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .pc-btn-cart.is-added {
-  background: #dcfce7;
-  border-color: #22c55e;
-  color: #166534;
+  background: #dcfce7 !important;
+  color: #166534 !important;
   transform: translateY(1px) scale(0.98);
-}
-
-.pc-btn-buy {
-  background: var(--color-primary);
-  border: 1.5px solid var(--color-primary);
-  color: #fff;
-}
-
-.pc-btn-buy:hover {
-  background: var(--color-primary-dark);
-  border-color: var(--color-primary-dark);
 }
 
 /* ─── WhatsApp Float ─────────────────────────────────────────────── */
@@ -2632,23 +2617,29 @@ button {
   background: #075985;
 }
 
-/* PDP CTAs — after .btn so colors are not overridden */
-.pdp-actions-row .btn.pdp-btn-add {
+/* Add to cart (blue) & buy now (orange) — after .btn so colors win */
+.hz-btn-add,
+.btn.hz-btn-add {
   background: #0284c7;
   color: #fff;
+  border-color: transparent;
 }
 
-.pdp-actions-row .btn.pdp-btn-add:hover {
+.hz-btn-add:hover:not(:disabled),
+.btn.hz-btn-add:hover:not(:disabled) {
   background: #0369a1;
   transform: none;
 }
 
-.pdp-actions-row .btn.pdp-btn-buy {
+.hz-btn-buy,
+.btn.hz-btn-buy {
   background: #ea580c;
   color: #fff;
+  border-color: transparent;
 }
 
-.pdp-actions-row .btn.pdp-btn-buy:hover {
+.hz-btn-buy:hover:not(:disabled),
+.btn.hz-btn-buy:hover:not(:disabled) {
   background: #c2410c;
   transform: none;
 }
@@ -3705,8 +3696,16 @@ button {
 
 .variant-picker-card-modal .variant-picker-actions .btn {
   width: 100%;
-  min-height: 40px;
+  min-height: 36px;
   padding: 8px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.variant-picker-actions .btn.hz-btn-add {
+  border-radius: 999px;
+  font-weight: 700;
 }
 
 /* ─── Responsive ─────────────────────────────────────────────────── */
@@ -3977,8 +3976,8 @@ button {
     margin-top: 0;
   }
 
-  .pdp-actions-row .btn.pdp-btn-add,
-  .pdp-actions-row .btn.pdp-btn-buy {
+  .pdp-actions-row .btn.hz-btn-add,
+  .pdp-actions-row .btn.hz-btn-buy {
     padding: 12px 10px;
     font-size: 14px;
   }
@@ -4067,13 +4066,15 @@ button {
   }
 
   .product-grid .pc-bottom-btn {
-    font-size: 11px;
-    padding: 7px 4px;
+    font-size: 10.5px;
+    min-height: 34px;
+    padding: 8px 8px;
   }
 
   .product-row-scroll .pc-bottom-btn {
-    font-size: 11px;
-    padding: 7px 4px;
+    font-size: 10.5px;
+    min-height: 34px;
+    padding: 8px 8px;
   }
 
   .product-row-scroll .pc-bottom-actions {

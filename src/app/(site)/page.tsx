@@ -182,7 +182,7 @@ function ProductCard({
         {/* Bottom Actions */}
         <div className="pc-bottom-actions">
           <button
-            className={`pc-bottom-btn pc-btn-cart${justAdded ? " is-added" : ""}`}
+            className={`pc-bottom-btn hz-btn-add pc-btn-cart${justAdded ? " is-added" : ""}`}
             onClick={(e) => {
               e.preventDefault();
               setSelectedSize(null);
@@ -195,7 +195,7 @@ function ProductCard({
             {justAdded ? bn.product.addedToCart : bn.product.addToCart}
           </button>
           <button
-            className="pc-bottom-btn pc-btn-buy"
+            className="pc-bottom-btn hz-btn-buy pc-btn-buy"
             onClick={(e) => {
               e.preventDefault();
               onBuyNow({ ...product, image: displayImage });
@@ -253,7 +253,7 @@ function ProductCard({
             <div className="variant-picker-actions">
               <button className="btn btn-secondary" onClick={() => setPickerOpen(false)}>Cancel</button>
               <button
-                className="btn"
+                className="btn hz-btn-add"
                 disabled={!selectedSize}
                 onClick={() => {
                   const colorLabel = colors[activeColorIdx]?.label;
@@ -267,7 +267,7 @@ function ProductCard({
                   setPickerOpen(false);
                 }}
               >
-                Add to Cart
+                {bn.product.confirmAdd}
               </button>
             </div>
           </div>

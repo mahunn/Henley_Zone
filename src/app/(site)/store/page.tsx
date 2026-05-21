@@ -146,7 +146,7 @@ function StoreCard({ product }: { product: Product }) {
       {/* Bottom Actions */}
       <div className="pc-bottom-actions" style={{ marginTop: "auto" }}>
         <button
-          className={`pc-bottom-btn pc-btn-cart${justAdded ? " is-added" : ""}`}
+          className={`pc-bottom-btn hz-btn-add pc-btn-cart${justAdded ? " is-added" : ""}`}
           type="button"
           onClick={() => {
             setSelectedSize(null);
@@ -159,7 +159,7 @@ function StoreCard({ product }: { product: Product }) {
           {justAdded ? bn.product.addedToCart : bn.product.addToCart}
         </button>
         <button
-          className="pc-bottom-btn pc-btn-buy"
+          className="pc-bottom-btn hz-btn-buy pc-btn-buy"
           type="button"
           onClick={() => {
             router.push(productPagePath(product.slug));
@@ -216,7 +216,7 @@ function StoreCard({ product }: { product: Product }) {
             <div className="variant-picker-actions">
               <button className="btn btn-secondary" onClick={() => setPickerOpen(false)}>{bn.product.cancel}</button>
               <button
-                className="btn"
+                className="btn hz-btn-add"
                 disabled={!selectedSize}
                 onClick={() => {
                   const colorLabel = colors[activeIdx]?.label;
@@ -230,7 +230,7 @@ function StoreCard({ product }: { product: Product }) {
                   setPickerOpen(false);
                 }}
               >
-                Add to Cart
+                {bn.product.confirmAdd}
               </button>
             </div>
           </div>
