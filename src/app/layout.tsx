@@ -1,15 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Suspense } from "react";
 import { Noto_Sans_Bengali } from "next/font/google";
 import "./globals.css";
 import { defaultBusiness } from "@/config/businesses";
 import { CartProvider } from "@/components/cart-provider";
 import { WishlistProvider } from "@/components/wishlist-provider";
-import { SiteHeader } from "@/components/layout/site-header";
-import { SiteFooter } from "@/components/layout/site-footer";
-import { FloatingCartButton } from "@/components/shop/whatsapp-button";
-import { CatalogPrefetch } from "@/components/catalog-prefetch";
-import { DeferredMetaPixel } from "@/components/analytics/deferred-meta-pixel";
 
 const notoBengali = Noto_Sans_Bengali({
   subsets: ["bengali"],
@@ -29,6 +23,7 @@ export const viewport: Viewport = {
   viewportFit: "cover"
 };
 
+/** Root: fonts + cart state only. Chrome is added per route group. */
 export default function RootLayout({
   children
 }: Readonly<{
@@ -38,16 +33,7 @@ export default function RootLayout({
     <html lang="bn" className={notoBengali.variable} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <CartProvider>
-          <WishlistProvider>
-            <CatalogPrefetch />
-            <Suspense fallback={null}>
-              <SiteHeader />
-            </Suspense>
-            <DeferredMetaPixel />
-            {children}
-            <SiteFooter />
-            <FloatingCartButton />
-          </WishlistProvider>
+          <WishlistProvider>{children}</WishlistProvider>
         </CartProvider>
       </body>
     </html>

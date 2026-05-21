@@ -960,6 +960,20 @@ button {
   background: #005f1e;
 }
 
+/* Product landing (Facebook ads) — no full site chrome */
+.product-landing-layout {
+  min-height: 100dvh;
+  background: var(--color-bg, #f8fafc);
+}
+
+.product-landing-main {
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+}
+
+.product-landing-layout .whatsapp-float {
+  bottom: max(16px, env(safe-area-inset-bottom, 0px));
+}
+
 /* Admin Orders */
 .admin-orders-top {
   display: flex;
