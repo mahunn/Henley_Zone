@@ -10,7 +10,7 @@ export function getSyncedProductCatalog(): Product[] | null {
 }
 
 function refreshCatalogFromApi(): Promise<Product[]> {
-  return fetch("/api/products")
+  return fetch("/products.json")
     .then((r) => {
       if (!r.ok) throw new Error("fetch failed");
       return r.json() as Promise<{ products: Product[] }>;

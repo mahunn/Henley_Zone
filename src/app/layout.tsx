@@ -13,6 +13,7 @@ const notoBengali = Noto_Sans_Bengali({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://henleyzone.com"),
   title: defaultBusiness.name,
   description: defaultBusiness.tagline
 };

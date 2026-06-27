@@ -3,7 +3,7 @@ import { mapProductToPdpDetail } from "@/lib/product-detail-mapper";
 import { getCachedProducts, getProductBySlug } from "@/lib/products-catalog-server";
 import { ProductDetailShell } from "./product-detail-shell";
 
-export const dynamicParams = true;
+export const dynamicParams = false;
 export const revalidate = 60;
 
 export async function generateStaticParams() {
@@ -66,8 +66,31 @@ export default async function ProductPage({
 
   const lcpImage = initialDetail?.images[0];
 
+  const jsonLd = found ? {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": found.name,
+    "image": found.imageUrl ? [found.imageUrl] : [],
+    "description": found.description.trim().slice(0, 160) || found.name,
+    "sku": `HENLEY-${found.id.toUpperCase().slice(0, 8)}`,
+    "offers": {
+      "@type": "Offer",
+      "url": `https://henleyzone.com/product/${found.slug}`,
+      "priceCurrency": "BDT",
+      "price": found.price.toString(),
+      "availability": found.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      "itemCondition": "https://schema.org/NewCondition"
+    }
+  } : null;
+
   return (
     <>
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
       {lcpImage ? (
         <link rel="preload" as="image" href={lcpImage} fetchPriority="high" />
       ) : null}
