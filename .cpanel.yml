@@ -1,0 +1,6 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/websybd/henleyzone.com/
+    - /bin/rsync -a --exclude='.git' --exclude='node_modules' --exclude='.env*.local' ./ $DEPLOYPATH
+    - /bin/touch $DEPLOYPATH/tmp/restart.txt

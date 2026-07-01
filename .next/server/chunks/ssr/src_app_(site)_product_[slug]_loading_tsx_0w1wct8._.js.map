@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../../../src/app/%28site%29/product/%5Bslug%5D/loading.tsx"],"sourcesContent":["/** Avoid skeleton flash on fast SSG product pages; server HTML paints first. */\r\nexport default function ProductLoading() {\r\n  return null;\r\n}\r\n"],"names":["ProductLoading"],"mappings":"wDACe,SAASA,EACtB,OAAO,IACT"}

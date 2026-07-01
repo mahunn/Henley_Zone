@@ -1,0 +1,10 @@
+{
+  "pages": {},
+  "app": {
+    "[project]/src/app/admin/products/manage/page": [
+      "static/media/6ea8d1bb8ea4af7a-s.p.0h.y3vqusyrtt.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pagesUsingSizeAdjust": false
+}

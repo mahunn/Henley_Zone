@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getCachedProducts } from "@/lib/products-catalog-server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const products = await getCachedProducts();
@@ -8,7 +10,7 @@ export async function GET() {
       { products },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=45, stale-while-revalidate=300"
+          "Cache-Control": "public, max-age=0, s-maxage=45, stale-while-revalidate=300"
         }
       }
     );

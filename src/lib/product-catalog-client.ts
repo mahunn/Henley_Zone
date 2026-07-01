@@ -10,13 +10,13 @@ export function getSyncedProductCatalog(): Product[] | null {
 }
 
 function refreshCatalogFromApi(): Promise<Product[]> {
-  return fetch("/products.json")
+  return fetch("/api/products")
     .then((r) => {
       if (!r.ok) throw new Error("fetch failed");
       return r.json() as Promise<{ products: Product[] }>;
     })
     .then((data) => {
-      if (data.products?.length) {
+      if (data.products && Array.isArray(data.products)) {
         memoryCache = data.products;
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("hz:catalog-updated"));
