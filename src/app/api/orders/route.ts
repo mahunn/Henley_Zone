@@ -6,6 +6,7 @@ import {
   listOrders,
   updateOrderStatus
 } from "@/lib/orders-repository";
+import { markLeadAsConverted } from "@/lib/leads-repository";
 import { Order } from "@/types/commerce";
 import { isAdminAuthorized } from "@/lib/admin-request";
 import { withAdminSessionRefresh } from "@/lib/admin-session-response";
@@ -28,7 +29,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as Order;
+    const body = (await request.json()) as Order & { leadId?: string };
 
     if (!body?.items?.length || !body.customerName?.trim() || !body.phone?.trim() || !body.address?.trim()) {
       return NextResponse.json(
@@ -49,8 +50,18 @@ export async function POST(request: Request) {
     };
 
     await createOrder(order);
+
+    if (body.leadId) {
+      try {
+        await markLeadAsConverted(body.leadId, order.id);
+      } catch (err) {
+        console.error("Failed to mark lead as converted:", err);
+      }
+    }
+
     return NextResponse.json({ ok: true, orderId: order.id, order }, { status: 201 });
   } catch (e) {
+
     const message = e instanceof Error ? e.message : "Failed to create order.";
     return NextResponse.json({ message }, { status: 500 });
   }

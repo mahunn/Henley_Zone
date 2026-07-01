@@ -43,6 +43,39 @@ export default function AdminManageProductsPage() {
   const [pendingDeleteIds, setPendingDeleteIds] = useState<string[]>([]);
   const [applyingDeletes, setApplyingDeletes] = useState(false);
 
+  const [syncing, setSyncing] = useState(false);
+  const [syncSuccessMsg, setSyncSuccessMsg] = useState("");
+  const [syncErrorMsg, setSyncErrorMsg] = useState("");
+
+  const needsSync = allProducts.some(
+    (p) =>
+      p.imageUrl.startsWith("/products/") ||
+      (p.colors && p.colors.some((c) => c.image.startsWith("/")))
+  );
+
+  async function handleSyncSeeds() {
+    setSyncing(true);
+    setSyncSuccessMsg("");
+    setSyncErrorMsg("");
+    try {
+      const res = await fetch("/api/admin/products/sync-seeds", {
+        method: "POST"
+      });
+      const data = (await res.json()) as { ok?: boolean; message?: string };
+      if (!res.ok) {
+        setSyncErrorMsg(data.message || "Failed to sync products.");
+        return;
+      }
+      setSyncSuccessMsg(data.message || "Products synced successfully!");
+      invalidateProductCatalog();
+      await reloadProducts();
+    } catch {
+      setSyncErrorMsg("Network error during sync.");
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   async function uploadImageFile(file: File | undefined | null): Promise<string> {
     if (!file) throw new Error("No file selected.");
     const fd = new FormData();
@@ -296,6 +329,88 @@ export default function AdminManageProductsPage() {
         <strong>Save deletions</strong>. Built-in products stay hidden after delete until you restore them in Supabase
         if needed.
       </p>
+
+      <div
+        style={{
+          background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+          border: "1px solid var(--color-border)",
+          borderRadius: "16px",
+          padding: "20px",
+          marginBottom: "24px",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px",
+          transition: "all 0.3s ease"
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ fontSize: "20px" }}>☁️</span>
+          <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, fontFamily: "var(--font-heading, serif)" }}>
+            Supabase Cloud Sync
+          </h3>
+        </div>
+        <p style={{ margin: 0, fontSize: "13.5px", color: "var(--color-text-secondary)", lineHeight: 1.5 }}>
+          Seeded products are loaded from a local configuration file. Sync them to your Supabase Storage bucket and database table to make sure they are fully hosted, secure, and editable directly from your Supabase dashboard.
+        </p>
+
+        {allProducts.length > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600 }}>
+            {needsSync ? (
+              <span style={{ color: "#d97706" }}>⚠️ Local seed images detected. Sync recommended.</span>
+            ) : (
+              <span style={{ color: "#16a34a" }}>✅ All seed products and images are synced to Supabase.</span>
+            )}
+          </div>
+        )}
+
+        {syncSuccessMsg && (
+          <p style={{ margin: 0, padding: "10px 12px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", color: "#166534", fontSize: "13px" }}>
+            {syncSuccessMsg}
+          </p>
+        )}
+
+        {syncErrorMsg && (
+          <p style={{ margin: 0, padding: "10px 12px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: "8px", color: "#991b1b", fontSize: "13px" }}>
+            {syncErrorMsg}
+          </p>
+        )}
+
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={handleSyncSeeds}
+            disabled={syncing}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              cursor: syncing ? "wait" : "pointer",
+              padding: "8px 16px",
+              borderRadius: "10px",
+              border: "1px solid #0ea5e9",
+              background: syncing ? "#f1f5f9" : "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
+              color: syncing ? "#94a3b8" : "#fff",
+              fontWeight: 600,
+              fontSize: "13.5px",
+              boxShadow: syncing ? "none" : "0 4px 12px rgba(14, 165, 233, 0.15)",
+              transition: "all 0.2s ease"
+            }}
+          >
+            {syncing ? (
+              <>
+                <IconSpinner size={16} />
+                <span>Syncing products & images...</span>
+              </>
+            ) : (
+              <>
+                <span>Sync Seeds to Supabase</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
 
       {loadErr && <p className="form-error" style={{ marginBottom: 16 }}>{loadErr}</p>}
       {message && (

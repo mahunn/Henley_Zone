@@ -6,7 +6,8 @@ import {
   IconClipboardList,
   IconLogout,
   IconPackage,
-  IconPlus
+  IconPlus,
+  IconUsers
 } from "@/components/admin/admin-icons";
 
 export default function AdminPanelPage() {
@@ -66,6 +67,12 @@ export default function AdminPanelPage() {
             <IconClipboardList size={22} />
           </span>
           Orders
+        </a>
+        <a href="/admin/leads" className="admin-nav-tile">
+          <span className="admin-nav-tile__icon">
+            <IconUsers size={22} />
+          </span>
+          Checkout Leads
         </a>
         <button
           type="button"

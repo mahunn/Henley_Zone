@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import type { NextResponse } from "next/server";
 
 export const ADMIN_SESSION_COOKIE = "admin_session";

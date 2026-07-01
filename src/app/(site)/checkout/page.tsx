@@ -1,6 +1,6 @@
 "use client";
-
-import { FormEvent, useState } from "react";
+ 
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/components/cart-provider";
@@ -9,7 +9,7 @@ import { DELIVERY_FEE_INSIDE_DHAKA, DELIVERY_FEE_OUTSIDE_DHAKA } from "@/config/
 import { formatCurrency } from "@/lib/money";
 import { Order } from "@/types/commerce";
 import { bn } from "@/config/ui-bn";
-
+ 
 const DELIVERY_OPTIONS = [
   {
     id: "inside",
@@ -24,13 +24,13 @@ const DELIVERY_OPTIONS = [
     fee: DELIVERY_FEE_OUTSIDE_DHAKA
   }
 ] as const;
-
+ 
 type DeliveryId = (typeof DELIVERY_OPTIONS)[number]["id"];
-
+ 
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
-
+ 
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -39,15 +39,62 @@ export default function CheckoutPage() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
+  const [leadId, setLeadId] = useState<string>("");
+ 
   const deliveryFee = DELIVERY_OPTIONS.find((o) => o.id === delivery)!.fee;
   const total = subtotal + (items.length > 0 ? deliveryFee : 0);
   const cleanedPhone = phone.replace(/\s+/g, "");
 
+  // Generate / retrieve leadId on mount or cart change
+  useEffect(() => {
+    if (items.length > 0) {
+      let id = localStorage.getItem("checkoutLeadId");
+      if (!id) {
+        id = `lead_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        localStorage.setItem("checkoutLeadId", id);
+      }
+      setLeadId(id);
+    } else {
+      localStorage.removeItem("checkoutLeadId");
+      setLeadId("");
+    }
+  }, [items.length]);
+
+  // Debounced effect to save lead data to backend
+  useEffect(() => {
+    if (!leadId || items.length === 0) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        await fetch("/api/checkout/lead", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: leadId,
+            customerName: customerName.trim(),
+            phone: cleanedPhone,
+            address: address.trim(),
+            note: note.trim(),
+            items,
+            subtotal,
+            deliveryFee,
+            total,
+            deliveryArea: delivery,
+            status: "abandoned"
+          })
+        });
+      } catch (err) {
+        console.error("Failed to save checkout progress:", err);
+      }
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [leadId, customerName, cleanedPhone, address, note, items, subtotal, deliveryFee, total, delivery]);
+ 
   const submitOrder = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
-
+ 
     if (!items.length) { setError(bn.checkout.errors.emptyCart); return; }
     if (!customerName.trim() || !cleanedPhone || !address.trim()) {
       setError(bn.checkout.errors.required);
@@ -61,8 +108,8 @@ export default function CheckoutPage() {
       setError(bn.checkout.errors.terms);
       return;
     }
-
-    const orderPayload: Omit<Order, "id"> = {
+ 
+    const orderPayload: Omit<Order, "id"> & { leadId?: string } = {
       items,
       subtotal,
       deliveryFee,
@@ -73,9 +120,10 @@ export default function CheckoutPage() {
       phone: cleanedPhone,
       address: address.trim(),
       note: note.trim(),
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      leadId: leadId || undefined
     };
-
+ 
     try {
       setSubmitting(true);
       const res = await fetch("/api/orders", {
@@ -93,6 +141,7 @@ export default function CheckoutPage() {
         setError(bn.checkout.errors.noOrderId);
         return;
       }
+      localStorage.removeItem("checkoutLeadId");
       localStorage.setItem("latestOrder", JSON.stringify(order));
       clearCart();
       router.push("/checkout/success");

@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { seedProducts } from "@/data/seed-products";
 import type { Product, ProductColor } from "@/types/commerce";
 import { getSupabaseAdminClient } from "@/lib/supabase-server";
@@ -265,4 +267,148 @@ export async function createProduct(input: CreateProductInput): Promise<Product>
   }
 
   return toProduct(data as ProductRow);
+}
+
+export async function syncSeedProductsToSupabase(): Promise<{
+  success: boolean;
+  message: string;
+  syncedCount: number;
+}> {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  let syncedCount = 0;
+
+  for (const product of seedProducts) {
+    // 1. Process primary image
+    let imageUrl = product.imageUrl;
+    if (imageUrl.startsWith("/")) {
+      const localPath = path.join(process.cwd(), "public", imageUrl);
+      try {
+        await fs.access(localPath);
+        const buf = await fs.readFile(localPath);
+        const ext = path.extname(localPath).replace(".", "");
+        const mime =
+          ext === "jpg" || ext === "jpeg"
+            ? "image/jpeg"
+            : ext === "png"
+            ? "image/png"
+            : ext === "webp"
+            ? "image/webp"
+            : ext === "gif"
+            ? "image/gif"
+            : "application/octet-stream";
+
+        const storagePath = `catalog/seeds/${product.id}/primary.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("product-images")
+          .upload(storagePath, buf, {
+            contentType: mime,
+            upsert: true
+          });
+
+        if (uploadError) {
+          console.error(`Failed to upload primary image for ${product.id}:`, uploadError);
+        } else {
+          const { data } = supabase.storage.from("product-images").getPublicUrl(storagePath);
+          imageUrl = data.publicUrl;
+        }
+      } catch (e) {
+        console.error(`Primary image local file error for ${product.id}:`, e);
+      }
+    }
+
+    // 2. Process color images
+    const colorsClean: ProductColor[] = [];
+    for (const color of product.colors || []) {
+      let colorImageUrl = color.image;
+      if (colorImageUrl.startsWith("/")) {
+        const localPath = path.join(process.cwd(), "public", colorImageUrl);
+        try {
+          await fs.access(localPath);
+          const buf = await fs.readFile(localPath);
+          const ext = path.extname(localPath).replace(".", "");
+          const mime =
+            ext === "jpg" || ext === "jpeg"
+              ? "image/jpeg"
+              : ext === "png"
+              ? "image/png"
+              : ext === "webp"
+              ? "image/webp"
+              : ext === "gif"
+              ? "image/gif"
+              : "application/octet-stream";
+
+          const storagePath = `catalog/seeds/${product.id}/color_${color.id}.${ext}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from("product-images")
+            .upload(storagePath, buf, {
+              contentType: mime,
+              upsert: true
+            });
+
+          if (uploadError) {
+            console.error(`Failed to upload color image ${color.id} for ${product.id}:`, uploadError);
+          } else {
+            const { data } = supabase.storage.from("product-images").getPublicUrl(storagePath);
+            colorImageUrl = data.publicUrl;
+          }
+        } catch (e) {
+          console.error(`Color image local file error for ${product.id} color ${color.id}:`, e);
+        }
+      }
+      colorsClean.push({
+        id: color.id,
+        label: color.label,
+        image: colorImageUrl
+      });
+    }
+
+    // 3. Size resolution matching description or seed custom array
+    let sizesClean = product.sizes || [];
+    if (sizesClean.length === 0) {
+      if (product.id === "p1") {
+        sizesClean = ["34", "36", "38", "40", "42", "44", "46", "48"];
+      } else if (product.id === "p2" || product.id === "p3") {
+        sizesClean = ["36", "38", "40", "42", "44", "46", "48"];
+      } else {
+        sizesClean = ["36", "38", "40", "42", "44", "46", "48"];
+      }
+    }
+
+    const row = {
+      id: product.id,
+      slug: product.slug,
+      name: product.name,
+      description: product.description,
+      price: Math.round(product.price),
+      stock: Math.max(0, Math.round(product.stock)),
+      image_url: imageUrl,
+      category: product.category,
+      colors_json: colorsClean,
+      sizes_json: sizesClean
+    };
+
+    const { error: upsertError } = await supabase.from("products").upsert(row, { onConflict: "id" });
+
+    if (upsertError) {
+      console.error(`Upsert failed for seed product ${product.id}:`, upsertError);
+      throw new Error(`Sync failed for ${product.name}: ${upsertError.message}`);
+    }
+
+    // 4. Remove suppression if deleted previously
+    await supabase.from("catalog_suppressions").delete().eq("product_id", product.id);
+
+    syncedCount++;
+  }
+
+  return {
+    success: true,
+    message: `Successfully synced ${syncedCount} seed products and their images to Supabase.`,
+    syncedCount
+  };
 }

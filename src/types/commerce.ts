@@ -63,3 +63,21 @@ export interface Order {
   createdAt: string;
 }
 
+export interface CheckoutLead {
+  id: string;
+  customerName?: string;
+  phone?: string;
+  address?: string;
+  note?: string;
+  items: CartItem[];
+  subtotal: number;
+  deliveryFee: number;
+  total: number;
+  deliveryArea?: string;
+  status: "abandoned" | "converted";
+  convertedOrderId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+
