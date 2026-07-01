@@ -111,7 +111,14 @@ function ProductCard({
     <div className="pc">
       <div className="pc-img-wrap">
         <a href={productPagePath(product.slug)} style={{ textDecoration: "none", display: "block" }}>
-          <img ref={cardImgRef} src={displayImage} alt={`${product.name}${activeLabel ? ` – ${activeLabel}` : ""}`} className="pc-img" />
+          <img
+            ref={cardImgRef}
+            src={displayImage}
+            alt={`${product.name}${activeLabel ? ` – ${activeLabel}` : ""}`}
+            className="pc-img"
+            loading="lazy"
+            decoding="async"
+          />
         </a>
         <button
           type="button"
@@ -302,7 +309,13 @@ function CategoryScrollSection() {
             href={`/store?category=${encodeURIComponent(cat.id)}`}
             className="cat-item"
           >
-            <img src={cat.image} alt={cat.label} className="cat-item-img" />
+            <img
+              src={cat.image}
+              alt={cat.label}
+              className="cat-item-img"
+              loading="lazy"
+              decoding="async"
+            />
             <span className="cat-item-label">{cat.label}</span>
           </Link>
         ))}
@@ -529,7 +542,13 @@ function HomePage({
                   className="flash-card"
                   style={{ textDecoration: "none" }}
                 >
-                  <img src={fd.image} alt={fd.name} className="flash-card-img" />
+                  <img
+                    src={fd.image}
+                    alt={fd.name}
+                    className="flash-card-img"
+                    loading="lazy"
+                    decoding="async"
+                  />
                   <div className="flash-card-body">
                     <span className="flash-badge">Flash Deal</span>
                     <div className="flash-card-name">{fd.name}</div>
