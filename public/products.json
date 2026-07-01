@@ -364,6 +364,19 @@
         "39",
         "40"
       ]
+    },
+    {
+      "id": "6e15adb0-23e6-4f8c-983c-55c908050685",
+      "slug": "juicce",
+      "name": "juicce",
+      "description": "a",
+      "price": 599,
+      "stock": 20,
+      "imageUrl": "/uploads/catalog/2eaf9913-1973-4173-a2c0-34ece18727f4.png",
+      "category": "Frogs",
+      "sizes": [
+        "34"
+      ]
     }
   ]
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { isAdminAuthorized } from "@/lib/admin-request";
 import { withAdminSessionRefresh } from "@/lib/admin-session-response";
 import {
@@ -90,6 +91,15 @@ export async function POST(request: Request) {
     }
 
     const product = await createProduct(parsed);
+    try {
+      revalidateTag("products", "default");
+      revalidatePath("/api/products");
+      revalidatePath("/");
+      revalidatePath("/store");
+      revalidatePath(`/product/${product.slug}`);
+    } catch (e) {
+      console.warn("Revalidation failed:", e);
+    }
     return withAdminSessionRefresh(NextResponse.json({ ok: true, product }, { status: 201 }));
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to create product.";
@@ -110,6 +120,14 @@ export async function DELETE(request: Request) {
     }
 
     await deleteProductById(id);
+    try {
+      revalidateTag("products", "default");
+      revalidatePath("/api/products");
+      revalidatePath("/");
+      revalidatePath("/store");
+    } catch (e) {
+      console.warn("Revalidation failed:", e);
+    }
     return withAdminSessionRefresh(NextResponse.json({ ok: true }));
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to delete product.";
@@ -136,6 +154,15 @@ export async function PUT(request: Request) {
     }
 
     const product = await updateProductById(parsed.id, parsed);
+    try {
+      revalidateTag("products", "default");
+      revalidatePath("/api/products");
+      revalidatePath("/");
+      revalidatePath("/store");
+      revalidatePath(`/product/${product.slug}`);
+    } catch (e) {
+      console.warn("Revalidation failed:", e);
+    }
     return withAdminSessionRefresh(NextResponse.json({ ok: true, product }));
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to update product.";

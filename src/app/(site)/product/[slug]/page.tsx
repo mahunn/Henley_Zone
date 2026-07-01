@@ -3,7 +3,7 @@ import { mapProductToPdpDetail } from "@/lib/product-detail-mapper";
 import { getCachedProducts, getProductBySlug } from "@/lib/products-catalog-server";
 import { ProductDetailShell } from "./product-detail-shell";
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 export const revalidate = 60;
 
 export async function generateStaticParams() {
