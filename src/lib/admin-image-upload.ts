@@ -65,8 +65,7 @@ export async function saveAdminProductImage(file: File): Promise<{ url: string }
   const ext = extFromMime(file.type);
   const key = `${randomUUID()}.${ext}`;
   const storagePath = `catalog/${key}`;
-
-  if (isSupabaseConfigured()) {
+  if (isSupabaseConfigured() && process.env.UPLOAD_LOCAL !== "true") {
     const supabase = getSupabaseAdminClient();
     if (!supabase) {
       return { error: "Supabase client could not be created." };

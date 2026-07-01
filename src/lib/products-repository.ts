@@ -284,7 +284,7 @@ export async function syncSeedProductsToSupabase(): Promise<{
   for (const product of seedProducts) {
     // 1. Process primary image
     let imageUrl = product.imageUrl;
-    if (imageUrl.startsWith("/")) {
+    if (imageUrl.startsWith("/") && process.env.UPLOAD_LOCAL !== "true") {
       const localPath = path.join(process.cwd(), "public", imageUrl);
       try {
         await fs.access(localPath);
@@ -325,7 +325,7 @@ export async function syncSeedProductsToSupabase(): Promise<{
     const colorsClean: ProductColor[] = [];
     for (const color of product.colors || []) {
       let colorImageUrl = color.image;
-      if (colorImageUrl.startsWith("/")) {
+      if (colorImageUrl.startsWith("/") && process.env.UPLOAD_LOCAL !== "true") {
         const localPath = path.join(process.cwd(), "public", colorImageUrl);
         try {
           await fs.access(localPath);
