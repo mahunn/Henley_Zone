@@ -69,7 +69,7 @@ export const categories: CategoryItem[] = [
     title: "Tops",
     description: "Fashionable and comfortable tops for modern daily wear.",
     icon: "👚",
-    imageUrl: "/products/tops-category.png",
+    imageUrl: "https://placehold.co/120x120/e0f2fe/0284c7?text=Tops",
     accent: "#0ea5e9"
   }
 ];

@@ -431,6 +431,10 @@ function HomePage({
   const threePiecesProducts = catalog
     .filter((p) => p.category === "Three Pieces")
     .slice(0, 8);
+  const topsProducts = catalog
+    .filter((p) => p.category === "Tops")
+    .slice(0, 8);
+
 
   return (
     <main className="page-main">
@@ -523,6 +527,17 @@ function HomePage({
             title="Three Pieces"
             products={threePiecesProducts}
             viewAllHref="/store?category=Three+Pieces"
+            onAddToCart={onAddToCart}
+            onBuyNow={onBuyNow}
+          />
+        )}
+
+        {/* ── Tops ── */}
+        {topsProducts.length > 0 && (
+          <ProductRowSection
+            title="Tops"
+            products={topsProducts}
+            viewAllHref="/store?category=Tops"
             onAddToCart={onAddToCart}
             onBuyNow={onBuyNow}
           />
