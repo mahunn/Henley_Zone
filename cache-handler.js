@@ -6,27 +6,56 @@ class CacheHandler {
 
     if (!global.redisClient) {
       const redisUrl = process.env.REDIS_URL || "redis://127.0.0.1:6379";
-      global.redisClient = createClient({ url: redisUrl });
-      
-      let loggedRefused = false;
+      let clientOptions = {};
 
-      global.redisClient.on("error", (err) => {
-        if (err.code === "ECONNREFUSED" && !process.env.REDIS_URL) {
-          if (!loggedRefused) {
-            console.warn("Redis: local server not running on 127.0.0.1:6379 (caching disabled).");
-            loggedRefused = true;
+      if (redisUrl.startsWith("/") || redisUrl.startsWith("unix:")) {
+        // Unix Socket Path
+        let socketPath = redisUrl;
+        if (redisUrl.startsWith("unix:")) {
+          socketPath = redisUrl.replace(/^unix:(\/\/)?/, "");
+        }
+        clientOptions = {
+          socket: {
+            path: socketPath
           }
-          return;
-        }
-        console.error("Redis Client Error:", err.message || err);
-      });
+        };
+      } else {
+        clientOptions = { url: redisUrl };
+      }
 
-      global.redisClient.connect().catch((err) => {
-        if (err.code === "ECONNREFUSED" && !process.env.REDIS_URL) {
-          return;
-        }
-        console.error("Redis connection failed:", err.message || err);
-      });
+      try {
+        global.redisClient = createClient(clientOptions);
+        
+        let loggedRefused = false;
+
+        global.redisClient.on("error", (err) => {
+          if (err.code === "ECONNREFUSED" && !process.env.REDIS_URL) {
+            if (!loggedRefused) {
+              console.warn("Redis: local server not running on 127.0.0.1:6379 (caching disabled).");
+              loggedRefused = true;
+            }
+            return;
+          }
+          console.error("Redis Client Error:", err.message || err);
+        });
+
+        global.redisClient.connect().catch((err) => {
+          if (err.code === "ECONNREFUSED" && !process.env.REDIS_URL) {
+            return;
+          }
+          console.error("Redis connection failed:", err.message || err);
+        });
+      } catch (err) {
+        console.error("Redis client initialization failed, caching disabled:", err.message || err);
+        // Fallback to a mock client that doesn't crash the server
+        global.redisClient = {
+          isOpen: false,
+          on: () => {},
+          connect: () => Promise.resolve(),
+          get: () => Promise.resolve(null),
+          set: () => Promise.resolve()
+        };
+      }
     }
     this.client = global.redisClient;
   }
