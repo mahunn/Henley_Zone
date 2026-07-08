@@ -41,6 +41,7 @@ export function SiteFooter() {
               <Link href="/store?category=Frogs">{bn.categories.Frogs}</Link>
               <Link href="/store?category=Gown">{bn.categories.Gown}</Link>
               <Link href="/store?category=Plazo">{bn.categories.Plazo}</Link>
+              <Link href="/store?category=Tops">{bn.categories.Tops}</Link>
               <Link href="/store">{bn.footer.allProducts}</Link>
             </div>
           </div>

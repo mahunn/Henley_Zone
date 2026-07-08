@@ -7,6 +7,8 @@ import { invalidateProductCatalog } from "@/lib/product-catalog-client";
 import { AdminProductsWorkspaceNav } from "@/components/admin/admin-products-workspace-nav";
 import { AdminIconButton, AdminIconLink } from "@/components/admin/admin-icon-button";
 import { IconCheck, IconHome, IconSpinner, IconTrash } from "@/components/admin/admin-icons";
+import { categories as staticCategories } from "@/data/categories";
+import { categoryLabelBn } from "@/config/ui-bn";
 
 const AVAILABLE_SIZES = ["32", "34", "36", "38", "40", "42", "44", "46", "48"];
 type ColorImageRow = { label: string; image: string };
@@ -68,7 +70,12 @@ export default function AdminProductsPage() {
         const data = (await res.json()) as { products: Product[] };
         const products = data.products ?? [];
         setAllProducts(products);
-        const cats = Array.from(new Set(products.map((p) => p.category))).sort();
+        const cats = Array.from(
+          new Set([
+            ...staticCategories.map((c) => c.id),
+            ...products.map((p) => p.category)
+          ])
+        ).sort();
         setExistingCategories(cats);
         setLoadErr("");
       } catch {
@@ -84,7 +91,14 @@ export default function AdminProductsPage() {
     const data = (await res.json()) as { products: Product[] };
     const products = data.products ?? [];
     setAllProducts(products);
-    setExistingCategories(Array.from(new Set(products.map((p) => p.category))).sort());
+    setExistingCategories(
+      Array.from(
+        new Set([
+          ...staticCategories.map((c) => c.id),
+          ...products.map((p) => p.category)
+        ])
+      ).sort()
+    );
   }
 
   function toggleSize(size: string) {
@@ -326,9 +340,14 @@ export default function AdminProductsPage() {
             onChange={(e) => setCategory(e.target.value)}
           >
             <option value="">Select existing category…</option>
-            {existingCategories.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
+            {existingCategories.map((c) => {
+              const label = categoryLabelBn(c);
+              return (
+                <option key={c} value={c}>
+                  {c === label ? c : `${c} (${label})`}
+                </option>
+              );
+            })}
           </select>
         </fieldset>
 

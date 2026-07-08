@@ -7,33 +7,33 @@
       "description": "New arrival with premium print, sequence embroidery + tassel finishing. Size: 34-48 (salwar free size). Full COD available.",
       "price": 800,
       "stock": 30,
-      "imageUrl": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p1/primary.jpeg",
+      "imageUrl": "/products/kurti/salwar1/yellow.jpeg",
       "category": "Salwar Kameez",
       "colors": [
         {
           "id": "yellow",
           "label": "Yellow",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p1/color_yellow.jpeg"
+          "image": "/products/kurti/salwar1/yellow.jpeg"
         },
         {
           "id": "blue",
           "label": "Blue",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p1/color_blue.jpeg"
+          "image": "/products/kurti/salwar1/blue.jpeg"
         },
         {
           "id": "olive",
           "label": "Olive",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p1/color_olive.jpeg"
+          "image": "/products/kurti/salwar1/olive.jpeg"
         },
         {
           "id": "orange",
           "label": "Orange",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p1/color_orange.jpeg"
+          "image": "/products/kurti/salwar1/orange.jpeg"
         },
         {
           "id": "purple",
           "label": "Purple",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p1/color_purple.jpeg"
+          "image": "/products/kurti/salwar1/purple.jpeg"
         }
       ],
       "sizes": [
@@ -50,27 +50,27 @@
     {
       "id": "p2",
       "slug": "salwar-premium-cotton",
-      "name": "Printed Salwar Kameez",
+      "name": "Noksih TW-7",
       "description": "Premium cotton quality with strong embroidery, color guarantee print, and white salwar. Size: 36-48.",
-      "price": 799,
+      "price": 690,
       "stock": 28,
-      "imageUrl": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p2/primary.jpeg",
+      "imageUrl": "/uploads/catalog/17627691-85b6-4f1d-b98d-c8a45e5ae94b.jpg",
       "category": "Salwar Kameez",
       "colors": [
         {
           "id": "green",
           "label": "Green",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p2/color_green.jpeg"
+          "image": "/products/kurti/salwar2/green.jpeg"
         },
         {
           "id": "deep_green",
           "label": "Deep Green",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p2/color_deep_green.jpeg"
+          "image": "/products/kurti/salwar2/deep_green.jpeg"
         },
         {
           "id": "yellow",
           "label": "Yellow",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p2/color_yellow.jpeg"
+          "image": "/products/kurti/salwar2/yellow.jpeg"
         }
       ],
       "sizes": [
@@ -90,23 +90,23 @@
       "description": "Color guarantee print with clean sequence embroidery on neck. Gher 80+, long 45, sizes 36-48.",
       "price": 649,
       "stock": 35,
-      "imageUrl": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p3/primary.jpeg",
+      "imageUrl": "/products/kurti/frog1/magenda.jpeg",
       "category": "Frogs",
       "colors": [
         {
           "id": "magenda",
           "label": "Magenta",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p3/color_magenda.jpeg"
+          "image": "/products/kurti/frog1/magenda.jpeg"
         },
         {
           "id": "yellow",
           "label": "Yellow",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p3/color_yellow.jpeg"
+          "image": "/products/kurti/frog1/yellow.jpeg"
         },
         {
           "id": "brown",
           "label": "Brown",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p3/color_brown.jpeg"
+          "image": "/products/kurti/frog1/brown.jpeg"
         }
       ],
       "sizes": [
@@ -126,38 +126,38 @@
       "description": "রেডিমেড টু পিস। বাটিক প্রিন্ট। কালার গ্যারান্টি। বুকে,হাতে মিরর বসানো। সাইজ ৩৬-৩৮-৪০-৪২-৪৪-৪৬-৪৮।",
       "price": 900,
       "stock": 40,
-      "imageUrl": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p4/primary.jpeg",
+      "imageUrl": "/products/kurti/salwar3/blue.jpeg",
       "category": "Two Pieces",
       "colors": [
         {
           "id": "blue",
           "label": "Blue",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p4/color_blue.jpeg"
+          "image": "/products/kurti/salwar3/blue.jpeg"
         },
         {
           "id": "green",
           "label": "Green",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p4/color_green.jpeg"
+          "image": "/products/kurti/salwar3/green.jpeg"
         },
         {
           "id": "orange",
           "label": "Orange",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p4/color_orange.jpeg"
+          "image": "/products/kurti/salwar3/orange.jpeg"
         },
         {
           "id": "pink",
           "label": "Pink",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p4/color_pink.jpeg"
+          "image": "/products/kurti/salwar3/pink.jpeg"
         },
         {
           "id": "purple",
           "label": "Purple",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p4/color_purple.jpeg"
+          "image": "/products/kurti/salwar3/purple.jpeg"
         },
         {
           "id": "yellow",
           "label": "Yellow",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p4/color_yellow.jpeg"
+          "image": "/products/kurti/salwar3/yellow.jpeg"
         }
       ],
       "sizes": [
@@ -177,18 +177,18 @@
       "description": "স্টাইল ও কোয়ালিটির পারফেক্ট কম্বিনেশন। নিজস্ব ফ্যাক্টরিতে প্রস্তুত প্রিমিয়াম কটন ফেব্রিক্স, নিখুঁত সেলাই ও দীর্ঘস্থায়ী কালার। ১০০% ক্যাশ অন ডেলিভারি সুবিধা।",
       "price": 990,
       "stock": 32,
-      "imageUrl": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p6/primary.jpeg",
+      "imageUrl": "/products/kurti/two-piece/blue.jpeg",
       "category": "Two Pieces",
       "colors": [
         {
           "id": "blue",
           "label": "Blue",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p6/color_blue.jpeg"
+          "image": "/products/kurti/two-piece/blue.jpeg"
         },
         {
           "id": "pink",
           "label": "Pink",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p6/color_pink.jpeg"
+          "image": "/products/kurti/two-piece/pink.jpeg"
         }
       ],
       "sizes": [
@@ -208,33 +208,33 @@
       "description": "থ্রি পিস কটন ড্রেস সেট। ১০০% পিওর কটন কাপড়, কালার গ্যারান্টি, স্কিন প্রিন্ট ও সুন্দর ম্যানুয়াল এমব্রয়ডারি। অগ্রিম ছাড়াই ক্যাশ অন ডেলিভারি।",
       "price": 1290,
       "stock": 36,
-      "imageUrl": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p7/primary.jpeg",
+      "imageUrl": "/products/kurti/three-piece/purple.jpeg",
       "category": "Three Pieces",
       "colors": [
         {
           "id": "orange",
           "label": "Orange",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p7/color_orange.jpeg"
+          "image": "/products/kurti/three-piece/Orange.jpeg"
         },
         {
           "id": "olive",
           "label": "Olive",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p7/color_olive.jpeg"
+          "image": "/products/kurti/three-piece/olive.jpeg"
         },
         {
           "id": "pink",
           "label": "Pink",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p7/color_pink.jpeg"
+          "image": "/products/kurti/three-piece/pink.jpeg"
         },
         {
           "id": "purple",
           "label": "Purple",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p7/color_purple.jpeg"
+          "image": "/products/kurti/three-piece/purple.jpeg"
         },
         {
           "id": "red",
           "label": "Red",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p7/color_red.jpeg"
+          "image": "/products/kurti/three-piece/red.jpeg"
         }
       ],
       "sizes": [
@@ -253,38 +253,38 @@
       "description": "রেডিমেড সুতি গাউন ওয়ান পিস। এমব্রয়ডারি +গ্লাস ওয়ার্ক। ঘের ১৪০+ ইঞ্চি। রঙ উঠবে না ধোয়ার পরে। বডি সাইজ ৩৬-৪৮।",
       "price": 750,
       "stock": 45,
-      "imageUrl": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p5/primary.jpeg",
+      "imageUrl": "/products/kurti/gown1/navy-blue.jpeg",
       "category": "Gown",
       "colors": [
         {
           "id": "brown",
           "label": "Brown",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p5/color_brown.jpeg"
+          "image": "/products/kurti/gown1/brown.jpeg"
         },
         {
           "id": "light-blue",
           "label": "Light Blue",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p5/color_light-blue.jpeg"
+          "image": "/products/kurti/gown1/light-blue.jpeg"
         },
         {
           "id": "lime-green",
           "label": "Lime Green",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p5/color_lime-green.jpeg"
+          "image": "/products/kurti/gown1/lime-green.jpeg"
         },
         {
           "id": "navy-blue",
           "label": "Navy Blue",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p5/color_navy-blue.jpeg"
+          "image": "/products/kurti/gown1/navy-blue.jpeg"
         },
         {
           "id": "olive-green",
           "label": "Olive Green",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p5/color_olive-green.jpeg"
+          "image": "/products/kurti/gown1/olive-green.jpeg"
         },
         {
           "id": "orange",
           "label": "Orange",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p5/color_orange.jpeg"
+          "image": "/products/kurti/gown1/orange.jpeg"
         }
       ],
       "sizes": [
@@ -304,28 +304,28 @@
       "description": "🔥 ২৫% ডিস্কাউন্টে এই সিজনের মোস্ট ট্রেন্ডিং গাউন। পরলেই লুক হবে একদম স্টার-লেভেল। বুকজুড়ে স্টাইলিশ মিরর ওয়ার্ক, ট্রেন্ডি প্রিন্ট — ক্লাসি + এলিগেন্ট ভাইব। ১০০% কালার গ্যারান্টি। সাইজ ৩৬–৪৮ (পারফেক্ট ফিট গ্যারান্টি)। সারা বাংলাদেশে ফুল ক্যাশ অন ডেলিভারি। WhatsApp: 01581708578। স্টক লিমিটেড — আজই অর্ডার কনফার্ম করুন!",
       "price": 700,
       "stock": 40,
-      "imageUrl": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p9/primary.jpeg",
+      "imageUrl": "/products/kurti/gawn2/blue.jpeg",
       "category": "Gown",
       "colors": [
         {
           "id": "black",
           "label": "Black",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p9/color_black.jpeg"
+          "image": "/products/kurti/gawn2/black.jpeg"
         },
         {
           "id": "blue",
           "label": "Blue",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p9/color_blue.jpeg"
+          "image": "/products/kurti/gawn2/blue.jpeg"
         },
         {
           "id": "red",
           "label": "Red",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p9/color_red.jpeg"
+          "image": "/products/kurti/gawn2/red.jpeg"
         },
         {
           "id": "yellow",
           "label": "Yellow",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p9/color_yellow.jpeg"
+          "image": "/products/kurti/gawn2/yellow.jpeg"
         }
       ],
       "sizes": [
@@ -345,37 +345,24 @@
       "description": "🔥 এমব্রয়ডারি প্লাজো — স্টাইল আর কমফোর্টের পারফেক্ট কম্বো। প্রিমিয়াম কোয়ালিটি ফ্যাব্রিক: নরম, হালকা ও আরামদায়ক। ফ্রি সাইজ (সবার জন্য পারফেক্ট ফিট)। লং সাইজ (Long Size): ৩৮, ৩৯, ৪০। আজকের স্পেশাল অফার: ২৫% ডিস্কাউন্ট। সারা বাংলাদেশে ফুল ক্যাশ অন ডেলিভারি। WhatsApp: 01581708578। স্টক লিমিটেড!",
       "price": 450,
       "stock": 50,
-      "imageUrl": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p8/primary.jpeg",
+      "imageUrl": "/products/plazo/plazo1/img1.jpeg",
       "category": "Plazo",
       "colors": [
         {
           "id": "design-1",
           "label": "Design 1",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p8/color_design-1.jpeg"
+          "image": "/products/plazo/plazo1/img1.jpeg"
         },
         {
           "id": "design-2",
           "label": "Design 2",
-          "image": "https://yupsextjpobenxiscwde.supabase.co/storage/v1/object/public/product-images/catalog/seeds/p8/color_design-2.jpeg"
+          "image": "/products/plazo/plazo1/img2.jpeg"
         }
       ],
       "sizes": [
         "38",
         "39",
         "40"
-      ]
-    },
-    {
-      "id": "6e15adb0-23e6-4f8c-983c-55c908050685",
-      "slug": "juicce",
-      "name": "juicce",
-      "description": "a",
-      "price": 599,
-      "stock": 20,
-      "imageUrl": "/uploads/catalog/2eaf9913-1973-4173-a2c0-34ece18727f4.png",
-      "category": "Frogs",
-      "sizes": [
-        "34"
       ]
     }
   ]

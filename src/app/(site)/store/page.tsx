@@ -14,6 +14,7 @@ import { getProductsCatalog, getSyncedProductCatalog } from "@/lib/product-catal
 import { animateFlyToCart } from "@/lib/cart-fly-animation";
 import { productPagePath } from "@/lib/product-url";
 import { bn, categoryLabelBn } from "@/config/ui-bn";
+import { categories as staticCategories } from "@/data/categories";
 
 const CARD_SIZE_OPTIONS = ["36", "38", "40", "42", "44", "46", "48"];
 
@@ -306,7 +307,13 @@ function StorePageContent() {
   }, []);
 
   const categories = useMemo(
-    () => Array.from(new Set(products.map((p) => p.category))),
+    () =>
+      Array.from(
+        new Set([
+          ...staticCategories.map((c) => c.id),
+          ...products.map((p) => p.category)
+        ])
+      ),
     [products]
   );
 

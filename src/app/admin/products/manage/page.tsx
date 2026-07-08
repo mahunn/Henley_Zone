@@ -16,6 +16,8 @@ import {
   IconUpload,
   IconX
 } from "@/components/admin/admin-icons";
+import { categories as staticCategories } from "@/data/categories";
+import { categoryLabelBn } from "@/config/ui-bn";
 
 const AVAILABLE_SIZES = ["32", "34", "36", "38", "40", "42", "44", "46", "48"];
 type ColorImageRow = { label: string; image: string };
@@ -35,6 +37,7 @@ export default function AdminManageProductsPage() {
   const router = useRouter();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [existingCategories, setExistingCategories] = useState<string[]>([]);
   const [loadErr, setLoadErr] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -42,6 +45,7 @@ export default function AdminManageProductsPage() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [pendingDeleteIds, setPendingDeleteIds] = useState<string[]>([]);
   const [applyingDeletes, setApplyingDeletes] = useState(false);
+  const [uploadingColorImages, setUploadingColorImages] = useState(false);
 
   const [syncing, setSyncing] = useState(false);
   const [syncSuccessMsg, setSyncSuccessMsg] = useState("");
@@ -121,7 +125,15 @@ export default function AdminManageProductsPage() {
           return;
         }
         const data = (await res.json()) as { products: Product[] };
-        setAllProducts(data.products ?? []);
+        const products = data.products ?? [];
+        setAllProducts(products);
+        const cats = Array.from(
+          new Set([
+            ...staticCategories.map((c) => c.id),
+            ...products.map((p) => p.category)
+          ])
+        ).sort();
+        setExistingCategories(cats);
         setLoadErr("");
       } catch {
         setLoadErr("Could not load products.");
@@ -138,12 +150,31 @@ export default function AdminManageProductsPage() {
       return;
     }
     const data = (await res.json()) as { products: Product[] };
-    setAllProducts(data.products ?? []);
+    const products = data.products ?? [];
+    setAllProducts(products);
+    setExistingCategories(
+      Array.from(
+        new Set([
+          ...staticCategories.map((c) => c.id),
+          ...products.map((p) => p.category)
+        ])
+      ).sort()
+    );
     setLoadErr("");
   }
 
   function toColorRowsFromProduct(p: Product): ColorImageRow[] {
     return (p.colors ?? []).map((c) => ({ label: c.label, image: c.image }));
+  }
+
+  function makeColorLabelFromFileName(fileName: string): string {
+    const base = fileName.replace(/\.[^/.]+$/, "");
+    const cleaned = base.replace(/[-_]+/g, " ").trim();
+    if (!cleaned) return "Color";
+    return cleaned
+      .split(/\s+/)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(" ");
   }
 
   function startEditing(p: Product) {
@@ -453,7 +484,35 @@ export default function AdminManageProductsPage() {
                   }}
                 />
               </label>
+              {editing.imageUrl ? (
+                <div style={{ marginTop: 2, marginBottom: 6 }}>
+                  <img
+                    src={editing.imageUrl}
+                    alt="Primary preview"
+                    style={{ maxWidth: 120, maxHeight: 120, borderRadius: 8, objectFit: "cover", border: "1px solid var(--color-border)" }}
+                  />
+                </div>
+              ) : null}
             </div>
+            <fieldset style={{ border: "1px solid var(--color-border)", borderRadius: 10, padding: "14px 16px" }}>
+              <legend style={{ fontWeight: 600, padding: "0 6px" }}>Category</legend>
+              <select
+                className="nav-search"
+                value={editing.category}
+                onChange={(e) => setEditing({ ...editing, category: e.target.value })}
+                style={{ width: "100%", background: "#fff" }}
+              >
+                <option value="">Select category…</option>
+                {existingCategories.map((c) => {
+                  const label = categoryLabelBn(c);
+                  return (
+                    <option key={c} value={c}>
+                      {c === label ? c : `${c} (${label})`}
+                    </option>
+                  );
+                })}
+              </select>
+            </fieldset>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {AVAILABLE_SIZES.map((sz) => (
                 <button
@@ -467,23 +526,67 @@ export default function AdminManageProductsPage() {
                 </button>
               ))}
             </div>
-            <div style={{ display: "grid", gap: 8 }}>
-              {editing.colorImages.map((row, i) => (
-                <div key={`${row.image}-${i}`} style={{ display: "grid", gridTemplateColumns: "56px 1fr 1fr auto", gap: 8, alignItems: "center" }}>
-                  <img src={row.image} alt={row.label} style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, border: "1px solid var(--color-border)" }} />
-                  <input className="nav-search" value={row.label} onChange={(e) => updateEditColor(i, { label: e.target.value })} placeholder="Color name" />
-                  <input className="nav-search" value={row.image} onChange={(e) => updateEditColor(i, { image: e.target.value })} placeholder="Color image URL" />
-                  <AdminIconButton
-                    type="button"
-                    variant="danger"
-                    label={`Remove color ${row.label}`}
-                    onClick={() => removeEditColor(i)}
-                  >
-                    <IconTrash />
-                  </AdminIconButton>
+            <fieldset style={{ border: "1px solid var(--color-border)", borderRadius: 10, padding: "14px 16px" }}>
+              <legend style={{ fontWeight: 600, padding: "0 6px" }}>Color images (optional)</legend>
+              <p style={{ margin: "0 0 10px", fontSize: 13, color: "var(--color-text-secondary)" }}>
+                Upload multiple color images. Color name is auto-filled from file name and you can edit it.
+              </p>
+              <label style={{ display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap", cursor: uploadingColorImages ? "wait" : "pointer", marginBottom: 12 }}>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  disabled={uploadingColorImages}
+                  onChange={async (e) => {
+                    const files = Array.from(e.target.files ?? []);
+                    e.target.value = "";
+                    if (files.length === 0) return;
+                    setError("");
+                    setUploadingColorImages(true);
+                    try {
+                      const uploaded: ColorImageRow[] = [];
+                      for (const file of files) {
+                        const url = await uploadImageFile(file);
+                        uploaded.push({
+                          label: makeColorLabelFromFileName(file.name),
+                          image: url
+                        });
+                      }
+                      setEditing((prev) =>
+                        prev ? { ...prev, colorImages: [...prev.colorImages, ...uploaded] } : prev
+                      );
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : "Color image upload failed.");
+                    } finally {
+                      setUploadingColorImages(false);
+                    }
+                  }}
+                />
+                {uploadingColorImages && (
+                  <span style={{ fontSize: 13, color: "var(--color-text-secondary)" }}>Uploading color images…</span>
+                )}
+              </label>
+
+              {editing.colorImages.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {editing.colorImages.map((row, i) => (
+                    <div key={`${row.image}-${i}`} style={{ display: "grid", gridTemplateColumns: "56px 1fr 1fr auto", gap: 8, alignItems: "center" }}>
+                      <img src={row.image} alt={row.label} style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, border: "1px solid var(--color-border)" }} />
+                      <input className="nav-search" value={row.label} onChange={(e) => updateEditColor(i, { label: e.target.value })} placeholder="Color name" />
+                      <input className="nav-search" value={row.image} onChange={(e) => updateEditColor(i, { image: e.target.value })} placeholder="Color image URL" />
+                      <AdminIconButton
+                        type="button"
+                        variant="danger"
+                        label={`Remove color ${row.label}`}
+                        onClick={() => removeEditColor(i)}
+                      >
+                        <IconTrash />
+                      </AdminIconButton>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+            </fieldset>
             <AdminIconToolbar>
               <AdminIconButton
                 type="button"

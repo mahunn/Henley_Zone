@@ -62,6 +62,15 @@ export const categories: CategoryItem[] = [
     icon: "👖",
     imageUrl: "/products/plazo/plazo1/img1.jpeg",
     accent: "#7c3aed"
+  },
+  {
+    id: "Tops",
+    label: "Trendy Wear",
+    title: "Tops",
+    description: "Fashionable and comfortable tops for modern daily wear.",
+    icon: "👚",
+    imageUrl: "/products/tops-category.png",
+    accent: "#0ea5e9"
   }
 ];
 

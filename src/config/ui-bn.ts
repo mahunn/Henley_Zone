@@ -25,7 +25,8 @@ export const bn = {
     "Three Pieces": "থ্রি পিস",
     Frogs: "ফ্রগ",
     Gown: "গাউন",
-    Plazo: "প্লাজো"
+    Plazo: "প্লাজো",
+    Tops: "টপস"
   },
   product: {
     addToCart: "Add to Cart",

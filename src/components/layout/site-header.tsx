@@ -355,6 +355,13 @@ export function SiteHeader() {
             >
               {bn.categories.Plazo}
             </Link>
+            <Link
+              href="/store?category=Tops"
+              className={navClass(onStorePage && activeCategory === "Tops")}
+              onClick={scrollToTopAfterNav}
+            >
+              {bn.categories.Tops}
+            </Link>
             <Link href="/contact" className={navClass(pathname === "/contact")} onClick={scrollToTopAfterNav}>
               {bn.nav.contact}
             </Link>

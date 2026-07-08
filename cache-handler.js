@@ -8,18 +8,21 @@ class CacheHandler {
       const redisUrl = process.env.REDIS_URL || "redis://127.0.0.1:6379";
       global.redisClient = createClient({ url: redisUrl });
       
+      let loggedRefused = false;
+
       global.redisClient.on("error", (err) => {
-        // Suppress connection refused logs during next build if REDIS_URL is not set
-        const isBuild = process.env.NEXT_PHASE === "phase-production-build";
-        if (isBuild && err.code === "ECONNREFUSED" && !process.env.REDIS_URL) {
+        if (err.code === "ECONNREFUSED" && !process.env.REDIS_URL) {
+          if (!loggedRefused) {
+            console.warn("Redis: local server not running on 127.0.0.1:6379 (caching disabled).");
+            loggedRefused = true;
+          }
           return;
         }
         console.error("Redis Client Error:", err.message || err);
       });
 
       global.redisClient.connect().catch((err) => {
-        const isBuild = process.env.NEXT_PHASE === "phase-production-build";
-        if (isBuild && err.code === "ECONNREFUSED" && !process.env.REDIS_URL) {
+        if (err.code === "ECONNREFUSED" && !process.env.REDIS_URL) {
           return;
         }
         console.error("Redis connection failed:", err.message || err);
