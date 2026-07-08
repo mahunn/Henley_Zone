@@ -2,5 +2,7 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/websybd/henleyzone.com/
-    - /bin/rsync -a --exclude='.git' --exclude='node_modules' --exclude='.env*.local' ./ $DEPLOYPATH
-    - /bin/touch $DEPLOYPATH/tmp/restart.txt
+    - mkdir -p $DEPLOYPATH/tmp
+    - /usr/bin/rsync -a --exclude='.git' --exclude='node_modules' --exclude='.env*.local' ./ $DEPLOYPATH || /bin/rsync -a --exclude='.git' --exclude='node_modules' --exclude='.env*.local' ./ $DEPLOYPATH
+    - /usr/bin/touch $DEPLOYPATH/tmp/restart.txt || /bin/touch $DEPLOYPATH/tmp/restart.txt
+
