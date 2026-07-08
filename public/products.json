@@ -50,11 +50,11 @@
     {
       "id": "p2",
       "slug": "salwar-premium-cotton",
-      "name": "Noksih TW-7",
+      "name": "Printed Salwar Kameez",
       "description": "Premium cotton quality with strong embroidery, color guarantee print, and white salwar. Size: 36-48.",
-      "price": 690,
+      "price": 799,
       "stock": 28,
-      "imageUrl": "/uploads/catalog/b02c18f5-df45-4794-9c1a-72abd3053620.jpg",
+      "imageUrl": "/products/kurti/salwar2/green.jpeg",
       "category": "Salwar Kameez",
       "colors": [
         {
@@ -363,6 +363,42 @@
         "38",
         "39",
         "40"
+      ]
+    },
+    {
+      "id": "bab13e38-91b5-4c3a-89c9-77960d9d4cc0",
+      "slug": "embroidery-tops",
+      "name": "Embroidery tops",
+      "description": "Premium cotton fabric embroidery tops",
+      "price": 550,
+      "stock": 160,
+      "imageUrl": "/uploads/catalog/890a3a7b-0d7d-49e5-be25-c85b24deaeff.jpg",
+      "category": "Tops",
+      "colors": [
+        {
+          "id": "কফি",
+          "label": "কফি",
+          "image": "/uploads/catalog/955f3928-101d-4902-bc6a-f2858e45d76e.png"
+        },
+        {
+          "id": "মেরুন",
+          "label": "মেরুন",
+          "image": "/uploads/catalog/27ab6bf3-cdca-4961-92f8-4a504d12a2fe.jpg"
+        },
+        {
+          "id": "সাদা",
+          "label": "সাদা",
+          "image": "/uploads/catalog/04c9f9d8-5b8b-472c-988b-6d24d6d14f4f.png"
+        }
+      ],
+      "sizes": [
+        "36",
+        "38",
+        "40",
+        "42",
+        "44",
+        "46",
+        "48"
       ]
     }
   ]

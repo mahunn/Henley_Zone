@@ -1,0 +1,17 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/(site)/layout,_N_T_/(site)/product/layout,_N_T_/(site)/product/[slug]/layout,_N_T_/(site)/product/[slug]/page,_N_T_/product/embroidery-tops,products"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/!KHNpdGUp/product/$d$slug/__PAGE__",
+    "/!KHNpdGUp/product/$d$slug",
+    "/!KHNpdGUp/product",
+    "/!KHNpdGUp",
+    "/_index",
+    "/_head"
+  ]
+}

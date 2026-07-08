@@ -2,11 +2,12 @@ import { seedProducts } from "@/data/seed-products";
 import type { Product } from "@/types/commerce";
 
 let memoryCache: Product[] | null = null;
+let isLoadedFromApi = false;
 let inflight: Promise<Product[]> | null = null;
 
 /** Synchronous read after a successful load (e.g. user visited home first, then Shop). */
 export function getSyncedProductCatalog(): Product[] | null {
-  return memoryCache;
+  return isLoadedFromApi ? memoryCache : null;
 }
 
 function refreshCatalogFromApi(): Promise<Product[]> {
@@ -18,6 +19,7 @@ function refreshCatalogFromApi(): Promise<Product[]> {
     .then((data) => {
       if (data.products && Array.isArray(data.products)) {
         memoryCache = data.products;
+        isLoadedFromApi = true;
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("hz:catalog-updated"));
         }
@@ -31,12 +33,18 @@ function refreshCatalogFromApi(): Promise<Product[]> {
  * Shared by header search, store, and product pages so ad traffic never blocks on Supabase.
  */
 export function getProductsCatalog(): Promise<Product[]> {
-  if (memoryCache) return Promise.resolve(memoryCache);
+  if (isLoadedFromApi && memoryCache) return Promise.resolve(memoryCache);
 
-  memoryCache = [...seedProducts];
+  if (!memoryCache) {
+    memoryCache = [...seedProducts];
+  }
 
   if (!inflight) {
     inflight = refreshCatalogFromApi()
+      .then((products) => {
+        isLoadedFromApi = true;
+        return products;
+      })
       .catch(() => memoryCache ?? [...seedProducts])
       .finally(() => {
         inflight = null;
@@ -48,16 +56,19 @@ export function getProductsCatalog(): Promise<Product[]> {
 
 export function invalidateProductCatalog() {
   memoryCache = null;
+  isLoadedFromApi = false;
   inflight = null;
 }
 
 /** Defer Supabase sync until after first paint (product pages with server data). */
 export function deferCatalogRefresh(): Promise<Product[]> {
-  if (memoryCache && memoryCache !== seedProducts) {
+  if (isLoadedFromApi && memoryCache) {
     return Promise.resolve(memoryCache);
   }
 
-  memoryCache = [...seedProducts];
+  if (!memoryCache) {
+    memoryCache = [...seedProducts];
+  }
 
   return new Promise((resolve) => {
     const run = () => {
@@ -70,3 +81,4 @@ export function deferCatalogRefresh(): Promise<Product[]> {
     }
   });
 }
+
