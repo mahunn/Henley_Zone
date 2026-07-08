@@ -3,6 +3,7 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home/websybd/henleyzone.com/
     - mkdir -p $DEPLOYPATH/tmp
-    - /usr/bin/rsync -a --exclude='.git' --exclude='node_modules' --exclude='.env*.local' ./ $DEPLOYPATH || /bin/rsync -a --exclude='.git' --exclude='node_modules' --exclude='.env*.local' ./ $DEPLOYPATH
-    - /usr/bin/touch $DEPLOYPATH/tmp/restart.txt || /bin/touch $DEPLOYPATH/tmp/restart.txt
+    - /bin/cp -rf .next public src supabase cache-handler.js ecosystem.config.js middleware.ts next-env.d.ts next.config.ts package-lock.json package.json server.js tsconfig.json $DEPLOYPATH || cp -rf .next public src supabase cache-handler.js ecosystem.config.js middleware.ts next-env.d.ts next.config.ts package-lock.json package.json server.js tsconfig.json $DEPLOYPATH
+    - /usr/bin/touch $DEPLOYPATH/tmp/restart.txt || /bin/touch $DEPLOYPATH/tmp/restart.txt || touch $DEPLOYPATH/tmp/restart.txt
+
 
