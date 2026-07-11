@@ -1,7 +1,0 @@
-{"timestamp":"00:00:05.347","source":"Server","level":"LOG","message":""}
-{"timestamp":"00:00:07.946","source":"Server","level":"WARN","message":"Redis: local server not running on 127.0.0.1:6379 (caching disabled)."}
-{"timestamp":"00:00:13.956","source":"Browser","level":"WARN","message":"[Meta Pixel] - Call to \"fbq('set', 'test_event_code', 'TEST30054');\" with parameter \"pixel_id\" has an invalid value of \"undefined\""}
-{"timestamp":"00:00:13.986","source":"Server","level":"WARN","message":"[browser] \"\\u001b[33m[Meta Pixel] - Call to \\\"fbq('set', 'test_event_code', 'TEST30054');\\\" with parameter \\\"pixel_id\\\" has an invalid value of \\\"undefined\\\"\\u001b[39m\" \"\\u001b[2m(https://connect.facebook.net/en_US/fbevents.js:188:528)\\u001b[22m\""}
-{"timestamp":"00:00:13.987","source":"Browser","level":"WARN","message":"\u001b[33m[Meta Pixel] - Call to \"fbq('set', 'test_event_code', 'TEST30054');\" with parameter \"pixel_id\" has an invalid value of \"undefined\"\u001b[39m"}
-{"timestamp":"00:00:18.792","source":"Server","level":"ERROR","message":"CacheHandler.get error: Error"}
-{"timestamp":"00:00:24.584","source":"Server","level":"ERROR","message":"CacheHandler.set error: Error"}

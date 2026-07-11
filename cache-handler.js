@@ -25,12 +25,14 @@ class CacheHandler {
 
       try {
         global.redisClient = createClient(clientOptions);
+        global.redisClientActive = true;
         
         let loggedRefused = false;
 
         global.redisClient.on("error", (err) => {
-          if (err.code === "ECONNREFUSED" && !process.env.REDIS_URL) {
-            if (!loggedRefused) {
+          if (err.code === "ECONNREFUSED") {
+            global.redisClientActive = false;
+            if (!loggedRefused && !process.env.REDIS_URL) {
               console.warn("Redis: local server not running on 127.0.0.1:6379 (caching disabled).");
               loggedRefused = true;
             }
@@ -40,7 +42,8 @@ class CacheHandler {
         });
 
         global.redisClient.connect().catch((err) => {
-          if (err.code === "ECONNREFUSED" && !process.env.REDIS_URL) {
+          if (err.code === "ECONNREFUSED") {
+            global.redisClientActive = false;
             return;
           }
           console.error("Redis connection failed:", err.message || err);
@@ -50,6 +53,7 @@ class CacheHandler {
         // Fallback to a mock client that doesn't crash the server
         global.redisClient = {
           isOpen: false,
+          isReady: false,
           on: () => {},
           connect: () => Promise.resolve(),
           get: () => Promise.resolve(null),
@@ -62,7 +66,7 @@ class CacheHandler {
 
   async get(key) {
     try {
-      if (!this.client.isOpen) return null;
+      if (!this.client.isOpen || !this.client.isReady) return null;
       const val = await this.client.get(key);
       if (!val) return null;
 
@@ -96,7 +100,7 @@ class CacheHandler {
 
   async set(key, data, ctx) {
     try {
-      if (!this.client.isOpen) return;
+      if (!this.client.isOpen || !this.client.isReady) return;
 
       const entry = {
         lastModified: Date.now(),
@@ -123,7 +127,7 @@ class CacheHandler {
 
   async revalidateTag(tag) {
     try {
-      if (!this.client.isOpen) return;
+      if (!this.client.isOpen || !this.client.isReady) return;
       const now = Date.now();
       await this.client.set(`tag:${tag}`, now.toString());
     } catch (err) {

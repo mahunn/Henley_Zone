@@ -1,0 +1,1226 @@
+/* ─────────────────────────────────────────────────────────────────────
+   Landing Page — Facebook Ad Single-Page Checkout
+   Mobile-first, scoped under .lp-* prefix to avoid conflicts.
+   Reuses CSS vars from globals.css (:root tokens).
+   ───────────────────────────────────────────────────────────────────── */
+
+/* ─── SiteHeader Overrides for Landing Page ─────────────────────────── */
+
+/* Hide main website distractions (topbar & links row) on landing pages */
+.topbar,
+.header-nav-links {
+  display: none !important;
+}
+
+/* Ensure sticky positioning for landing page */
+.main-header {
+  position: sticky !important;
+  top: 0 !important;
+}
+
+/* ─── Page Container ─────────────────────────────────────────────── */
+
+.lp-page {
+  max-width: 600px;
+  margin: 0 auto;
+  background: var(--color-surface);
+}
+
+/* ─── Image Gallery ──────────────────────────────────────────────── */
+
+.lp-gallery {
+  position: relative;
+  width: 100%;
+  background: #f1f5f9;
+}
+
+.lp-gallery-main {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 3.8;
+  overflow: hidden;
+}
+
+.lp-gallery-main img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.lp-gallery-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: var(--color-badge-sale);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 6px;
+  z-index: 5;
+  font-family: var(--font-body);
+}
+
+.lp-gallery-counter {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  z-index: 5;
+}
+
+.lp-gallery-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: background 0.18s;
+}
+
+.lp-gallery-nav:hover {
+  background: #fff;
+}
+
+.lp-gallery-nav.prev {
+  left: 8px;
+}
+
+.lp-gallery-nav.next {
+  right: 8px;
+}
+
+.lp-gallery-thumbs {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: var(--color-surface);
+}
+
+.lp-gallery-thumbs::-webkit-scrollbar {
+  display: none;
+}
+
+.lp-gallery-thumb {
+  width: 60px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  object-fit: cover;
+  object-position: top;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.18s, opacity 0.18s;
+  opacity: 0.7;
+}
+
+.lp-gallery-thumb.active {
+  border-color: var(--color-primary);
+  opacity: 1;
+}
+
+.lp-gallery-thumb:hover {
+  opacity: 1;
+}
+
+/* ─── Product Info ───────────────────────────────────────────────── */
+
+.lp-info {
+  padding: 16px var(--page-gutter) 0;
+}
+
+.lp-info-brand {
+  font-size: 13px;
+  color: var(--color-primary);
+  font-weight: 600;
+  font-family: var(--font-body);
+  margin-bottom: 4px;
+}
+
+.lp-info-name {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+
+.lp-info-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.lp-info-stars {
+  color: #f59e0b;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+.lp-info-review-count {
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+}
+
+.lp-info-price {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.lp-info-price-current {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  font-family: var(--font-heading);
+}
+
+.lp-info-price-original {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  text-decoration: line-through;
+}
+
+.lp-info-price-discount {
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--color-badge-sale);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.lp-info-stock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #16a34a;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* ─── Description Points ─────────────────────────────────────────── */
+
+.lp-desc {
+  padding: 0 var(--page-gutter) 16px;
+}
+
+.lp-desc-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lp-desc-item {
+  font-size: 14px;
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.lp-desc-bullet {
+  color: #ef4444;
+  flex-shrink: 0;
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+/* ─── CTA Button ─────────────────────────────────────────────────── */
+
+.lp-cta-wrap {
+  padding: 12px var(--page-gutter) 8px;
+}
+
+.lp-cta-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-family: var(--font-heading);
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  transition: transform 0.18s, box-shadow 0.18s;
+}
+
+.lp-cta-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);
+}
+
+.lp-cta-btn:active {
+  transform: translateY(0);
+}
+
+/* ─── Phone / Call Section ───────────────────────────────────────── */
+
+.lp-call {
+  text-align: center;
+  padding: 14px var(--page-gutter) 16px;
+}
+
+.lp-call-label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 6px;
+}
+
+.lp-call-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-family: var(--font-heading);
+  margin-bottom: 10px;
+}
+
+.lp-call-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 28px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);
+  transition: transform 0.18s, box-shadow 0.18s;
+}
+
+.lp-call-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(34, 197, 94, 0.4);
+}
+
+/* ─── Trust Badges ───────────────────────────────────────────────── */
+
+.lp-trust {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 12px var(--page-gutter);
+  background: #f8fafc;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.lp-trust::-webkit-scrollbar {
+  display: none;
+}
+
+.lp-trust-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  padding: 6px 14px;
+  flex-shrink: 0;
+}
+
+.lp-trust-item:not(:last-child) {
+  border-right: 1px solid var(--color-border);
+}
+
+/* ─── Variant Selection Cards ────────────────────────────────────── */
+
+.lp-variants {
+  padding: 20px var(--page-gutter);
+}
+
+.lp-variants-title {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+
+.lp-variants-hint {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 14px;
+}
+
+.lp-variant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lp-variant-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+}
+
+.lp-variant-card:hover {
+  border-color: var(--color-primary);
+}
+
+.lp-variant-card.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  box-shadow: 0 2px 10px rgba(14, 165, 233, 0.12);
+}
+
+.lp-variant-checkbox {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: 2px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.18s, background 0.18s;
+  font-size: 14px;
+  color: #fff;
+}
+
+.lp-variant-card.selected .lp-variant-checkbox {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.lp-variant-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.lp-variant-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+
+.lp-variant-price {
+  font-size: 13px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.lp-variant-price-original {
+  color: var(--color-text-secondary);
+  text-decoration: line-through;
+  font-size: 12px;
+}
+
+.lp-variant-price-current {
+  color: var(--color-primary-dark);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.lp-variant-img {
+  width: 60px;
+  height: 72px;
+  border-radius: 6px;
+  object-fit: cover;
+  object-position: top;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+}
+
+/* ─── Size Selection ─────────────────────────────────────────────── */
+
+.lp-sizes {
+  padding: 0 var(--page-gutter) 16px;
+}
+
+.lp-sizes-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 10px;
+}
+
+.lp-sizes-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lp-size-chip {
+  padding: 8px 16px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s;
+}
+
+.lp-size-chip:hover {
+  border-color: var(--color-primary);
+}
+
+.lp-size-chip.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+}
+
+/* ─── Order Form ─────────────────────────────────────────────────── */
+
+.lp-order-form {
+  padding: 20px var(--page-gutter);
+  background: var(--color-surface);
+}
+
+.lp-order-form-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 18px;
+}
+
+.lp-form-group {
+  margin-bottom: 16px;
+}
+
+.lp-form-label {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  margin-bottom: 6px;
+  font-family: var(--font-body);
+}
+
+.lp-form-input,
+.lp-form-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-family: var(--font-body);
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.lp-form-input:focus,
+.lp-form-textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.lp-form-input::placeholder,
+.lp-form-textarea::placeholder {
+  color: #94a3b8;
+}
+
+.lp-form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Delivery area radio */
+
+.lp-delivery-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lp-delivery-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.lp-delivery-option:hover {
+  border-color: var(--color-primary);
+}
+
+.lp-delivery-option.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.lp-delivery-radio {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.18s;
+}
+
+.lp-delivery-option.selected .lp-delivery-radio {
+  border-color: var(--color-primary);
+}
+
+.lp-delivery-radio-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: transparent;
+  transition: background 0.18s;
+}
+
+.lp-delivery-option.selected .lp-delivery-radio-dot {
+  background: var(--color-primary);
+}
+
+.lp-delivery-fee {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+/* ─── Order Summary ──────────────────────────────────────────────── */
+
+.lp-summary {
+  margin: 16px var(--page-gutter);
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1.5px solid var(--color-border);
+}
+
+.lp-summary-title {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 12px;
+}
+
+.lp-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  padding: 4px 0;
+  color: var(--color-text-primary);
+}
+
+.lp-summary-row.total {
+  font-weight: 700;
+  font-size: 16px;
+  border-top: 1.5px solid var(--color-border);
+  padding-top: 10px;
+  margin-top: 6px;
+}
+
+.lp-summary-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #fef3c7;
+  border-radius: 8px;
+  font-size: 13.5px;
+  color: #92400e;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+/* ─── Confirm Button ─────────────────────────────────────────────── */
+
+.lp-confirm-wrap {
+  padding: 12px var(--page-gutter) 8px;
+}
+
+.lp-confirm-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-family: var(--font-heading);
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);
+  transition: transform 0.18s, box-shadow 0.18s, opacity 0.18s;
+}
+
+.lp-confirm-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+}
+
+.lp-confirm-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.lp-secure-note {
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  padding: 8px 0 16px;
+}
+
+/* ─── Form Error ─────────────────────────────────────────────────── */
+
+.lp-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 13.5px;
+  color: #b91c1c;
+  font-weight: 600;
+  margin: 0 var(--page-gutter) 12px;
+}
+
+/* ─── FAQ Accordion ──────────────────────────────────────────────── */
+
+.lp-faq {
+  padding: 24px var(--page-gutter);
+  border-top: 8px solid #f1f5f9;
+}
+
+.lp-faq-title {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 14px;
+}
+
+.lp-faq-item {
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.lp-faq-question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background 0.18s;
+}
+
+.lp-faq-question:hover {
+  background: #f8fafc;
+}
+
+.lp-faq-arrow {
+  font-size: 18px;
+  transition: transform 0.25s;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.lp-faq-item.open .lp-faq-arrow {
+  transform: rotate(180deg);
+}
+
+.lp-faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+}
+
+.lp-faq-item.open .lp-faq-answer {
+  max-height: 200px;
+  padding: 0 16px 14px;
+}
+
+.lp-faq-answer-text {
+  font-size: 13.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+/* ─── Reviews Section ────────────────────────────────────────────── */
+
+.lp-reviews {
+  padding: 24px var(--page-gutter);
+  border-top: 8px solid #f1f5f9;
+}
+
+.lp-reviews-title {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 14px;
+}
+
+.lp-review-card {
+  padding: 16px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.lp-review-stars {
+  color: #f59e0b;
+  font-size: 14px;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.lp-review-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 6px;
+}
+
+.lp-review-text {
+  font-size: 13.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+  margin-bottom: 10px;
+}
+
+.lp-review-author {
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+/* ─── Stats Bar ──────────────────────────────────────────────────── */
+
+.lp-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 20px var(--page-gutter);
+  border-top: 1px solid var(--color-border);
+}
+
+.lp-stat {
+  flex: 1;
+  text-align: center;
+  padding: 4px 8px;
+}
+
+.lp-stat:not(:last-child) {
+  border-right: 1px solid var(--color-border);
+}
+
+.lp-stat-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  font-family: var(--font-heading);
+}
+
+.lp-stat-label {
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+/* ─── Landing Footer ─────────────────────────────────────────────── */
+
+.lp-footer {
+  text-align: center;
+  padding: 20px var(--page-gutter);
+  background: #f8fafc;
+  border-top: 1px solid var(--color-border);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+/* ─── Floating WhatsApp Button ───────────────────────────────────── */
+
+.lp-whatsapp-float {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 999;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #25d366;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(37, 211, 102, 0.4);
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.lp-whatsapp-float:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 24px rgba(37, 211, 102, 0.5);
+}
+
+.lp-whatsapp-float svg {
+  width: 30px;
+  height: 30px;
+}
+
+/* ─── Scroll-to animation ────────────────────────────────────────── */
+
+@keyframes lpPulse {
+  0%, 100% { box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35); }
+  50% { box-shadow: 0 4px 20px rgba(245, 158, 11, 0.55); }
+}
+
+.lp-cta-btn {
+  animation: lpPulse 2.5s infinite;
+}
+
+/* ─── Divider ────────────────────────────────────────────────────── */
+
+.lp-divider {
+  height: 8px;
+  background: #f1f5f9;
+  border: none;
+  margin: 0;
+}
+
+/* ─── Selected items list in summary ─────────────────────────────── */
+
+.lp-summary-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.lp-summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  padding: 6px 0;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+.lp-summary-item:last-child {
+  border-bottom: none;
+}
+
+.lp-summary-item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lp-summary-item-price {
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+/* ─── Responsive tweaks ──────────────────────────────────────────── */
+
+@media (min-width: 480px) {
+  .lp-info-name {
+    font-size: 1.5rem;
+  }
+  
+  .lp-gallery-main {
+    aspect-ratio: 3 / 3.2;
+  }
+}
+
+@media (min-width: 640px) {
+  .lp-page {
+    margin-top: 8px;
+    margin-bottom: 24px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   MOBILE-FIRST OPTIMIZATIONS
+   Designed for 360-414px viewport (Facebook/Messenger in-app browser)
+   ───────────────────────────────────────────────────────────────────── */
+
+/* Prevent iOS zoom on input focus — inputs must be ≥16px */
+.lp-form-input,
+.lp-form-textarea {
+  font-size: 16px;
+}
+
+/* Smooth scrolling on the whole page */
+.lp-page {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Remove tap highlight on all interactive elements */
+.lp-cta-btn,
+.lp-confirm-btn,
+.lp-call-btn,
+.lp-variant-card,
+.lp-size-chip,
+.lp-delivery-option,
+.lp-faq-question,
+.lp-gallery-nav,
+.lp-gallery-thumb,
+.lp-header-action-btn {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Active states for touch feedback (no hover on mobile) */
+.lp-cta-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.lp-confirm-btn:active:not(:disabled) {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.25);
+}
+
+.lp-call-btn:active {
+  transform: scale(0.97);
+}
+
+.lp-variant-card:active {
+  transform: scale(0.99);
+}
+
+.lp-size-chip:active {
+  transform: scale(0.95);
+}
+
+.lp-faq-question:active {
+  background: #f1f5f9;
+}
+
+/* Minimum touch target size: 48px (Google's recommendation) */
+.lp-gallery-nav {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.lp-gallery-thumb {
+  min-width: 56px;
+  min-height: 68px;
+}
+
+.lp-size-chip {
+  min-height: 44px;
+  padding: 10px 18px;
+}
+
+.lp-delivery-option {
+  min-height: 52px;
+}
+
+.lp-faq-question {
+  min-height: 48px;
+}
+
+/* Safe area insets for notched phones (iPhone X+) */
+.lp-header {
+  padding-left: max(var(--page-gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--page-gutter), env(safe-area-inset-right, 0px));
+}
+
+.lp-footer {
+  padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
+}
+
+.lp-whatsapp-float {
+  bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 12px));
+  right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* Facebook/Messenger in-app browser viewport fix */
+@supports (padding: max(0px)) {
+  .lp-page {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* Ensure buttons don't overflow on very small screens (320px) */
+@media (max-width: 359px) {
+  .lp-trust {
+    gap: 0;
+    padding: 8px 8px;
+  }
+
+  .lp-trust-item {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  .lp-info-price-current {
+    font-size: 1.35rem;
+  }
+
+  .lp-call-number {
+    font-size: 1.25rem;
+  }
+
+  .lp-cta-btn,
+  .lp-confirm-btn {
+    font-size: 1rem;
+    padding: 14px 16px;
+  }
+
+  .lp-variant-img {
+    width: 50px;
+    height: 60px;
+  }
+  
+  .lp-stats {
+    flex-wrap: wrap;
+  }
+}
+
+/* Optimized for 360-414px (most common BD phone sizes) */
+@media (min-width: 360px) and (max-width: 414px) {
+  .lp-gallery-main {
+    aspect-ratio: 3 / 3.6;
+  }
+  
+  .lp-variant-card {
+    padding: 14px 16px;
+  }
+  
+  .lp-variant-img {
+    width: 64px;
+    height: 76px;
+  }
+}
+
+/* Disable hover effects on touch devices — only active states */
+@media (hover: none) and (pointer: coarse) {
+  .lp-cta-btn:hover,
+  .lp-confirm-btn:hover,
+  .lp-call-btn:hover,
+  .lp-variant-card:hover,
+  .lp-size-chip:hover,
+  .lp-delivery-option:hover,
+  .lp-gallery-nav:hover,
+  .lp-header-action-btn:hover,
+  .lp-whatsapp-float:hover {
+    transform: none;
+    box-shadow: inherit;
+  }
+}
+
+/* Gallery swipe touch optimization */
+.lp-gallery-main {
+  touch-action: pan-y pinch-zoom;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Prevent pull-to-refresh while swiping gallery */
+.lp-gallery {
+  overscroll-behavior: contain;
+}
+
+/* Smooth scroll behavior for "Order Now" button */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .lp-cta-btn {
+    animation: none;
+  }
+  
+  html {
+    scroll-behavior: auto;
+  }
+  
+  .lp-faq-answer {
+    transition: none;
+  }
+}
+

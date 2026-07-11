@@ -3739,47 +3739,47 @@ button {
     padding-top: 8px;
     padding-bottom: 8px;
     gap: 8px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
   }
 
   .logo-frame {
-    max-width: 126px;
-    height: 40px;
+    max-width: 110px;
+    height: 36px;
     flex: 0 0 auto;
   }
 
   .logo-image {
-    max-width: 126px;
-    height: 40px;
+    max-width: 110px;
+    height: 36px;
   }
 
   .header-icons {
-    gap: 6px;
-    margin-left: auto;
+    gap: 4px;
+    margin-left: 0;
     flex: 0 0 auto;
   }
 
   .icon-nav-btn {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
   }
 
   .nav-search-wrap {
-    order: 3;
-    flex: 1 1 100%;
-    max-width: none;
+    flex: 1;
     min-width: 0;
+    max-width: none;
+    order: unset;
   }
 
   .nav-search {
-    padding: 8px 10px;
-    font-size: 13px;
+    padding: 6px 8px;
+    font-size: 12px;
   }
 
   .nav-search-btn {
-    width: 38px;
-    height: 38px;
+    width: 32px;
+    height: 32px;
   }
 
   .hero-banner-shop-btn {

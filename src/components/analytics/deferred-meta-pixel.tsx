@@ -15,7 +15,7 @@ const MetaFacebookPixel = dynamic(
 /** Loads Meta Pixel after idle on product pages so ad landings paint faster. */
 export function DeferredMetaPixel() {
   const pathname = usePathname() ?? "";
-  const isProductPage = pathname.startsWith("/product/");
+  const isProductPage = pathname.startsWith("/product/") || pathname.startsWith("/p/");
 
   if (!validPixelId) return null;
 

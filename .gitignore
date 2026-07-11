@@ -2,7 +2,10 @@
 /node_modules
 
 # next.js
+/.next/
 /out
+*.zip
+Henley-Zone-Business-Readiness-Audit.*
 
 # production
 /build

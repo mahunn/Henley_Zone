@@ -1,0 +1,47 @@
+---
+description: Live production site with active ads — safety check on "push"; deploy only after explicit confirm
+alwaysApply: true
+---
+
+# Production push safety (Henley Zone — live + ads)
+
+The site is **live** (`henleyzone.com`) with **Facebook ads** running. Vercel auto-deploys from `main`.
+
+## Two-step workflow (required)
+
+### Step 1 — User says "push" (or "check push", "ready to push?")
+
+**Do NOT run `git push`.** Only:
+
+1. Inspect what would ship (`git status`, `git diff --stat`, `git log origin/main..HEAD`)
+2. Run safety checks (see below); use `npx tsc --noEmit` when TS/app code changed
+3. Reply with a short verdict: **Safe to push** | **Risky — explain** | **Not safe — fix first**
+4. Summarize what commits/files would go live and any post-deploy steps (env, Supabase migration, smoke test)
+
+End with something like: *"Tell me to push when you want this deployed."*
+
+### Step 2 — User explicitly confirms deploy
+
+Only after a **separate, clear** go-ahead (e.g. "push it", "yes push", "go ahead and push", "deploy now"):
+
+- Run the normal commit flow if needed (status, diff, commit message)
+- `git push origin main` (or their branch)
+- Report the remote result and remind them to smoke-test checkout on mobile
+
+If the user only said "push" once without confirming after your report, **do not push**.
+
+## Safety checklist (for the verdict)
+
+Warn or mark **not safe** if:
+
+- Checkout/orders risk (Supabase env, `data/orders.json` on Vercel, order API changes untested)
+- Secrets in diff (`.env`, keys)
+- Broken/incomplete code (failed tsc, obvious regressions)
+- Ad landing URLs broken (e.g. `/product/...` or redirects removed)
+- Large accidental or unrelated changes
+
+## Do not
+
+- Treat the first "push" as permission to run `git push`
+- Force-push `main`
+- Commit or push secrets
