@@ -68,7 +68,18 @@ export default function LandingLayout({
 
       {/* ── Minimal Footer ────────────────────────────── */}
       <footer className="lp-footer">
-        © {new Date().getFullYear()} {defaultBusiness.name} — সর্বস্বত্ব সংরক্ষিত
+        <div className="lp-footer-container">
+          <div className="lp-footer-copy">
+            © {new Date().getFullYear()} {defaultBusiness.name} — সর্বস্বত্ব সংরক্ষিত
+          </div>
+          <div className="lp-footer-dev">
+            <span className="lp-footer-dev-text">Developed By:</span>
+            <a href="https://websy.bd" target="_blank" rel="noopener noreferrer" className="lp-footer-dev-link">
+              <img src="/websy-logo.png" alt="Websy.bd" className="lp-footer-dev-logo" />
+              <span className="lp-footer-dev-domain">websy.bd</span>
+            </a>
+          </div>
+        </div>
       </footer>
     </>
   );

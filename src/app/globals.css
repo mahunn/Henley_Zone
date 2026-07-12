@@ -2984,58 +2984,41 @@ button {
   margin-bottom: 8px;
 }
 
-.footer-dev-link-row {
-  display: flex;
-  flex-direction: row;
+.footer-dev-pill {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 14px;
+  border-radius: 999px;
   text-decoration: none;
-  color: inherit;
-  background: transparent;
-  border: none;
-  padding: 0;
-  margin: 0;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   max-width: 100%;
 }
 
-.footer-dev-link-row:hover .footer-dev-domain {
-  text-decoration: underline;
-  color: #e2e8f0;
+.footer-dev-pill:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
 }
 
-.footer-dev-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  text-align: left;
-  flex: 1;
+.footer-dev-logo-img {
+  height: 14px;
+  width: auto;
+  object-fit: contain;
+  transition: transform 0.25s ease;
 }
 
-.footer-dev-name-sm {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #fff;
-  font-family: var(--font-heading, serif);
-  line-height: 1.2;
+.footer-dev-pill:hover .footer-dev-logo-img {
+  transform: scale(1.04);
 }
 
 .footer-dev-domain {
   font-size: 12px;
   font-weight: 600;
-  color: #94a3b8;
-  transition: color 0.15s;
-}
-
-.footer-dev-photo {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+  letter-spacing: 0.02em;
 }
 
 /* ─── Cart Page ──────────────────────────────────────────────────── */

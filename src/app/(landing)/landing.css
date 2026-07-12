@@ -992,12 +992,93 @@
 /* ─── Landing Footer ─────────────────────────────────────────────── */
 
 .lp-footer {
+  padding: 32px var(--page-gutter);
+  background: #0f172a;
+  border-top: 1px solid #1e293b;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.lp-footer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (min-width: 480px) {
+  .lp-footer-container {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.lp-footer-copy {
+  font-size: 13px;
+  color: #94a3b8;
   text-align: center;
-  padding: 20px var(--page-gutter);
-  background: #f8fafc;
-  border-top: 1px solid var(--color-border);
+}
+
+@media (min-width: 480px) {
+  .lp-footer-copy {
+    text-align: left;
+  }
+}
+
+.lp-footer-dev {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #64748b;
+}
+
+.lp-footer-dev-text {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 10px;
+  color: #64748b;
+}
+
+.lp-footer-dev-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 14px;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lp-footer-dev-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.lp-footer-dev-logo {
+  height: 14px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(1);
+  transition: transform 0.25s ease;
+}
+
+.lp-footer-dev-link:hover .lp-footer-dev-logo {
+  transform: scale(1.04);
+}
+
+.lp-footer-dev-domain {
   font-size: 12px;
-  color: var(--color-text-secondary);
+  font-weight: 600;
+  color: #cbd5e1;
+  letter-spacing: 0.02em;
 }
 
 /* ─── Floating WhatsApp Button ───────────────────────────────────── */
