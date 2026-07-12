@@ -3004,14 +3004,16 @@ button {
 }
 
 .footer-dev-logo-img {
-  height: 14px;
+  height: 24px;
   width: auto;
   object-fit: contain;
+  filter: invert(1);
+  mix-blend-mode: screen;
   transition: transform 0.25s ease;
 }
 
 .footer-dev-pill:hover .footer-dev-logo-img {
-  transform: scale(1.04);
+  transform: scale(1.05);
 }
 
 .footer-dev-domain {

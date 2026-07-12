@@ -1029,56 +1029,75 @@
   }
 }
 
-.lp-footer-dev {
+.lp-footer-dev-section {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  color: #64748b;
+  margin-top: 18px;
+  width: 100%;
 }
 
-.lp-footer-dev-text {
-  font-weight: 600;
+@media (min-width: 480px) {
+  .lp-footer-dev-section {
+    align-items: flex-end;
+    margin-top: 0;
+    width: auto;
+  }
+}
+
+.lp-footer-dev-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  letter-spacing: 0.22em;
+  margin-bottom: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-size: 10px;
-  color: #64748b;
 }
 
-.lp-footer-dev-link {
-  display: inline-flex;
+.lp-footer-dev-link-block {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 6px 14px;
-  border-radius: 999px;
+  gap: 6px;
   text-decoration: none;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.lp-footer-dev-link:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
+@media (min-width: 480px) {
+  .lp-footer-dev-link-block {
+    align-items: flex-end;
+  }
 }
 
-.lp-footer-dev-logo {
-  height: 14px;
+.lp-footer-dev-link-block:hover {
+  transform: translateY(-2px);
+}
+
+.lp-footer-dev-logo-large {
+  height: 44px;
   width: auto;
   object-fit: contain;
-  filter: brightness(1);
-  transition: transform 0.25s ease;
+  filter: invert(1);
+  mix-blend-mode: screen;
+  opacity: 0.85;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
-.lp-footer-dev-link:hover .lp-footer-dev-logo {
-  transform: scale(1.04);
+.lp-footer-dev-link-block:hover .lp-footer-dev-logo-large {
+  opacity: 1;
+  transform: scale(1.05);
 }
 
-.lp-footer-dev-domain {
-  font-size: 12px;
-  font-weight: 600;
+.lp-footer-dev-domain-large {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  letter-spacing: 0.05em;
+  transition: color 0.25s ease;
+}
+
+.lp-footer-dev-link-block:hover .lp-footer-dev-domain-large {
   color: #cbd5e1;
-  letter-spacing: 0.02em;
 }
 
 /* ─── Floating WhatsApp Button ───────────────────────────────────── */

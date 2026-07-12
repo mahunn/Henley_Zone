@@ -72,11 +72,12 @@ export default function LandingLayout({
           <div className="lp-footer-copy">
             © {new Date().getFullYear()} {defaultBusiness.name} — সর্বস্বত্ব সংরক্ষিত
           </div>
-          <div className="lp-footer-dev">
-            <span className="lp-footer-dev-text">Developed By:</span>
-            <a href="https://websy.bd" target="_blank" rel="noopener noreferrer" className="lp-footer-dev-link">
-              <img src="/websy-logo.png" alt="Websy.bd" className="lp-footer-dev-logo" />
-              <span className="lp-footer-dev-domain">websy.bd</span>
+          
+          <div className="lp-footer-dev-section">
+            <div className="lp-footer-dev-label">DEVELOPED BY</div>
+            <a href="https://websy.bd" target="_blank" rel="noopener noreferrer" className="lp-footer-dev-link-block">
+              <img src="/websy-logo.png" alt="Websy.bd" className="lp-footer-dev-logo-large" />
+              <div className="lp-footer-dev-domain-large">websy.bd</div>
             </a>
           </div>
         </div>
