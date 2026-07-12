@@ -15,6 +15,7 @@ interface SelectedVariant {
   colorId: string;
   label: string;
   image: string;
+  size?: string;
 }
 
 type DeliveryArea = "inside" | "outside";
@@ -39,6 +40,54 @@ export function LandingProductPage({
   /* ── Variant state ─────────────────────────────────── */
   const [selectedColors, setSelectedColors] = useState<SelectedVariant[]>([]);
   const [selectedSize, setSelectedSize] = useState<string>("");
+
+  const selectSizeForColor = useCallback((colorId: string, size: string) => {
+    setSelectedColors((prev) =>
+      prev.map((c) => (c.colorId === colorId ? { ...c, size } : c))
+    );
+  }, []);
+
+  const translateColorLabel = useCallback((label: string): string => {
+    const clean = label.trim().toLowerCase();
+    switch (clean) {
+      case "orange":
+        return "ইটা";
+      case "brown":
+        return "কফি";
+      case "navy blue":
+      case "navy":
+        return "নেভী";
+      case "lime green":
+      case "tiya":
+        return "টিয়া";
+      case "yellow":
+        return "হলুদ";
+      case "blue":
+        return "নীল";
+      case "olive":
+        return "অলিভ";
+      case "purple":
+        return "বেগুনি";
+      case "green":
+        return "সবুজ";
+      case "deep green":
+        return "গাঢ় সবুজ";
+      case "magenta":
+        return "ম্যাজেন্টা";
+      case "pink":
+        return "গোলাপী";
+      case "red":
+        return "লাল";
+      case "black":
+        return "কালো";
+      case "light blue":
+        return "হালকা নীল";
+      case "olive green":
+        return "অলিভ সবুজ";
+      default:
+        return label;
+    }
+  }, []);
 
   /* ── Order form state ──────────────────────────────── */
   const [customerName, setCustomerName] = useState("");
@@ -132,10 +181,10 @@ export function LandingProductPage({
         if (exists) {
           return prev.filter((c) => c.colorId !== color.id);
         }
-        return [...prev, { colorId: color.id, label: color.label, image: color.swatchImage }];
+        return [...prev, { colorId: color.id, label: translateColorLabel(color.label), image: color.swatchImage }];
       });
     },
-    []
+    [translateColorLabel]
   );
 
   /* ── Build cart items for order API ────────────────── */
@@ -144,7 +193,7 @@ export function LandingProductPage({
     if (selectedColors.length === 0) {
       return [
         {
-          key: `${detail.id}::${selectedSize}::default`,
+          key: `${detail.id}::${selectedSize || "default"}::default`,
           productId: detail.id,
           name: detail.name,
           price: detail.price,
@@ -156,14 +205,14 @@ export function LandingProductPage({
       ];
     }
     return selectedColors.map((c) => ({
-      key: `${detail.id}::${selectedSize}::${c.colorId}`,
+      key: `${detail.id}::${c.size || "default"}::${c.colorId}`,
       productId: detail.id,
       name: detail.name,
       price: detail.price,
       quantity: 1,
       imageUrl: c.image,
       selectedColor: c.label,
-      selectedSize: selectedSize || undefined
+      selectedSize: c.size || undefined
     }));
   }, [detail, selectedColors, selectedSize]);
 
@@ -195,6 +244,17 @@ export function LandingProductPage({
     const hasMultipleColors = detail.colors.length > 1 || (detail.colors.length === 1 && detail.colors[0].id !== "default");
     if (hasMultipleColors && selectedColors.length === 0) {
       setError(bn.landing.errors.noColor);
+      return;
+    }
+
+    if (hasMultipleColors && sizes.length > 0) {
+      const missingSizeColor = selectedColors.find((c) => !c.size);
+      if (missingSizeColor) {
+        setError(`অনুগ্রহ করে "${missingSizeColor.label}" রঙের সাইজ সিলেক্ট করুন।`);
+        return;
+      }
+    } else if (!hasMultipleColors && sizes.length > 0 && !selectedSize) {
+      setError("অনুগ্রহ করে সাইজ সিলেক্ট করুন।");
       return;
     }
 
@@ -403,13 +463,16 @@ export function LandingProductPage({
           SECTION 5: PHONE / CALL
           ═══════════════════════════════════════════════════ */}
       <section className="lp-call">
-        <p className="lp-call-label">{bn.landing.callAnytime}</p>
+        <p className="lp-call-label">যেকোনো প্রয়োজনে কল করুন</p>
         <p className="lp-call-number">{phoneNumber}</p>
         <a
           href={businessTelHref(defaultBusiness)}
           className="lp-call-btn"
         >
-          {bn.landing.callBtn} {phoneNumber}
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+          </svg>
+          <span>{phoneNumber}</span>
         </a>
       </section>
 
@@ -417,9 +480,30 @@ export function LandingProductPage({
           SECTION 6: TRUST BADGES
           ═══════════════════════════════════════════════════ */}
       <div className="lp-trust">
-        <span className="lp-trust-item">{bn.landing.trustDelivery}</span>
-        <span className="lp-trust-item">{bn.landing.trustCod}</span>
-        <span className="lp-trust-item">{bn.landing.trustGuarantee}</span>
+        <div className="lp-trust-item">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lp-trust-icon">
+            <rect x="1" y="3" width="15" height="13" />
+            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+            <circle cx="5.5" cy="18.5" r="2.5" />
+            <circle cx="18.5" cy="18.5" r="2.5" />
+          </svg>
+          <span>সারাদেশে ডেলিভারি</span>
+        </div>
+        <div className="lp-trust-item">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#eab308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lp-trust-icon">
+            <rect x="2" y="6" width="20" height="12" rx="2" />
+            <circle cx="12" cy="12" r="2" />
+            <path d="M6 12h.01M18 12h.01" />
+          </svg>
+          <span>ক্যাশ অন ডেলিভারি</span>
+        </div>
+        <div className="lp-trust-item">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lp-trust-icon">
+            <polyline points="9 11 12 14 22 4" />
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+          </svg>
+          <span>১০০% অরিজিনাল</span>
+        </div>
       </div>
 
       {/* ═══════════════════════════════════════════════════
@@ -432,34 +516,68 @@ export function LandingProductPage({
           <div className="lp-variant-list">
             {colors.map((color) => {
               const isSelected = selectedColors.some((c) => c.colorId === color.id);
+              const colorInfo = selectedColors.find((c) => c.colorId === color.id);
+              const translatedLabel = translateColorLabel(color.label);
+              const originalPrice = Math.round(price / 0.87);
+
               return (
-                <button
+                <div
                   key={color.id}
-                  type="button"
                   className={`lp-variant-card${isSelected ? " selected" : ""}`}
-                  onClick={() => toggleColor(color)}
-                  aria-pressed={isSelected}
                 >
-                  <div className="lp-variant-checkbox">
-                    {isSelected && "✓"}
-                  </div>
-                  <div className="lp-variant-details">
-                    <div className="lp-variant-name">{color.label}</div>
-                    <div className="lp-variant-price">
-                      <span className="lp-variant-price-current">
-                        ৳{price.toLocaleString("bn-BD")}
-                      </span>
+                  <div
+                    className="lp-variant-card-header"
+                    onClick={() => toggleColor(color)}
+                  >
+                    <div className="lp-variant-checkbox">
+                      {isSelected && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
                     </div>
+                    <div className="lp-variant-details">
+                      <div className="lp-variant-name">{translatedLabel}</div>
+                      <div className="lp-variant-price">
+                        <span className="lp-variant-price-original">
+                          ৳{originalPrice.toLocaleString("bn-BD")}
+                        </span>
+                        <span className="lp-variant-price-current">
+                          ৳{price.toLocaleString("bn-BD")}
+                        </span>
+                      </div>
+                    </div>
+                    <ProductImage
+                      src={color.swatchImage}
+                      alt={color.label}
+                      width={60}
+                      height={72}
+                      sizes="60px"
+                      className="lp-variant-img"
+                    />
                   </div>
-                  <ProductImage
-                    src={color.swatchImage}
-                    alt={color.label}
-                    width={60}
-                    height={72}
-                    sizes="60px"
-                    className="lp-variant-img"
-                  />
-                </button>
+
+                  {isSelected && sizes.length > 0 && (
+                    <div className="lp-variant-sizes">
+                      <div className="lp-variant-sizes-label">সাইজ:</div>
+                      <div className="lp-variant-sizes-grid">
+                        {sizes.map((size) => {
+                          const isSizeSelected = colorInfo?.size === size;
+                          return (
+                            <button
+                              key={size}
+                              type="button"
+                              className={`lp-size-chip${isSizeSelected ? " selected" : ""}`}
+                              onClick={() => selectSizeForColor(color.id, size)}
+                            >
+                              {size}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -467,9 +585,9 @@ export function LandingProductPage({
       )}
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 7B: SIZE SELECTION
+          SECTION 7B: SIZE SELECTION (Fallback for single/no color products)
           ═══════════════════════════════════════════════════ */}
-      {sizes.length > 0 && (
+      {!hasRealColors && sizes.length > 0 && (
         <section className="lp-sizes">
           <h3 className="lp-sizes-title">{bn.product.size}</h3>
           <div className="lp-sizes-grid">
@@ -600,7 +718,7 @@ export function LandingProductPage({
                 <div key={c.colorId} className="lp-summary-item">
                   <span className="lp-summary-item-name">
                     {detail.name} — {c.label}
-                    {selectedSize ? ` (${selectedSize})` : ""}
+                    {c.size ? ` (${c.size})` : ""}
                   </span>
                   <span className="lp-summary-item-price">
                     ৳{price.toLocaleString("bn-BD")}

@@ -50,12 +50,12 @@
     {
       "id": "p2",
       "slug": "salwar-premium-cotton",
-      "name": "Printed Salwar Kameez",
+      "name": "Noksih TW-7",
       "description": "Premium cotton quality with strong embroidery, color guarantee print, and white salwar. Size: 36-48.",
-      "price": 799,
+      "price": 690,
       "stock": 28,
       "imageUrl": "/products/kurti/salwar2/green.jpeg",
-      "category": "Salwar Kameez",
+      "category": "Two Pieces",
       "colors": [
         {
           "id": "green",
@@ -71,6 +71,11 @@
           "id": "yellow",
           "label": "Yellow",
           "image": "/products/kurti/salwar2/yellow.jpeg"
+        },
+        {
+          "id": "brick",
+          "label": "Brick",
+          "image": "/uploads/catalog/2370c0af-e521-4782-bc3e-d8026f8b4e60.jpg"
         }
       ],
       "sizes": [
@@ -206,7 +211,7 @@
       "slug": "pure-cotton-three-piece",
       "name": "Pure Cotton Three Piece",
       "description": "থ্রি পিস কটন ড্রেস সেট। ১০০% পিওর কটন কাপড়, কালার গ্যারান্টি, স্কিন প্রিন্ট ও সুন্দর ম্যানুয়াল এমব্রয়ডারি। অগ্রিম ছাড়াই ক্যাশ অন ডেলিভারি।",
-      "price": 1290,
+      "price": 1099,
       "stock": 36,
       "imageUrl": "/products/kurti/three-piece/purple.jpeg",
       "category": "Three Pieces",
@@ -262,22 +267,22 @@
           "image": "/products/kurti/gown1/brown.jpeg"
         },
         {
-          "id": "light-blue",
+          "id": "light_blue",
           "label": "Light Blue",
           "image": "/products/kurti/gown1/light-blue.jpeg"
         },
         {
-          "id": "lime-green",
+          "id": "lime_green",
           "label": "Lime Green",
           "image": "/products/kurti/gown1/lime-green.jpeg"
         },
         {
-          "id": "navy-blue",
+          "id": "navy_blue",
           "label": "Navy Blue",
           "image": "/products/kurti/gown1/navy-blue.jpeg"
         },
         {
-          "id": "olive-green",
+          "id": "olive_green",
           "label": "Olive Green",
           "image": "/products/kurti/gown1/olive-green.jpeg"
         },
@@ -285,6 +290,11 @@
           "id": "orange",
           "label": "Orange",
           "image": "/products/kurti/gown1/orange.jpeg"
+        },
+        {
+          "id": "misty",
+          "label": "Misty",
+          "image": "/uploads/catalog/be4361a2-53d3-449e-b0ad-c0b8a602b4eb.jpg"
         }
       ],
       "sizes": [
@@ -366,10 +376,81 @@
       ]
     },
     {
+      "id": "a9abad63-0e3e-49a1-96be-e74029720f82",
+      "slug": "jam-jam-sadabahr",
+      "name": "Jam jam sadabahr",
+      "description": "Sada bahar  jam jam ( premium fabric lace work)\nStitched dress \nFabric :  pure cotton \nHuge stoc available ✅\nSize : S,M,L,XL \nS-38-40 /M-42-44-/L-46-48/XL-50-52\n01581708578",
+      "price": 1750,
+      "stock": 196,
+      "imageUrl": "/uploads/catalog/d45963fd-0db2-48ca-972d-ce1280912957.jpg",
+      "category": "Three Pieces",
+      "colors": [
+        {
+          "id": "img_20260630_wa0004",
+          "label": "Img 20260630 Wa0004",
+          "image": "/uploads/catalog/bc7ddb1f-a51d-4ab6-ab8f-ca59b6dc0f65.jpg"
+        },
+        {
+          "id": "img_20260709_wa0030",
+          "label": "Img 20260709 Wa0030",
+          "image": "/uploads/catalog/b53bfaeb-c63e-4c40-acfc-62634417e703.jpg"
+        },
+        {
+          "id": "img_20260630_wa0006",
+          "label": "Img 20260630 Wa0006",
+          "image": "/uploads/catalog/ac022952-5b7c-4587-8526-49f7e210d61e.jpg"
+        }
+      ],
+      "sizes": [
+        "38",
+        "40",
+        "42",
+        "44",
+        "46",
+        "48"
+      ]
+    },
+    {
+      "id": "5ee5957b-a59e-4b88-b714-1b620fa08c64",
+      "slug": "item-mrcditbg",
+      "name": "🌸নিউ স্কার্ট প্লাজু🌸",
+      "description": "🌸 নিউ স্কার্ট প্লাজু 🌸\n\nসাধারণ দিনের জন্য হোক কিংবা বন্ধুদের সাথে ঘুরতে যাওয়া—এই সুন্দর কুর্তি সেটটি আপনাকে দেবে এক অনন্য এলিগ্যান্ট লুক। 💖\nস্টাইল, কমফোর্ট এবং ট্রেন্ড—সবকিছুর নিখুঁত সমন্বয় এই আউটফিটে। 🌸\n\n💫 কেন বেছে নেবেন এই কুর্তি সেট?\n\n🌸 প্রিমিয়াম কোয়ালিটির সফট ও আরামদায়ক ফেব্রিক\n🌸আকর্ষণীয় রেড কালারের এলিগ্যান্ট কুর্তি\n🌸সামনে সুন্দর বাটন ডিটেইলিং\n🌸ম্যাচিং প্রিন্টেড পালাজ্জো, যা লুককে করে আরও স্টাইলিশ\n🌸 সারাদিন পরলেও স্বাচ্ছন্দ্য বজায় থাকে\n🌸 অফিস, ক্যাম্পাস, শপিং, আড্ডা কিংবা ডেইলি ইউজ—সবক্ষেত্রেই পারফেক্ট\n\n📏 সাইজ: ৩৬ – ৪৬\n📦 স্টক সীমিত, তাই দেরি না করে অর্ডার করুন এখনই!\n\n💌 অর্ডার করতে ইনবক্স করুন\n📞 01581-708578 \n\n🌺 সৌন্দর্যের সাথে স্বাচ্ছন্দ্যের ছোঁয়া—আপনার প্রতিটি দিন হোক আরও স্টাইলিশ। 🌺\n\n#LinenKurtiSet #KurtiFashion #StylishWomen\n#DailyWear #CasualFashion #ElegantLook\n#FashionCollection #NewArrival #LadiesFashion\n#ComfortableStyle #TrendingNow #BangladeshFashion 💖✨",
+      "price": 899,
+      "stock": 90,
+      "imageUrl": "/uploads/catalog/520c89bc-b209-4221-a3ec-021b87e92150.jpg",
+      "category": "Two Pieces",
+      "colors": [
+        {
+          "id": "নীল",
+          "label": "নীল",
+          "image": "/uploads/catalog/7523a2ec-5aeb-4414-aca3-cfbc0d1e9822.jpg"
+        },
+        {
+          "id": "পিং",
+          "label": "পিং",
+          "image": "/uploads/catalog/1493e8bb-1455-4fa3-bf71-ea5fc462c682.jpg"
+        },
+        {
+          "id": "কালো",
+          "label": "কালো",
+          "image": "/uploads/catalog/7b87e142-9932-4fa5-a352-48b7c0a76334.jpg"
+        }
+      ],
+      "sizes": [
+        "36",
+        "38",
+        "40",
+        "42",
+        "44",
+        "46",
+        "48"
+      ]
+    },
+    {
       "id": "bab13e38-91b5-4c3a-89c9-77960d9d4cc0",
       "slug": "embroidery-tops",
-      "name": "Embroidery tops",
-      "description": "Premium cotton fabric embroidery tops",
+      "name": "Elegant Cotton Embroidery Tops",
+      "description": "🩷 এলিগ্যান্ট কটন এমব্রয়ডারি টপস 🩷\n\nসিম্পল লুকে স্টাইলিশ হতে চাইলে এই সুন্দর এমব্রয়ডারি কটন টপস হতে পারে আপনার পারফেক্ট চয়েস! 🌸\n\n🌸 প্রিমিয়াম সফট কটন ফেব্রিক\n\n🌸সুন্দর ফ্রন্ট ও স্লিভে এমব্রয়ডারি ওয়ার্ক\n\n🌸 ট্রেন্ডি ফ্লেয়ার কাট ডিজাইন\n\n🌸 আরামদায়ক ও স্টাইলিশ ফিট\n\n🌸 দৈনন্দিন ব্যবহার, অফিস, ক্যাম্পাস ও আউটিংয়ের জন্য উপযুক্ত\n\n🌸 সাইজ: ৩৬-৪৮\n\n🌸সারা বাংলাদেশে হোম ডেলিভারি 💵 ক্যাশ অন ডেলিভারি সুবিধা রয়েছে\n\n📩 অর্ডার করতে ইনবক্স করুন অথবা 📞 কল করুন: 01581708578\n\n✨ সীমিত স্টক! পছন্দের ডিজাইনটি হাতছাড়া করবেন না। আজই অর্ডার করুন। 💖",
       "price": 550,
       "stock": 160,
       "imageUrl": "/uploads/catalog/890a3a7b-0d7d-49e5-be25-c85b24deaeff.jpg",

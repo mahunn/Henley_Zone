@@ -312,57 +312,122 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 28px;
-  font-size: 15px;
+  padding: 14px 32px;
+  font-size: 17px;
   font-weight: 700;
   font-family: var(--font-body);
   border: none;
   border-radius: 999px;
-  background: linear-gradient(135deg, #22c55e, #16a34a);
+  background: linear-gradient(135deg, #f43f5e, #e11d48);
   color: #fff;
   text-decoration: none;
-  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.3);
   transition: transform 0.18s, box-shadow 0.18s;
 }
 
 .lp-call-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(34, 197, 94, 0.4);
+  box-shadow: 0 6px 18px rgba(225, 29, 72, 0.4);
+}
+
+.lp-call-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ─── Minimal Landing Header ──────────────────────────────────────── */
+
+.lp-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: var(--color-surface);
+  border-bottom: 1.5px solid var(--color-border);
+  padding: 10px var(--page-gutter);
+}
+
+.lp-header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.lp-header-logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.lp-header-logo-img {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+}
+
+.lp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.lp-header-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.lp-header-action-btn.phone {
+  color: #374151; /* Dark Gray */
+}
+
+.lp-header-action-btn.whatsapp {
+  color: #22c55e; /* WhatsApp Green */
+}
+
+.lp-header-action-btn:hover {
+  background-color: #f3f4f6;
 }
 
 /* ─── Trust Badges ───────────────────────────────────────────────── */
 
 .lp-trust {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  padding: 12px var(--page-gutter);
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px var(--page-gutter);
   background: #f8fafc;
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.lp-trust::-webkit-scrollbar {
-  display: none;
 }
 
 .lp-trust-item {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  white-space: nowrap;
-  padding: 6px 14px;
-  flex-shrink: 0;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 4px;
+  flex: 1;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #1e293b;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  min-width: 0;
+  text-align: center;
 }
 
-.lp-trust-item:not(:last-child) {
-  border-right: 1px solid var(--color-border);
+.lp-trust-icon {
+  flex-shrink: 0;
 }
 
 /* ─── Variant Selection Cards ────────────────────────────────────── */
@@ -373,7 +438,7 @@
 
 .lp-variants-title {
   font-family: var(--font-heading);
-  font-size: 1.15rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--color-text-primary);
   margin-bottom: 4px;
@@ -388,48 +453,50 @@
 .lp-variant-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .lp-variant-card {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border: 1.5px solid var(--color-border);
-  border-radius: 10px;
+  flex-direction: column;
+  padding: 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
   background: var(--color-surface);
-  cursor: pointer;
-  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
-}
-
-.lp-variant-card:hover {
-  border-color: var(--color-primary);
+  transition: border-color 0.18s, box-shadow 0.18s, background-color 0.18s;
 }
 
 .lp-variant-card.selected {
-  border-color: var(--color-primary);
-  background: var(--color-primary-light);
-  box-shadow: 0 2px 10px rgba(14, 165, 233, 0.12);
+  border-color: #e11d48;
+  background-color: #fff;
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.05);
+}
+
+.lp-variant-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  width: 100%;
 }
 
 .lp-variant-checkbox {
   width: 22px;
   height: 22px;
-  border-radius: 4px;
-  border: 2px solid var(--color-border);
+  border-radius: 6px;
+  border: 2px solid #cbd5e1;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: border-color 0.18s, background 0.18s;
-  font-size: 14px;
+  transition: border-color 0.18s, background-color 0.18s;
+  background: #fff;
   color: #fff;
 }
 
 .lp-variant-card.selected .lp-variant-checkbox {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
+  background-color: #e11d48;
+  border-color: #e11d48;
 }
 
 .lp-variant-details {
@@ -438,39 +505,59 @@
 }
 
 .lp-variant-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  margin-bottom: 2px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 4px;
 }
 
 .lp-variant-price {
   font-size: 13px;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 6px;
 }
 
 .lp-variant-price-original {
-  color: var(--color-text-secondary);
+  color: #94a3b8;
   text-decoration: line-through;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .lp-variant-price-current {
-  color: var(--color-primary-dark);
+  color: #e11d48;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .lp-variant-img {
   width: 60px;
   height: 72px;
-  border-radius: 6px;
+  border-radius: 8px;
   object-fit: cover;
   object-position: top;
   flex-shrink: 0;
-  border: 1px solid var(--color-border);
+  border: 1px solid #e2e8f0;
+}
+
+/* Size selection inside variant card */
+.lp-variant-sizes {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.lp-variant-sizes-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.lp-variant-sizes-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 /* ─── Size Selection ─────────────────────────────────────────────── */
@@ -494,24 +581,26 @@
 
 .lp-size-chip {
   padding: 8px 16px;
-  border: 1.5px solid var(--color-border);
+  border: 1.5px solid #cbd5e1;
   border-radius: 8px;
   font-size: 14px;
-  font-weight: 600;
-  background: var(--color-surface);
-  color: var(--color-text-primary);
+  font-weight: 700;
+  background: #fff;
+  color: #334155;
   cursor: pointer;
-  transition: border-color 0.18s, background 0.18s;
+  transition: border-color 0.18s, background-color 0.18s, color 0.18s;
+  min-width: 44px;
+  text-align: center;
 }
 
 .lp-size-chip:hover {
-  border-color: var(--color-primary);
+  border-color: #e11d48;
 }
 
 .lp-size-chip.selected {
-  border-color: var(--color-primary);
-  background: var(--color-primary);
-  color: #fff;
+  border-color: #e11d48;
+  background-color: #fdf2f8;
+  color: #e11d48;
 }
 
 /* ─── Order Form ─────────────────────────────────────────────────── */

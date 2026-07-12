@@ -97,7 +97,7 @@ export function mapProductToPdpDetail(found: Product): PdpDetail {
     brand: "Henley Zone",
     categories: [found.category],
     price: found.price,
-    originalPrice: undefined,
+    originalPrice: Math.round(found.price / 0.87),
     stock: found.stock,
     badge: undefined,
     colors: colorSwatches,
