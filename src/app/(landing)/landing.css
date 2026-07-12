@@ -1039,7 +1039,7 @@
 
 @media (min-width: 480px) {
   .lp-footer-dev-section {
-    align-items: flex-end;
+    align-items: center;
     margin-top: 0;
     width: auto;
   }
@@ -1065,7 +1065,7 @@
 
 @media (min-width: 480px) {
   .lp-footer-dev-link-block {
-    align-items: flex-end;
+    align-items: center;
   }
 }
 
@@ -1077,7 +1077,7 @@
   height: 44px;
   width: auto;
   object-fit: contain;
-  filter: invert(1);
+  filter: invert(1) hue-rotate(180deg);
   mix-blend-mode: screen;
   opacity: 0.85;
   transition: opacity 0.25s ease, transform 0.25s ease;

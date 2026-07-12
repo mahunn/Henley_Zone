@@ -3007,7 +3007,7 @@ button {
   height: 24px;
   width: auto;
   object-fit: contain;
-  filter: invert(1);
+  filter: invert(1) hue-rotate(180deg);
   mix-blend-mode: screen;
   transition: transform 0.25s ease;
 }
