@@ -1004,7 +1004,7 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
   width: 100%;
 }
@@ -1029,75 +1029,10 @@
   }
 }
 
-.lp-footer-dev-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 18px;
-  width: 100%;
-}
-
 @media (min-width: 480px) {
-  .lp-footer-dev-section {
-    align-items: center;
-    margin-top: 0;
-    width: auto;
+  .lp-footer-dev-layout {
+    align-items: flex-end;
   }
-}
-
-.lp-footer-dev-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: #475569;
-  letter-spacing: 0.22em;
-  margin-bottom: 10px;
-  text-transform: uppercase;
-}
-
-.lp-footer-dev-link-block {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  text-decoration: none;
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@media (min-width: 480px) {
-  .lp-footer-dev-link-block {
-    align-items: center;
-  }
-}
-
-.lp-footer-dev-link-block:hover {
-  transform: translateY(-2px);
-}
-
-.lp-footer-dev-logo-large {
-  height: 44px;
-  width: auto;
-  object-fit: contain;
-  filter: invert(1) hue-rotate(180deg);
-  mix-blend-mode: screen;
-  opacity: 0.85;
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-.lp-footer-dev-link-block:hover .lp-footer-dev-logo-large {
-  opacity: 1;
-  transform: scale(1.05);
-}
-
-.lp-footer-dev-domain-large {
-  font-size: 13px;
-  font-weight: 500;
-  color: #64748b;
-  letter-spacing: 0.05em;
-  transition: color 0.25s ease;
-}
-
-.lp-footer-dev-link-block:hover .lp-footer-dev-domain-large {
-  color: #cbd5e1;
 }
 
 /* ─── Floating WhatsApp Button ───────────────────────────────────── */

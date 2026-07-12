@@ -10,24 +10,22 @@ export function FooterDeveloperCredit() {
   }
 
   return (
-    <div className="footer-dev-inline">
-      <div className="footer-dev-label">Developed by</div>
+    <div className="footer-dev-section-vertical" style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: "14px", marginTop: "14px" }}>
+      <div className="footer-dev-label-vertical">DEVELOPED BY</div>
       <a
         href="https://websy.bd"
         target="_blank"
         rel="noopener noreferrer"
-        className="footer-dev-pill"
+        className="footer-dev-link-block-vertical"
       >
         <img
-          src="/websy-logo.png"
-          alt="Websy Logo"
-          width={56}
-          height={14}
-          className="footer-dev-logo-img"
+          src="/websy-logo-white.png"
+          alt="Websy.bd"
+          className="footer-dev-logo-vertical"
           loading="lazy"
           decoding="async"
         />
-        <span className="footer-dev-domain">websy.bd</span>
+        <div className="footer-dev-domain-vertical">websy.bd</div>
       </a>
     </div>
   );

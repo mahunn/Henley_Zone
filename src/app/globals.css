@@ -2975,52 +2975,59 @@ button {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.footer-dev-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: #94a3b8;
-  margin-bottom: 8px;
-}
-
-.footer-dev-pill {
-  display: inline-flex;
+.footer-dev-section-vertical {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 6px 14px;
-  border-radius: 999px;
+  width: 100%;
+}
+
+.footer-dev-label-vertical {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  letter-spacing: 0.22em;
+  margin-bottom: 0px;
+  text-transform: uppercase;
+}
+
+.footer-dev-link-block-vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0px;
   text-decoration: none;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  max-width: 100%;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  width: fit-content;
 }
 
-.footer-dev-pill:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
+.footer-dev-link-block-vertical:hover {
+  transform: translateY(-2px);
 }
 
-.footer-dev-logo-img {
-  height: 24px;
+.footer-dev-logo-vertical {
+  height: 48px;
   width: auto;
   object-fit: contain;
-  filter: invert(1) hue-rotate(180deg);
-  mix-blend-mode: screen;
-  transition: transform 0.25s ease;
+  opacity: 0.85;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
-.footer-dev-pill:hover .footer-dev-logo-img {
+.footer-dev-link-block-vertical:hover .footer-dev-logo-vertical {
+  opacity: 1;
   transform: scale(1.05);
 }
 
-.footer-dev-domain {
-  font-size: 12px;
-  font-weight: 600;
+.footer-dev-domain-vertical {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  letter-spacing: 0.05em;
+  transition: color 0.25s ease;
+}
+
+.footer-dev-link-block-vertical:hover .footer-dev-domain-vertical {
   color: #cbd5e1;
-  letter-spacing: 0.02em;
 }
 
 /* ─── Cart Page ──────────────────────────────────────────────────── */
