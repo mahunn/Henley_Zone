@@ -41,8 +41,14 @@ async function main() {
       "utf8"
     );
     console.log(`Successfully generated static catalog with ${products.length} products.`);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating static catalog:", error);
+    try {
+      const fs = require("fs");
+      const path = require("path");
+      const errorPath = path.join(process.cwd(), "public", "build-error.txt");
+      fs.writeFileSync(errorPath, error?.stack || String(error), "utf8");
+    } catch (e) {}
     process.exit(1);
   }
 }
