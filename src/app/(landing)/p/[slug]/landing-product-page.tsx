@@ -124,7 +124,8 @@ export function LandingProductPage({
   }, []);
 
   useEffect(() => {
-    if (!leadId || !detail) return;
+    const cleanedPhone = phone.replace(/\s+/g, "");
+    if (!leadId || !detail || !cleanedPhone.trim()) return;
     const timer = setTimeout(async () => {
       try {
         const items = buildCartItems();
@@ -338,6 +339,7 @@ export function LandingProductPage({
             fill
             sizes="(max-width: 767px) 100vw, 600px"
             priority={activeImg === 0}
+            loadDelay={0}
             className="lp-gallery-main-img"
           />
 
@@ -385,6 +387,7 @@ export function LandingProductPage({
                 width={60}
                 height={72}
                 sizes="60px"
+                loadDelay={100 + i * 100}
                 className={`lp-gallery-thumb${i === activeImg ? " active" : ""}`}
                 onClick={() => setActiveImg(i)}
               />
@@ -514,7 +517,7 @@ export function LandingProductPage({
           <h2 className="lp-variants-title">{bn.landing.selectColorSize}</h2>
           <p className="lp-variants-hint">{bn.landing.multiSelectHint}</p>
           <div className="lp-variant-list">
-            {colors.map((color) => {
+            {colors.map((color, idx) => {
               const isSelected = selectedColors.some((c) => c.colorId === color.id);
               const colorInfo = selectedColors.find((c) => c.colorId === color.id);
               const translatedLabel = translateColorLabel(color.label);
@@ -553,6 +556,7 @@ export function LandingProductPage({
                       width={60}
                       height={72}
                       sizes="60px"
+                      loadDelay={300 + idx * 100}
                       className="lp-variant-img"
                     />
                   </div>

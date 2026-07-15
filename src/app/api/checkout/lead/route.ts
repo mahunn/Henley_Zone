@@ -37,6 +37,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Skip saving lead if phone number is not provided
+    if (!body.phone || !body.phone.trim()) {
+      return NextResponse.json(
+        { ok: false, message: "Skipped: phone number is required to save lead." },
+        { status: 200 }
+      );
+    }
+
     // Determine created_at (keep existing if known, or generate new)
     let createdAt = body.createdAt;
     if (!createdAt) {

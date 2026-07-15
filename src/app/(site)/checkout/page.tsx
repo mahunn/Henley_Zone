@@ -62,7 +62,7 @@ export default function CheckoutPage() {
 
   // Debounced effect to save lead data to backend
   useEffect(() => {
-    if (!leadId || items.length === 0) return;
+    if (!leadId || items.length === 0 || !cleanedPhone.trim()) return;
 
     const timer = setTimeout(async () => {
       try {
