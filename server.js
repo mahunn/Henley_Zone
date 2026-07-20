@@ -1,4 +1,5 @@
 const { createServer } = require("http");
+const http = require("http");
 const { parse } = require("url");
 const next = require("next");
 
@@ -10,11 +11,26 @@ const handle = app.getRequestHandler();
 const port = process.env.PORT || 3000;
 
 app.prepare().then(() => {
-  createServer((req, res) => {
+  const server = createServer((req, res) => {
     const parsedUrl = parse(req.url, true);
     handle(req, res, parsedUrl);
-  }).listen(port, (err) => {
+  });
+
+  server.listen(port, (err) => {
     if (err) throw err;
     console.log(`> Ready on http://localhost:${port}`);
+
+    // Self-ping every 3 minutes to keep Node process alive against Passenger idle sleep
+    if (!dev) {
+      setInterval(() => {
+        const pingUrl = `http://127.0.0.1:${port}/api/ping`;
+        http.get(pingUrl, (res) => {
+          res.resume();
+        }).on("error", () => {
+          /* silent */
+        });
+      }, 180000);
+    }
   });
 });
+

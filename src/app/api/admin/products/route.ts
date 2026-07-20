@@ -97,6 +97,7 @@ export async function POST(request: Request) {
       revalidatePath("/");
       revalidatePath("/store");
       revalidatePath(`/product/${product.slug}`);
+      revalidatePath(`/p/${product.slug}`);
     } catch (e) {
       console.warn("Revalidation failed:", e);
     }
@@ -160,6 +161,7 @@ export async function PUT(request: Request) {
       revalidatePath("/");
       revalidatePath("/store");
       revalidatePath(`/product/${product.slug}`);
+      revalidatePath(`/p/${product.slug}`);
     } catch (e) {
       console.warn("Revalidation failed:", e);
     }

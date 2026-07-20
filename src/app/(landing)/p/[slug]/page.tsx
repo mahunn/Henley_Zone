@@ -6,7 +6,7 @@ import { LandingProductPage } from "./landing-product-page";
 // Force VS Code tsserver type refresh
 
 export const dynamicParams = true;
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export async function generateStaticParams() {
   try {

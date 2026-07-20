@@ -1,5 +1,31 @@
 const { createClient } = require("redis");
 
+// In-Memory fallback store for when Redis is unavailable on shared hosting
+if (!global.memoryCacheStore) {
+  global.memoryCacheStore = new Map();
+}
+
+function getMemoryCache(key) {
+  const item = global.memoryCacheStore.get(key);
+  if (!item) return null;
+  if (item.expireAt && item.expireAt < Date.now()) {
+    global.memoryCacheStore.delete(key);
+    return null;
+  }
+  return item.value;
+}
+
+function setMemoryCache(key, value, ttlSeconds = 604800) {
+  if (global.memoryCacheStore.size > 500) {
+    const firstKey = global.memoryCacheStore.keys().next().value;
+    if (firstKey) global.memoryCacheStore.delete(firstKey);
+  }
+  global.memoryCacheStore.set(key, {
+    value,
+    expireAt: Date.now() + ttlSeconds * 1000
+  });
+}
+
 class CacheHandler {
   constructor(options) {
     this.options = options;
@@ -33,7 +59,7 @@ class CacheHandler {
           if (err.code === "ECONNREFUSED") {
             global.redisClientActive = false;
             if (!loggedRefused && !process.env.REDIS_URL) {
-              console.warn("Redis: local server not running on 127.0.0.1:6379 (caching disabled).");
+              console.warn("Redis: local server not running on 127.0.0.1:6379 (using in-memory cache fallback).");
               loggedRefused = true;
             }
             return;
@@ -49,8 +75,7 @@ class CacheHandler {
           console.error("Redis connection failed:", err.message || err);
         });
       } catch (err) {
-        console.error("Redis client initialization failed, caching disabled:", err.message || err);
-        // Fallback to a mock client that doesn't crash the server
+        console.error("Redis client initialization failed, falling back to memory cache:", err.message || err);
         global.redisClient = {
           isOpen: false,
           isReady: false,
@@ -65,71 +90,70 @@ class CacheHandler {
   }
 
   async get(key) {
+    const isBuild = process.env.NEXT_PHASE === "phase-production-build";
     try {
-      if (!this.client.isOpen || !this.client.isReady) return null;
-      const val = await this.client.get(key);
-      if (!val) return null;
+      if (this.client && this.client.isOpen && this.client.isReady) {
+        const val = await this.client.get(key);
+        if (val) {
+          const entry = JSON.parse(val);
 
-      const entry = JSON.parse(val);
+          // Tag validation: check if tags have been revalidated since this entry was saved
+          if (entry && entry.tags && entry.tags.length > 0) {
+            const tagKeys = entry.tags.map((tag) => `tag:${tag}`);
+            const revalTimes = await this.client.mGet(tagKeys);
 
-      // Tag validation: check if tags have been revalidated since this entry was saved
-      if (entry && entry.tags && entry.tags.length > 0) {
-        const tagKeys = entry.tags.map((tag) => `tag:${tag}`);
-        const revalTimes = await this.client.mGet(tagKeys);
-
-        for (let i = 0; i < entry.tags.length; i++) {
-          const revalTime = revalTimes[i];
-          if (revalTime) {
-            const revalTimestamp = parseInt(revalTime, 10);
-            if (revalTimestamp > entry.lastModified) {
-              return null; // Entry is stale!
+            for (let i = 0; i < entry.tags.length; i++) {
+              const revalTime = revalTimes[i];
+              if (revalTime) {
+                const revalTimestamp = parseInt(revalTime, 10);
+                if (revalTimestamp > entry.lastModified) {
+                  return null; // Entry is stale!
+                }
+              }
             }
           }
+
+          return entry.value;
         }
       }
-
-      return entry.value;
     } catch (err) {
-      const isBuild = process.env.NEXT_PHASE === "phase-production-build";
-      if (!isBuild || process.env.REDIS_URL) {
-        console.error("CacheHandler.get error:", err);
-      }
+      /* Fall through to in-memory cache fallback */
+    }
+
+    if (isBuild && (!this.client || !this.client.isOpen || !this.client.isReady)) {
       return null;
     }
+
+    return getMemoryCache(key);
   }
 
   async set(key, data, ctx) {
+    const ttl = typeof ctx?.revalidate === "number" && ctx.revalidate > 0 ? ctx.revalidate : 604800;
+
+    // Always populate memory cache fallback
+    setMemoryCache(key, data, ttl);
+
     try {
-      if (!this.client.isOpen || !this.client.isReady) return;
-
-      const entry = {
-        lastModified: Date.now(),
-        value: data,
-        tags: ctx?.tags || data?.tags || []
-      };
-
-      const ttl = ctx?.revalidate;
-      const payload = JSON.stringify(entry);
-
-      if (typeof ttl === "number" && ttl > 0) {
+      if (this.client && this.client.isOpen && this.client.isReady) {
+        const entry = {
+          lastModified: Date.now(),
+          value: data,
+          tags: ctx?.tags || data?.tags || []
+        };
+        const payload = JSON.stringify(entry);
         await this.client.set(key, payload, { EX: ttl });
-      } else {
-        // Cache indefinitely or set a long default (e.g. 1 week) to avoid memory bloating
-        await this.client.set(key, payload, { EX: 604800 });
       }
     } catch (err) {
-      const isBuild = process.env.NEXT_PHASE === "phase-production-build";
-      if (!isBuild || process.env.REDIS_URL) {
-        console.error("CacheHandler.set error:", err);
-      }
+      /* silent fallback */
     }
   }
 
   async revalidateTag(tag) {
     try {
-      if (!this.client.isOpen || !this.client.isReady) return;
-      const now = Date.now();
-      await this.client.set(`tag:${tag}`, now.toString());
+      if (this.client && this.client.isOpen && this.client.isReady) {
+        const now = Date.now();
+        await this.client.set(`tag:${tag}`, now.toString());
+      }
     } catch (err) {
       console.error("CacheHandler.revalidateTag error:", err);
     }
@@ -137,3 +161,4 @@ class CacheHandler {
 }
 
 module.exports = CacheHandler;
+
