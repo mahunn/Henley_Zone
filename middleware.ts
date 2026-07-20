@@ -24,4 +24,3 @@ export const config = {
   matcher: ["/admin", "/admin/:path*"]
 };
 
-export const runtime = "nodejs";

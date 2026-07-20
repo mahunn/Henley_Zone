@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  cacheHandler: require.resolve("./cache-handler.js"),
   // Allow 50MB local memory cache to guarantee fast responses if Redis is unavailable
   cacheMaxMemorySize: 50 * 1024 * 1024,
   async headers() {

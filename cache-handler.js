@@ -1,4 +1,9 @@
-const { createClient } = require("redis");
+let createClient = null;
+try {
+  createClient = require("redis").createClient;
+} catch {
+  /* Redis not installed or unavailable */
+}
 
 // In-Memory fallback store for when Redis is unavailable on shared hosting
 if (!global.memoryCacheStore) {
@@ -50,6 +55,7 @@ class CacheHandler {
       }
 
       try {
+        if (typeof createClient !== "function") throw new Error("Redis module not installed.");
         global.redisClient = createClient(clientOptions);
         global.redisClientActive = true;
         
