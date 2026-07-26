@@ -5,6 +5,7 @@ import "./landing.css";
 import { defaultBusiness, businessWhatsappChatUrl, businessTelHref } from "../../config/businesses";
 import { bn } from "../../config/ui-bn";
 import { DeferredMetaPixel } from "../../components/analytics/deferred-meta-pixel";
+import { HeaderSearch } from "../../components/layout/header-search";
 
 function LandingHeader() {
   const waUrl = businessWhatsappChatUrl(defaultBusiness);
@@ -16,6 +17,7 @@ function LandingHeader() {
         <Link href="/#/" className="lp-header-logo">
           <img src="/logo.png" alt="Henley" className="lp-header-logo-img" />
         </Link>
+        <HeaderSearch />
         <div className="lp-header-actions">
           <a href={telHref} className="lp-header-action-btn phone" aria-label="Call Us">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

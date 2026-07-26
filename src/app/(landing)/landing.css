@@ -352,12 +352,14 @@
   align-items: center;
   max-width: 600px;
   margin: 0 auto;
+  gap: 12px;
 }
 
 .lp-header-logo {
   display: flex;
   align-items: center;
   text-decoration: none;
+  flex-shrink: 0;
 }
 
 .lp-header-logo-img {
@@ -369,7 +371,8 @@
 .lp-header-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .lp-header-action-btn {
