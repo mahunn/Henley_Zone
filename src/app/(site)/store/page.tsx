@@ -14,7 +14,8 @@ import { getProductsCatalog, getSyncedProductCatalog } from "@/lib/product-catal
 import { animateFlyToCart } from "@/lib/cart-fly-animation";
 import { productPagePath } from "@/lib/product-url";
 import { bn, categoryLabelBn } from "@/config/ui-bn";
-import { categories as staticCategories } from "@/data/categories";
+import { getCategoriesCatalog, getSyncedCategories } from "@/lib/categories-client";
+import { DEFAULT_CATEGORIES, type CategoryItem } from "@/types/category";
 
 const CARD_SIZE_OPTIONS = ["36", "38", "40", "42", "44", "46", "48"];
 
@@ -306,16 +307,28 @@ function StorePageContent() {
     return () => window.removeEventListener("hz:catalog-updated", onCatalog);
   }, []);
 
-  const categories = useMemo(
-    () =>
-      Array.from(
-        new Set([
-          ...staticCategories.map((c) => c.id),
-          ...products.map((p) => p.category)
-        ])
-      ),
-    [products]
-  );
+  const [categoryItems, setCategoryItems] = useState<CategoryItem[]>(() => getSyncedCategories() ?? DEFAULT_CATEGORIES);
+
+  useEffect(() => {
+    void getCategoriesCatalog().then(setCategoryItems);
+
+    const onCategoriesUpdated = () => {
+      void getCategoriesCatalog().then(setCategoryItems);
+    };
+    window.addEventListener("hz:categories-updated", onCategoriesUpdated);
+    return () => window.removeEventListener("hz:categories-updated", onCategoriesUpdated);
+  }, []);
+
+  const categories = useMemo(() => {
+    const list = categoryItems.map((c) => c.id);
+    // Include any additional category found in products
+    for (const p of products) {
+      if (p.category && !list.includes(p.category)) {
+        list.push(p.category);
+      }
+    }
+    return list;
+  }, [categoryItems, products]);
 
   useEffect(() => {
     const cat = searchParams.get("category");
@@ -346,13 +359,13 @@ function StorePageContent() {
         >
           {bn.categories.all}
         </button>
-        {categories.map((cat) => (
+        {categoryItems.map((cat) => (
           <button
-            key={cat}
-            className={`chip${activeCategory === cat ? " chip-active" : ""}`}
-            onClick={() => { setActiveCategory(cat); router.push(`/store?category=${encodeURIComponent(cat)}`); }}
+            key={cat.id}
+            className={`chip${activeCategory === cat.id ? " chip-active" : ""}`}
+            onClick={() => { setActiveCategory(cat.id); router.push(`/store?category=${encodeURIComponent(cat.id)}`); }}
           >
-            {categoryLabelBn(cat)}
+            {categoryLabelBn(cat.id, cat.nameBn)}
           </button>
         ))}
       </div>

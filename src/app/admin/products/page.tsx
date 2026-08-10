@@ -7,11 +7,11 @@ import { invalidateProductCatalog } from "@/lib/product-catalog-client";
 import { AdminProductsWorkspaceNav } from "@/components/admin/admin-products-workspace-nav";
 import { AdminIconButton, AdminIconLink } from "@/components/admin/admin-icon-button";
 import { IconCheck, IconHome, IconSpinner, IconTrash } from "@/components/admin/admin-icons";
-import { categories as staticCategories } from "@/data/categories";
 import { categoryLabelBn } from "@/config/ui-bn";
+import { getCategoriesCatalog } from "@/lib/categories-client";
 
 const AVAILABLE_SIZES = ["32", "34", "36", "38", "40", "42", "44", "46", "48"];
-type ColorImageRow = { label: string; image: string };
+type ColorImageRow = { label: string; image: string; isDefault?: boolean };
 
 export default function AdminProductsPage() {
   const router = useRouter();
@@ -62,6 +62,8 @@ export default function AdminProductsPage() {
     void verify();
   }, [verify]);
 
+  const [dynamicCategoryObjects, setDynamicCategoryObjects] = useState<{ id: string; title: string; nameBn: string }[]>([]);
+
   useEffect(() => {
     async function loadProductsAndCats() {
       try {
@@ -70,13 +72,21 @@ export default function AdminProductsPage() {
         const data = (await res.json()) as { products: Product[] };
         const products = data.products ?? [];
         setAllProducts(products);
-        const cats = Array.from(
-          new Set([
-            ...staticCategories.map((c) => c.id),
-            ...products.map((p) => p.category)
-          ])
-        ).sort();
-        setExistingCategories(cats);
+
+        const loadedCats = await getCategoriesCatalog(true);
+        const catObjs = loadedCats.map((c) => ({ id: c.id, title: c.title, nameBn: c.nameBn }));
+
+        // Include any additional category found in existing products
+        const knownIds = new Set(catObjs.map((c) => c.id));
+        for (const p of products) {
+          if (p.category && !knownIds.has(p.category)) {
+            knownIds.add(p.category);
+            catObjs.push({ id: p.category, title: p.category, nameBn: categoryLabelBn(p.category) });
+          }
+        }
+
+        setDynamicCategoryObjects(catObjs);
+        setExistingCategories(catObjs.map((c) => c.id));
         setLoadErr("");
       } catch {
         setLoadErr("Could not load categories.");
@@ -91,14 +101,18 @@ export default function AdminProductsPage() {
     const data = (await res.json()) as { products: Product[] };
     const products = data.products ?? [];
     setAllProducts(products);
-    setExistingCategories(
-      Array.from(
-        new Set([
-          ...staticCategories.map((c) => c.id),
-          ...products.map((p) => p.category)
-        ])
-      ).sort()
-    );
+
+    const loadedCats = await getCategoriesCatalog(true);
+    const catObjs = loadedCats.map((c) => ({ id: c.id, title: c.title, nameBn: c.nameBn }));
+    const knownIds = new Set(catObjs.map((c) => c.id));
+    for (const p of products) {
+      if (p.category && !knownIds.has(p.category)) {
+        knownIds.add(p.category);
+        catObjs.push({ id: p.category, title: p.category, nameBn: categoryLabelBn(p.category) });
+      }
+    }
+    setDynamicCategoryObjects(catObjs);
+    setExistingCategories(catObjs.map((c) => c.id));
   }
 
   function toggleSize(size: string) {
@@ -153,11 +167,13 @@ export default function AdminProductsPage() {
       return;
     }
 
+    const defaultIdx = colorImages.findIndex((r) => r.isDefault);
     const colorPayload: ProductColor[] = colorImages
-      .map((row) => ({
+      .map((row, idx) => ({
         id: row.label.trim().toLowerCase().replace(/\s+/g, "_"),
         label: row.label.trim(),
-        image: row.image.trim()
+        image: row.image.trim(),
+        isDefault: defaultIdx >= 0 ? idx === defaultIdx : idx === 0
       }))
       .filter((row) => row.label && row.image);
 
@@ -339,15 +355,12 @@ export default function AdminProductsPage() {
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           >
-            <option value="">Select existing category…</option>
-            {existingCategories.map((c) => {
-              const label = categoryLabelBn(c);
-              return (
-                <option key={c} value={c}>
-                  {c === label ? c : `${c} (${label})`}
-                </option>
-              );
-            })}
+            <option value="">Select category…</option>
+            {dynamicCategoryObjects.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title} ({c.nameBn})
+              </option>
+            ))}
           </select>
         </fieldset>
 
@@ -421,37 +434,59 @@ export default function AdminProductsPage() {
 
           {colorImages.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
-              {colorImages.map((row, i) => (
-                <div
-                  key={`${row.image}-${i}`}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "56px 1fr auto",
-                    gap: 10,
-                    alignItems: "center"
-                  }}
-                >
-                  <img
-                    src={row.image}
-                    alt={row.label}
-                    style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, border: "1px solid var(--color-border)" }}
-                  />
-                  <input
-                    className="nav-search"
-                    value={row.label}
-                    onChange={(e) => updateColorImageRow(i, { label: e.target.value })}
-                    placeholder="Color name"
-                  />
-                  <AdminIconButton
-                    type="button"
-                    variant="danger"
-                    label={`Remove color ${row.label}`}
-                    onClick={() => removeColorImageRow(i)}
+              {colorImages.map((row, i) => {
+                const isDefault = row.isDefault || (i === 0 && !colorImages.some(r => r.isDefault));
+                return (
+                  <div
+                    key={`${row.image}-${i}`}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "56px 1fr auto auto",
+                      gap: 10,
+                      alignItems: "center"
+                    }}
                   >
-                    <IconTrash />
-                  </AdminIconButton>
-                </div>
-              ))}
+                    <img
+                      src={row.image}
+                      alt={row.label}
+                      style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, border: "1px solid var(--color-border)" }}
+                    />
+                    <input
+                      className="nav-search"
+                      value={row.label}
+                      onChange={(e) => updateColorImageRow(i, { label: e.target.value })}
+                      placeholder="Color name"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setColorImages((prev) => prev.map((r, idx) => ({ ...r, isDefault: idx === i })));
+                      }}
+                      style={{
+                        padding: "6px 10px",
+                        borderRadius: "6px",
+                        border: isDefault ? "1.5px solid #0ea5e9" : "1px solid var(--color-border)",
+                        background: isDefault ? "#e0f2fe" : "#f8fafc",
+                        color: isDefault ? "#0369a1" : "var(--color-text-secondary)",
+                        fontWeight: 600,
+                        fontSize: "12px",
+                        cursor: "pointer",
+                        whiteSpace: "nowrap"
+                      }}
+                    >
+                      {isDefault ? "⭐ Default" : "Set Default"}
+                    </button>
+                    <AdminIconButton
+                      type="button"
+                      variant="danger"
+                      label={`Remove color ${row.label}`}
+                      onClick={() => removeColorImageRow(i)}
+                    >
+                      <IconTrash />
+                    </AdminIconButton>
+                  </div>
+                );
+              })}
             </div>
           )}
         </fieldset>

@@ -4,6 +4,5 @@ deployment:
     - export DEPLOYPATH=/home/websybd/henleyzone.com/
     - mkdir -p $DEPLOYPATH/tmp
     - /bin/cp -rf .next public src supabase cache-handler.js ecosystem.config.js middleware.ts next-env.d.ts next.config.ts package-lock.json package.json server.js tsconfig.json $DEPLOYPATH || cp -rf .next public src supabase cache-handler.js ecosystem.config.js middleware.ts next-env.d.ts next.config.ts package-lock.json package.json server.js tsconfig.json $DEPLOYPATH
+    - /bin/cp -f .env* $DEPLOYPATH 2>/dev/null || true
     - /usr/bin/touch $DEPLOYPATH/tmp/restart.txt || /bin/touch $DEPLOYPATH/tmp/restart.txt || touch $DEPLOYPATH/tmp/restart.txt
-
-

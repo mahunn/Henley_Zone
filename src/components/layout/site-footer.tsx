@@ -37,7 +37,9 @@ export function SiteFooter() {
             <div className="footer-col-title">{bn.footer.categories}</div>
             <div className="footer-links">
               <Link href="/store?category=Salwar+Kameez">{bn.categories["Salwar Kameez"]}</Link>
+              <Link href="/store?category=Kurti">{bn.categories.Kurti}</Link>
               <Link href="/store?category=Two+Pieces">{bn.categories["Two Pieces"]}</Link>
+              <Link href="/store?category=Three+Pieces">{bn.categories["Three Pieces"]}</Link>
               <Link href="/store?category=Frogs">{bn.categories.Frogs}</Link>
               <Link href="/store?category=Gown">{bn.categories.Gown}</Link>
               <Link href="/store?category=Plazo">{bn.categories.Plazo}</Link>

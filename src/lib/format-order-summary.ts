@@ -20,7 +20,6 @@ export function formatOrderSummaryLines(order: Order): string[] {
     `Status: ${order.status}`,
     `Subtotal: ${formatCurrency(order.subtotal, currency)}`,
     `Delivery: ${formatCurrency(order.deliveryFee, currency)}`,
-    `Total: ${formatCurrency(order.total, currency)}`,
     "Items:"
   ];
 
@@ -35,6 +34,8 @@ export function formatOrderSummaryLines(order: Order): string[] {
   if (order.note?.trim()) {
     lines.push(`Note: ${order.note.trim()}`);
   }
+
+  lines.push(`Total: ${formatCurrency(order.total, currency)}`);
 
   return lines;
 }

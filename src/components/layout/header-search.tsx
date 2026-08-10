@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Product } from "@/types/commerce";
+import { seedProducts } from "@/data/seed-products";
 import { filterProductsBySearch } from "@/lib/product-search";
 import { getProductsCatalog, getSyncedProductCatalog, deferCatalogRefresh } from "@/lib/product-catalog-client";
 import { productPagePath } from "@/lib/product-url";
@@ -22,7 +23,7 @@ export function HeaderSearch() {
   const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [products, setProducts] = useState<Product[]>(() => getSyncedProductCatalog() ?? []);
+  const [products, setProducts] = useState<Product[]>(() => getSyncedProductCatalog() ?? seedProducts);
   const searchWrapRef = useRef<HTMLDivElement>(null);
 
   const isProductPage = (pathname ?? "").startsWith("/product/");
@@ -30,7 +31,9 @@ export function HeaderSearch() {
   useEffect(() => {
     const load = isProductPage ? deferCatalogRefresh : getProductsCatalog;
     void load()
-      .then((list) => setProducts(list))
+      .then((list) => {
+        if (list && list.length > 0) setProducts(list);
+      })
       .catch(() => {});
   }, [isProductPage]);
 
@@ -52,9 +55,10 @@ export function HeaderSearch() {
     }
   };
 
-  const searchResults = searchQuery.trim()
-    ? filterProductsBySearch(products, searchQuery).slice(0, 5)
-    : [];
+  const isQueryEmpty = !searchQuery.trim();
+  const searchResults = !isQueryEmpty
+    ? filterProductsBySearch(products, searchQuery).slice(0, 6)
+    : products.slice(0, 6);
 
   return (
     <div className="nav-search-wrap" ref={searchWrapRef}>
@@ -67,6 +71,7 @@ export function HeaderSearch() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onFocus={() => setIsSearchFocused(true)}
+          onClick={() => setIsSearchFocused(true)}
         />
         <button type="submit" className="nav-search-btn" aria-label={bn.nav.search}>
           <SearchIcon />
@@ -74,9 +79,56 @@ export function HeaderSearch() {
       </form>
 
       {/* Live Search Dropdown */}
-      {isSearchFocused && searchQuery.trim() && (
+      {isSearchFocused && (
         <div className="nav-search-dropdown">
-          {searchResults.length > 0 ? (
+          {isQueryEmpty ? (
+            <>
+              <div
+                style={{
+                  padding: "8px 12px 6px",
+                  fontSize: "11.5px",
+                  fontWeight: 600,
+                  color: "var(--color-text-secondary)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  borderBottom: "1px solid var(--color-border)"
+                }}
+              >
+                🔥 জনপ্রিয় পণ্যসমূহ (Popular Products)
+              </div>
+              <div className="search-dropdown-list">
+                {searchResults.map((p) => {
+                  const initials = p.name.slice(0, 2).toUpperCase();
+                  const fallbackSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='48'%3E%3Crect width='40' height='48' rx='6' fill='%23e0f2fe'/%3E%3Ctext x='20' y='29' text-anchor='middle' font-family='sans-serif' font-size='12' font-weight='700' fill='%230284c7'%3E${encodeURIComponent(initials)}%3C/text%3E%3C/svg%3E`;
+                  return (
+                    <a
+                      key={p.id}
+                      href={productPagePath(p.slug)}
+                      className="search-dropdown-item"
+                      onClick={() => {
+                        setIsSearchFocused(false);
+                        setSearchQuery("");
+                      }}
+                    >
+                      <img
+                        src={p.imageUrl ?? fallbackSvg}
+                        alt={p.name}
+                        className="search-dropdown-img"
+                        onError={(e) => { (e.target as HTMLImageElement).src = fallbackSvg; }}
+                      />
+                      <div className="search-dropdown-info">
+                        <div className="search-dropdown-name">{p.name}</div>
+                        <div className="search-dropdown-cat" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span>{p.category}</span>
+                          <span style={{ fontWeight: 600, color: "var(--color-primary-dark)" }}>৳{p.price.toLocaleString("en-BD")}</span>
+                        </div>
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+            </>
+          ) : searchResults.length > 0 ? (
             <>
               <div className="search-dropdown-list">
                 {searchResults.map((p) => {
@@ -100,7 +152,10 @@ export function HeaderSearch() {
                       />
                       <div className="search-dropdown-info">
                         <div className="search-dropdown-name">{p.name}</div>
-                        <div className="search-dropdown-cat">{p.category}</div>
+                        <div className="search-dropdown-cat" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span>{p.category}</span>
+                          <span style={{ fontWeight: 600, color: "var(--color-primary-dark)" }}>৳{p.price.toLocaleString("en-BD")}</span>
+                        </div>
                       </div>
                     </a>
                   );

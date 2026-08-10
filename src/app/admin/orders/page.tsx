@@ -1,22 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { defaultBusiness } from "@/config/businesses";
 import { formatOrderItemLabel } from "@/lib/format-order-line";
-import { AdminIconButton, AdminIconToolbar } from "@/components/admin/admin-icon-button";
-import {
-  IconCopy,
-  IconCopyAll,
-  IconLogout,
-  IconPhone,
-  IconSpinner,
-  IconTrash,
-  IconUndo,
-  IconWhatsapp
-} from "@/components/admin/admin-icons";
 import { customerTelHref, customerWhatsappUrl } from "@/lib/customer-contact";
-import { formatOrderForClipboard } from "@/lib/format-order-summary";
 import { formatCurrency } from "@/lib/money";
+import { defaultBusiness } from "@/config/businesses";
 import { Order } from "@/types/commerce";
 import { useRouter } from "next/navigation";
 
@@ -29,13 +17,12 @@ const statusTabs: Array<{ key: Order["status"] | "all"; label: string }> = [
 ];
 
 function statusBadgeStyle(status: Order["status"]) {
-  if (status === "pending") return { background: "#FEF3C7", color: "#92400E" };
-  if (status === "confirmed") return { background: "#DBEAFE", color: "#1E40AF" };
-  if (status === "delivered") return { background: "#DCFCE7", color: "#166534" };
-  return { background: "#FEE2E2", color: "#991B1B" };
+  if (status === "confirmed") return { background: "#DCFCE7", color: "#166534", border: "1px solid #86EFAC" };
+  if (status === "pending") return { background: "#FEF3C7", color: "#92400E", border: "1px solid #FCD34D" };
+  if (status === "delivered") return { background: "#E0F2FE", color: "#0369A1", border: "1px solid #BAE6FD" };
+  return { background: "#FEE2E2", color: "#991B1B", border: "1px solid #FCA5A5" };
 }
 
-/** Local calendar date YYYY-MM-DD for grouping */
 function localDateKey(iso: string): string {
   const d = new Date(iso);
   const y = d.getFullYear();
@@ -47,7 +34,7 @@ function localDateKey(iso: string): string {
 function formatDayHeading(ymd: string): string {
   const [y, m, day] = ymd.split("-").map(Number);
   const dt = new Date(y, m - 1, day);
-  return dt.toLocaleDateString(undefined, {
+  return dt.toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -55,55 +42,15 @@ function formatDayHeading(ymd: string): string {
   });
 }
 
-function formatMonthOption(ym: string): string {
-  const [y, m] = ym.split("-").map(Number);
-  const dt = new Date(y, m - 1, 1);
-  return dt.toLocaleDateString(undefined, { year: "numeric", month: "long" });
-}
-
-function orderMatchesPeriod(order: Order, period: string): boolean {
-  if (period === "all") return true;
-  const t = new Date(order.createdAt).getTime();
-  if (Number.isNaN(t)) return true;
-
-  if (period === "today") {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    const end = new Date();
-    end.setHours(23, 59, 59, 999);
-    return t >= start.getTime() && t <= end.getTime();
-  }
-  if (period === "7d") return t >= Date.now() - 7 * 86400000;
-  if (period === "30d") return t >= Date.now() - 30 * 86400000;
-  if (period.startsWith("month:")) {
-    const rest = period.slice(6);
-    const parts = rest.split("-");
-    const y = Number(parts[0]);
-    const mo = Number(parts[1]);
-    if (!y || !mo) return true;
-    const start = new Date(y, mo - 1, 1);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(y, mo, 0, 23, 59, 59, 999);
-    return t >= start.getTime() && t <= end.getTime();
-  }
-  return true;
-}
-
-function groupOrdersByLocalDay(
-  sortedOrders: Order[],
-  sortBy: "latest" | "oldest" | "amountHigh" | "amountLow"
-): { key: string; heading: string; orders: Order[] }[] {
+function groupOrdersByDay(orders: Order[]): { key: string; heading: string; orders: Order[] }[] {
   const map = new Map<string, Order[]>();
-  for (const o of sortedOrders) {
+  for (const o of orders) {
     const key = localDateKey(o.createdAt);
     if (!map.has(key)) map.set(key, []);
     map.get(key)!.push(o);
   }
-  const keys = [...map.keys()].sort((a, b) => {
-    if (sortBy === "oldest") return a.localeCompare(b);
-    return b.localeCompare(a);
-  });
-  return keys.map((key) => ({
+  const sortedKeys = [...map.keys()].sort((a, b) => b.localeCompare(a));
+  return sortedKeys.map((key) => ({
     key,
     heading: formatDayHeading(key),
     orders: map.get(key)!
@@ -118,15 +65,7 @@ export default function AdminOrdersPage() {
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<Order["status"] | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"latest" | "oldest" | "amountHigh" | "amountLow">(
-    "latest"
-  );
-  /** Time window: all | today | 7d | 30d | month:YYYY-MM (default: last 7 days) */
-  const [period, setPeriod] = useState<string>("7d");
-  const [copyingId, setCopyingId] = useState<string | null>(null);
-  const [copiedNotice, setCopiedNotice] = useState("");
-  const [pendingDeleteIds, setPendingDeleteIds] = useState<string[]>([]);
-  const [applyingDeletes, setApplyingDeletes] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
 
   const loadOrders = async () => {
     try {
@@ -135,9 +74,7 @@ export default function AdminOrdersPage() {
         router.replace("/login?type=admin");
         return;
       }
-      if (!res.ok) {
-        throw new Error("failed");
-      }
+      if (!res.ok) throw new Error("failed");
       const data = (await res.json()) as { orders: Order[] };
       setOrders(data.orders);
       setError("");
@@ -152,12 +89,6 @@ export default function AdminOrdersPage() {
     void loadOrders();
   }, [router]);
 
-  const logout = async () => {
-    await fetch("/api/admin/logout", { method: "POST", credentials: "include" });
-    router.push("/login?type=admin");
-    router.refresh();
-  };
-
   const updateStatus = async (orderId: string, status: Order["status"]) => {
     setUpdatingOrderId(orderId);
     try {
@@ -168,172 +99,54 @@ export default function AdminOrdersPage() {
         body: JSON.stringify({ orderId, status })
       });
 
-      if (res.status === 401) {
-        router.replace("/login?type=admin");
-        return;
-      }
       if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as
-          | { message?: string }
-          | null;
-        setError(body?.message || "Failed to update order status.");
+        setError("Failed to update status.");
         return;
       }
 
       await loadOrders();
     } catch {
-      setError("Failed to update order status.");
+      setError("Failed to update status.");
     } finally {
       setUpdatingOrderId(null);
     }
   };
 
-  const monthOptions = useMemo(() => {
-    const set = new Set<string>();
+  const availableMonths = useMemo(() => {
+    const map = new Map<string, string>();
     for (const o of orders) {
       const d = new Date(o.createdAt);
       if (Number.isNaN(d.getTime())) continue;
-      set.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+      map.set(key, label);
     }
-    return [...set].sort((a, b) => b.localeCompare(a));
+    return [...map.entries()].sort((a, b) => b[0].localeCompare(a[0]));
   }, [orders]);
 
-  const filteredOrders = orders
-    .filter((order) => orderMatchesPeriod(order, period))
-    .filter((order) => (activeFilter === "all" ? true : order.status === activeFilter))
-    .filter((order) => {
-      const q = searchQuery.trim().toLowerCase();
-      if (!q) return true;
-      return (
-        order.id.toLowerCase().includes(q) ||
-        order.customerName.toLowerCase().includes(q) ||
-        order.phone.toLowerCase().includes(q)
-      );
-    })
-    .sort((a, b) => {
-      if (sortBy === "latest") {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      }
-      if (sortBy === "oldest") {
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      }
-      if (sortBy === "amountHigh") {
-        return b.total - a.total;
-      }
-      return a.total - b.total;
-    });
-
-  const ordersByDay = useMemo(
-    () => groupOrdersByLocalDay(filteredOrders, sortBy),
-    [filteredOrders, sortBy]
-  );
-
-  const togglePendingDelete = (orderId: string) => {
-    setPendingDeleteIds((prev) =>
-      prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]
-    );
-    setError("");
-  };
-
-  const clearPendingDeletes = () => {
-    setPendingDeleteIds([]);
-    setError("");
-  };
-
-  const applyPendingDeletes = async () => {
-    if (!pendingDeleteIds.length) return;
-    if (
-      !window.confirm(
-        `Permanently delete ${pendingDeleteIds.length} order(s)? This cannot be undone.`
-      )
-    ) {
-      return;
-    }
-
-    setApplyingDeletes(true);
-    setError("");
-    const ids = [...pendingDeleteIds];
-
-    try {
-      const res = await fetch("/api/orders", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ orderIds: ids })
+  const filteredOrders = useMemo(() => {
+    return orders
+      .filter((order) => {
+        if (selectedMonth === "all") return true;
+        const d = new Date(order.createdAt);
+        if (Number.isNaN(d.getTime())) return true;
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        return key === selectedMonth;
+      })
+      .filter((order) => (activeFilter === "all" ? true : order.status === activeFilter))
+      .filter((order) => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return true;
+        return (
+          order.id.toLowerCase().includes(q) ||
+          order.customerName.toLowerCase().includes(q) ||
+          order.phone.toLowerCase().includes(q) ||
+          order.address.toLowerCase().includes(q)
+        );
       });
-      const data = (await res.json()) as {
-        message?: string;
-        deleted?: string[];
-        failed?: { id: string; reason: string }[];
-      };
+  }, [orders, selectedMonth, activeFilter, searchQuery]);
 
-      if (!res.ok) {
-        setError(data.message || "Could not delete orders.");
-        if (data.deleted?.length) {
-          setOrders((prev) => prev.filter((o) => !data.deleted!.includes(o.id)));
-          setPendingDeleteIds(ids.filter((id) => !data.deleted!.includes(id)));
-        }
-        return;
-      }
-
-      const deletedSet = new Set(data.deleted ?? ids);
-      setOrders((prev) => prev.filter((o) => !deletedSet.has(o.id)));
-      setPendingDeleteIds([]);
-    } catch {
-      setError("Could not delete orders.");
-    } finally {
-      setApplyingDeletes(false);
-    }
-  };
-
-  const copyText = async (text: string) => {
-    if (navigator?.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
-      return;
-    }
-    const area = document.createElement("textarea");
-    area.value = text;
-    area.setAttribute("readonly", "true");
-    area.style.position = "absolute";
-    area.style.left = "-9999px";
-    document.body.appendChild(area);
-    area.select();
-    document.execCommand("copy");
-    area.remove();
-  };
-
-  const handleCopyOrder = async (order: Order) => {
-    setCopyingId(order.id);
-    try {
-      await copyText(formatOrderForClipboard(order));
-      setCopiedNotice(`Copied order ${order.id}`);
-      window.setTimeout(() => setCopiedNotice(""), 1800);
-    } catch {
-      setError("Could not copy order.");
-    } finally {
-      setCopyingId(null);
-    }
-  };
-
-  const handleCopyAll = async () => {
-    if (!filteredOrders.length) return;
-    setCopyingId("all");
-    try {
-      const allText = filteredOrders
-        .map((order, idx) => {
-          const block = formatOrderForClipboard(order);
-          return idx === filteredOrders.length - 1 ? block : `${block}\n\n--------------------\n`;
-        })
-        .join("");
-      await copyText(allText);
-      setCopiedNotice(`Copied ${filteredOrders.length} orders`);
-      window.setTimeout(() => setCopiedNotice(""), 1800);
-    } catch {
-      setError("Could not copy all orders.");
-    } finally {
-      setCopyingId(null);
-    }
-  };
+  const dayGroups = useMemo(() => groupOrdersByDay(filteredOrders), [filteredOrders]);
 
   const countByStatus = {
     all: orders.length,
@@ -344,319 +157,273 @@ export default function AdminOrdersPage() {
   };
 
   return (
-    <main style={{ maxWidth: 960, margin: "0 auto", padding: 24 }}>
-      <div className="admin-orders-top">
+    <main style={{ maxWidth: 1240, margin: "0 auto", padding: "24px 16px", fontFamily: "sans-serif" }}>
+      {/* Top Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div>
-          <h1>Admin - COD Orders</h1>
-          <p>
-            By default only the <strong>last 7 days</strong> of orders are shown. Change <strong>Time period</strong> for today, 30 days, all time, or a specific month. Orders are grouped by calendar day (newest days first).
+          <h1 style={{ margin: 0, fontSize: "1.4rem", color: "#0F172A" }}>Admin Orders (Day-wise & Month-wise)</h1>
+          <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748B" }}>
+            Orders are grouped by day and month, syncing automatically to your Google Sheet.
           </p>
         </div>
-        <AdminIconToolbar className="admin-orders-actions">
-          <AdminIconButton
-            variant="primary"
-            label={copyingId === "all" ? "Copying all orders" : "Copy all filtered orders"}
-            onClick={handleCopyAll}
-            disabled={copyingId === "all" || !filteredOrders.length}
+        <div style={{ display: "flex", gap: 8 }}>
+          <a
+            href="https://docs.google.com/spreadsheets"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              padding: "7px 14px",
+              background: "#166534",
+              color: "#fff",
+              borderRadius: 6,
+              textDecoration: "none",
+              fontSize: 13,
+              fontWeight: 600
+            }}
           >
-            {copyingId === "all" ? <IconSpinner /> : <IconCopyAll />}
-          </AdminIconButton>
-          <AdminIconButton variant="ghost" label="Log out" onClick={logout}>
-            <IconLogout />
-          </AdminIconButton>
-        </AdminIconToolbar>
+            📊 Open Google Sheet
+          </a>
+          <button
+            type="button"
+            onClick={async () => {
+              await fetch("/api/admin/logout", { method: "POST", credentials: "include" });
+              router.push("/login?type=admin");
+            }}
+            style={{
+              padding: "7px 12px",
+              background: "#F1F5F9",
+              border: "1px solid #CBD5E1",
+              borderRadius: 6,
+              cursor: "pointer",
+              fontSize: 13
+            }}
+          >
+            Log out
+          </button>
+        </div>
+      </div>
+
+      {/* Filter Tabs, Month Filter & Search */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
+        {/* Status Tabs */}
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {statusTabs.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveFilter(tab.key)}
+              style={{
+                padding: "6px 12px",
+                borderRadius: 999,
+                border: "1px solid #CBD5E1",
+                fontSize: 12,
+                fontWeight: 600,
+                background: activeFilter === tab.key ? "#0F172A" : "#FFFFFF",
+                color: activeFilter === tab.key ? "#FFFFFF" : "#334155",
+                cursor: "pointer"
+              }}
+            >
+              {tab.label} ({countByStatus[tab.key]})
+            </button>
+          ))}
+        </div>
+
+        {/* Month Selector & Search */}
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            style={{
+              padding: "7px 12px",
+              borderRadius: 6,
+              border: "1px solid #CBD5E1",
+              fontSize: 13,
+              fontWeight: 600,
+              background: "#F8FAFC",
+              color: "#0F172A"
+            }}
+          >
+            <option value="all">📅 All Months</option>
+            {availableMonths.map(([key, label]) => (
+              <option key={key} value={key}>
+                {label}
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="text"
+            placeholder="Search name, phone, address, ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              padding: "7px 12px",
+              borderRadius: 6,
+              border: "1px solid #CBD5E1",
+              fontSize: 13,
+              minWidth: 220
+            }}
+          />
+        </div>
       </div>
 
       {loading ? <p>Loading orders...</p> : null}
-      {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
-      {copiedNotice ? <p className="admin-copy-note">{copiedNotice}</p> : null}
+      {error ? <p style={{ color: "crimson", fontSize: 13 }}>{error}</p> : null}
 
-      {!loading && !orders.length ? <p>No orders yet.</p> : null}
-
-      {!loading && orders.length ? (
-        <>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
-            {statusTabs.map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setActiveFilter(tab.key)}
-                style={{
-                  padding: "6px 10px",
-                  borderRadius: 999,
-                  border: "1px solid #d1d5db",
-                  background: activeFilter === tab.key ? "#111827" : "#fff",
-                  color: activeFilter === tab.key ? "#fff" : "#111827"
-                }}
-              >
-                {tab.label} ({countByStatus[tab.key]})
-              </button>
-            ))}
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              gap: 10,
-              flexWrap: "wrap",
-              marginTop: 12,
-              alignItems: "center"
-            }}
-          >
-            <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
-              <span style={{ fontWeight: 600, color: "#374151" }}>Time period</span>
-              <select
-                value={period}
-                onChange={(e) => setPeriod(e.target.value)}
-                aria-label="Filter orders by date range"
-                style={{ padding: "8px 10px", minWidth: 220, borderRadius: 8, border: "1px solid #d1d5db" }}
-              >
-                <optgroup label="Date range">
-                  <option value="7d">Last 7 days</option>
-                  <option value="today">Today only</option>
-                  <option value="30d">Last 30 days</option>
-                  <option value="all">All time</option>
-                </optgroup>
-                {monthOptions.length > 0 ? (
-                  <optgroup label="Single calendar month">
-                    {monthOptions.map((ym) => (
-                      <option key={ym} value={`month:${ym}`}>
-                        {formatMonthOption(ym)}
-                      </option>
-                    ))}
-                  </optgroup>
-                ) : null}
-              </select>
-            </label>
-            <input
-              type="text"
-              placeholder="Search by order ID, customer, phone"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              style={{ padding: 8, minWidth: 280, borderRadius: 8, border: "1px solid #d1d5db" }}
-            />
-            <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
-              <span style={{ fontWeight: 600, color: "#374151" }}>Order by</span>
-              <select
-                value={sortBy}
-                onChange={(event) =>
-                  setSortBy(event.target.value as "latest" | "oldest" | "amountHigh" | "amountLow")
-                }
-                style={{ padding: "8px 10px", minWidth: 200, borderRadius: 8, border: "1px solid #d1d5db" }}
-              >
-                <option value="latest">Date: newest first</option>
-                <option value="oldest">Date: oldest first</option>
-                <option value="amountHigh">Amount: high to low</option>
-                <option value="amountLow">Amount: low to high</option>
-              </select>
-            </label>
-          </div>
-        </>
-      ) : null}
-
-      {!loading && orders.length > 0 && filteredOrders.length === 0 ? (
-        <p style={{ marginTop: 12, color: "#64748b" }}>
-          No orders match your current filters.
-          {period !== "all" ? (
-            <>
-              {" "}
-              Try setting <strong>Time period</strong> to <strong>All time</strong> or a different month.
-            </>
-          ) : null}
-        </p>
-      ) : null}
-
-      <div style={{ marginTop: 16 }}>
-        {ordersByDay.map((group) => (
-          <section key={group.key} style={{ marginBottom: 28 }}>
-            <h2
+      {/* Day-wise Grouped Orders Sections */}
+      {!loading && dayGroups.length === 0 ? (
+        <div style={{ padding: 32, textAlign: "center", background: "#fff", borderRadius: 8, border: "1px solid #E2E8F0", color: "#64748B" }}>
+          No orders found matching your selection.
+        </div>
+      ) : (
+        dayGroups.map((group) => (
+          <section key={group.key} style={{ marginBottom: 24 }}>
+            {/* Green Day Section Header */}
+            <div
               style={{
-                margin: "0 0 12px",
-                padding: "10px 14px",
-                fontSize: "1.05rem",
+                background: "#15803D",
+                color: "#FFFFFF",
+                padding: "8px 14px",
+                borderRadius: "8px 8px 0 0",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
                 fontWeight: 700,
-                color: "#0f172a",
-                background: "linear-gradient(90deg, #e0f2fe 0%, #f8fafc 100%)",
-                borderRadius: 10,
-                border: "1px solid #bae6fd"
+                fontSize: 14
               }}
             >
-              {group.heading}
-              <span style={{ fontWeight: 500, fontSize: 13, color: "#64748b", marginLeft: 8 }}>
-                ({group.orders.length} {group.orders.length === 1 ? "order" : "orders"})
+              <span>📅 {group.heading}</span>
+              <span style={{ fontSize: 12, background: "rgba(255,255,255,0.2)", padding: "2px 8px", borderRadius: 999 }}>
+                {group.orders.length} {group.orders.length === 1 ? "Order" : "Orders"}
               </span>
-            </h2>
-            <div style={{ display: "grid", gap: 12 }}>
-              {group.orders.map((order) => {
-                const markedForDelete = pendingDeleteIds.includes(order.id);
-                return (
-                <article
-                  key={order.id}
-                  style={{
-                    border: markedForDelete ? "1px solid #fca5a5" : "1px solid var(--color-border)",
-                    borderRadius: 12,
-                    padding: 16,
-                    background: markedForDelete ? "#fef2f2" : "var(--color-surface)",
-                    opacity: markedForDelete ? 0.94 : 1
-                  }}
-                >
-                  <div className="admin-order-head">
-                    <p style={{ textDecoration: markedForDelete ? "line-through" : undefined }}>
-                      <strong>Order:</strong> {order.id}
-                      {markedForDelete ? (
-                        <span style={{ marginLeft: 8, fontSize: 12, color: "#b91c1c", fontWeight: 600 }}>
-                          marked for deletion
-                        </span>
-                      ) : null}
-                    </p>
-                    <AdminIconToolbar>
-                      <AdminIconButton
-                        variant="primary"
-                        label={copyingId === order.id ? "Copying order" : `Copy order ${order.id}`}
-                        onClick={() => void handleCopyOrder(order)}
-                        disabled={copyingId === order.id || markedForDelete}
+            </div>
+
+            {/* Orders Table for this Day */}
+            <div style={{ overflowX: "auto", background: "#FFFFFF", borderRadius: "0 0 8px 8px", border: "1px solid #E2E8F0", borderTop: "none" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, textAlign: "left" }}>
+                <thead>
+                  <tr style={{ background: "#F1F5F9", color: "#475569", borderBottom: "1px solid #E2E8F0" }}>
+                    <th style={{ padding: "8px 12px", borderRight: "1px solid #E2E8F0" }}>Order ID & Time</th>
+                    <th style={{ padding: "8px 12px", borderRight: "1px solid #E2E8F0" }}>Customer</th>
+                    <th style={{ padding: "8px 12px", borderRight: "1px solid #E2E8F0" }}>Phone</th>
+                    <th style={{ padding: "8px 12px", borderRight: "1px solid #E2E8F0", minWidth: 180 }}>Address</th>
+                    <th style={{ padding: "8px 12px", borderRight: "1px solid #E2E8F0", minWidth: 220 }}>Products & Sizes</th>
+                    <th style={{ padding: "8px 12px", borderRight: "1px solid #E2E8F0" }}>Total</th>
+                    <th style={{ padding: "8px 12px" }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {group.orders.map((order, idx) => {
+                    const badge = statusBadgeStyle(order.status);
+                    return (
+                      <tr
+                        key={order.id}
+                        style={{
+                          background: idx % 2 === 0 ? "#F8FAFC" : "#FFFFFF",
+                          borderBottom: "1px solid #E2E8F0"
+                        }}
                       >
-                        {copyingId === order.id ? <IconSpinner /> : <IconCopy />}
-                      </AdminIconButton>
-                      <AdminIconButton
-                        variant={markedForDelete ? "warning" : "danger"}
-                        label={markedForDelete ? "Undo removal mark" : "Mark order for removal"}
-                        onClick={() => togglePendingDelete(order.id)}
-                        disabled={applyingDeletes || updatingOrderId === order.id}
-                      >
-                        {markedForDelete ? <IconUndo /> : <IconTrash />}
-                      </AdminIconButton>
-                    </AdminIconToolbar>
-                  </div>
-                  <p>
-                    <strong>Time:</strong> {new Date(order.createdAt).toLocaleString()}
-                  </p>
-                  <p>
-                    <strong>Customer:</strong> {order.customerName}
-                  </p>
-                  <p>
-                    <strong>Phone:</strong> {order.phone}
-                  </p>
-                  {customerTelHref(order.phone) ? (
-                    <AdminIconToolbar className="admin-order-contact">
-                      <AdminIconButton
-                        href={customerTelHref(order.phone)}
-                        variant="call"
-                        label={`Call ${order.customerName}`}
-                      >
-                        <IconPhone />
-                      </AdminIconButton>
-                      <AdminIconButton
-                        href={customerWhatsappUrl(
-                          order.phone,
-                          `Hi ${order.customerName}, regarding your order ${order.id}.`
-                        )}
-                        variant="whatsapp"
-                        label={`WhatsApp ${order.customerName}`}
-                        external
-                      >
-                        <IconWhatsapp />
-                      </AdminIconButton>
-                    </AdminIconToolbar>
-                  ) : null}
-                  <p>
-                    <strong>Address:</strong> {order.address}
-                  </p>
-                  <p>
-                    <strong>Total:</strong>{" "}
-                    {formatCurrency(order.total, defaultBusiness.currency)}
-                  </p>
-                  <p>
-                    <strong>Status:</strong>{" "}
-                    <span
-                      style={{
-                        display: "inline-block",
-                        padding: "3px 8px",
-                        borderRadius: 999,
-                        fontWeight: 600,
-                        ...statusBadgeStyle(order.status)
-                      }}
-                    >
-                      {order.status}
-                    </span>
-                  </p>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <label htmlFor={`status-${order.id}`}>Update status:</label>
-                    <select
-                      id={`status-${order.id}`}
-                      value={order.status}
-                      onChange={(event) =>
-                        void updateStatus(order.id, event.target.value as Order["status"])
-                      }
-                      disabled={updatingOrderId === order.id || markedForDelete}
-                    >
-                      <option value="pending">pending</option>
-                      <option value="confirmed">confirmed</option>
-                      <option value="delivered">delivered</option>
-                      <option value="cancelled">cancelled</option>
-                    </select>
-                  </div>
-                  <div style={{ marginTop: 4 }}>
-                    <strong>Items:</strong>
-                    <ul style={{ margin: "8px 0 0", paddingLeft: 20, lineHeight: 1.55 }}>
-                      {order.items.map((item) => (
-                        <li key={item.key ?? `${item.productId}-${item.name}`}>
-                          {formatOrderItemLabel(item)} · Qty {item.quantity} ·{" "}
-                          {formatCurrency(item.price * item.quantity, defaultBusiness.currency)}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </article>
-              );
-              })}
+                        <td style={{ padding: "10px 12px", verticalAlign: "top", borderRight: "1px solid #E2E8F0" }}>
+                          <div style={{ fontWeight: 700, color: "#0F172A" }}>{order.id}</div>
+                          <div style={{ fontSize: 11, color: "#64748B", marginTop: 2 }}>
+                            {new Date(order.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                          </div>
+                        </td>
+
+                        <td style={{ padding: "10px 12px", verticalAlign: "top", borderRight: "1px solid #E2E8F0" }}>
+                          <div style={{ fontWeight: 600 }}>{order.customerName}</div>
+                          {order.note && (
+                            <div style={{ fontSize: 11, color: "#D97706", marginTop: 2 }}>Note: {order.note}</div>
+                          )}
+                        </td>
+
+                        <td style={{ padding: "10px 12px", verticalAlign: "top", borderRight: "1px solid #E2E8F0", whiteSpace: "nowrap" }}>
+                          <div style={{ fontWeight: 600 }}>{order.phone}</div>
+                          {customerTelHref(order.phone) && (
+                            <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+                              <a
+                                href={customerTelHref(order.phone)}
+                                style={{
+                                  fontSize: 11,
+                                  padding: "2px 6px",
+                                  background: "#0284C7",
+                                  color: "#fff",
+                                  borderRadius: 4,
+                                  textDecoration: "none",
+                                  fontWeight: 600
+                                }}
+                              >
+                                📞 Call
+                              </a>
+                              <a
+                                href={customerWhatsappUrl(order.phone, `Hi ${order.customerName}, regarding your order ${order.id}.`)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  fontSize: 11,
+                                  padding: "2px 6px",
+                                  background: "#16A34A",
+                                  color: "#fff",
+                                  borderRadius: 4,
+                                  textDecoration: "none",
+                                  fontWeight: 600
+                                }}
+                              >
+                                💬 WA
+                              </a>
+                            </div>
+                          )}
+                        </td>
+
+                        <td style={{ padding: "10px 12px", verticalAlign: "top", borderRight: "1px solid #E2E8F0", fontSize: 12 }}>
+                          {order.address}
+                        </td>
+
+                        <td style={{ padding: "10px 12px", verticalAlign: "top", borderRight: "1px solid #E2E8F0" }}>
+                          <ul style={{ margin: 0, paddingLeft: 14, fontSize: 12, lineHeight: 1.45 }}>
+                            {order.items.map((item, i) => (
+                              <li key={i}>
+                                <strong>{formatOrderItemLabel(item)}</strong> ({item.quantity}টি)
+                              </li>
+                            ))}
+                          </ul>
+                        </td>
+
+                        <td style={{ padding: "10px 12px", verticalAlign: "top", borderRight: "1px solid #E2E8F0", whiteSpace: "nowrap" }}>
+                          <div style={{ fontWeight: 700, color: "#0F172A" }}>
+                            {formatCurrency(order.total, defaultBusiness.currency)}
+                          </div>
+                        </td>
+
+                        <td style={{ padding: "10px 12px", verticalAlign: "top" }}>
+                          <select
+                            value={order.status}
+                            onChange={(e) => void updateStatus(order.id, e.target.value as Order["status"])}
+                            disabled={updatingOrderId === order.id}
+                            style={{
+                              padding: "4px 8px",
+                              borderRadius: 6,
+                              fontSize: 12,
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              ...badge
+                            }}
+                          >
+                            <option value="pending">PENDING</option>
+                            <option value="confirmed">CONFIRMED</option>
+                            <option value="delivered">DELIVERED</option>
+                            <option value="cancelled">CANCELLED</option>
+                          </select>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </section>
-        ))}
-      </div>
-
-      {pendingDeleteIds.length > 0 ? (
-        <div
-          style={{
-            position: "sticky",
-            bottom: 0,
-            marginTop: 24,
-            padding: "14px 16px",
-            borderRadius: 10,
-            border: "1px solid #fca5a5",
-            background: "#fff",
-            boxShadow: "0 -8px 24px rgba(0,0,0,0.08)",
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 12,
-            alignItems: "center",
-            justifyContent: "space-between"
-          }}
-        >
-          <p style={{ margin: 0, flex: "1 1 200px", color: "#7f1d1d", fontSize: 14 }}>
-            <strong>{pendingDeleteIds.length}</strong> order(s) marked for removal. Nothing is deleted until you save.
-          </p>
-          <AdminIconToolbar>
-            <AdminIconButton
-              variant="ghost"
-              label="Clear removal marks"
-              onClick={clearPendingDeletes}
-              disabled={applyingDeletes}
-            >
-              <IconUndo />
-            </AdminIconButton>
-            <AdminIconButton
-              variant="danger"
-              label={applyingDeletes ? "Deleting orders" : "Save deletions permanently"}
-              onClick={() => void applyPendingDeletes()}
-              disabled={applyingDeletes}
-            >
-              {applyingDeletes ? <IconSpinner /> : <IconTrash />}
-            </AdminIconButton>
-          </AdminIconToolbar>
-        </div>
-      ) : null}
+        ))
+      )}
     </main>
   );
 }
-

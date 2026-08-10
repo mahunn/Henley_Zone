@@ -2,6 +2,7 @@ export interface ProductColor {
   id: string;
   label: string;
   image: string;
+  isDefault?: boolean;
 }
 
 export interface Product {

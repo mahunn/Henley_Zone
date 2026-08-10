@@ -8,7 +8,9 @@ import { useWishlist } from "@/components/wishlist-provider";
 import { defaultBusiness, businessTelHref, businessWhatsappChatUrl } from "@/config/businesses";
 import { HeaderLoginLink } from "@/components/layout/header-login-link";
 import { HeaderSearch } from "@/components/layout/header-search";
-import { bn } from "@/config/ui-bn";
+import { bn, categoryLabelBn } from "@/config/ui-bn";
+import { getCategoriesCatalog, getSyncedCategories } from "@/lib/categories-client";
+import { DEFAULT_CATEGORIES, type CategoryItem } from "@/types/category";
 
 function CartIcon() {
   return (
@@ -47,7 +49,18 @@ export function SiteHeader() {
   const [logoSrc, setLogoSrc] = useState("/logo.png");
   const [currentHash, setCurrentHash] = useState("");
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [navCategories, setNavCategories] = useState<CategoryItem[]>(() => getSyncedCategories() ?? DEFAULT_CATEGORIES);
   const lastScrollYRef = useRef(0);
+
+  useEffect(() => {
+    void getCategoriesCatalog().then(setNavCategories);
+
+    const onCategoriesUpdated = () => {
+      void getCategoriesCatalog().then(setNavCategories);
+    };
+    window.addEventListener("hz:categories-updated", onCategoriesUpdated);
+    return () => window.removeEventListener("hz:categories-updated", onCategoriesUpdated);
+  }, []);
 
   useEffect(() => {
     const readHash = () => setCurrentHash(window.location.hash || "");
@@ -194,55 +207,18 @@ export function SiteHeader() {
             <Link href="/store" className={navClass(onStorePage && !activeCategory)} onClick={scrollToTopAfterNav}>
               {bn.nav.shop}
             </Link>
-            <Link
-              href="/store?category=Salwar+Kameez"
-              className={navClass(onStorePage && activeCategory === "Salwar Kameez")}
-              onClick={scrollToTopAfterNav}
-            >
-              {bn.categories["Salwar Kameez"]}
-            </Link>
-            <Link
-              href="/store?category=Two+Pieces"
-              className={navClass(onStorePage && activeCategory === "Two Pieces")}
-              onClick={scrollToTopAfterNav}
-            >
-              {bn.categories["Two Pieces"]}
-            </Link>
-            <Link
-              href="/store?category=Three+Pieces"
-              className={navClass(onStorePage && activeCategory === "Three Pieces")}
-              onClick={scrollToTopAfterNav}
-            >
-              {bn.categories["Three Pieces"]}
-            </Link>
-            <Link
-              href="/store?category=Frogs"
-              className={navClass(onStorePage && activeCategory === "Frogs")}
-              onClick={scrollToTopAfterNav}
-            >
-              {bn.categories.Frogs}
-            </Link>
-            <Link
-              href="/store?category=Gown"
-              className={navClass(onStorePage && activeCategory === "Gown")}
-              onClick={scrollToTopAfterNav}
-            >
-              {bn.categories.Gown}
-            </Link>
-            <Link
-              href="/store?category=Plazo"
-              className={navClass(onStorePage && activeCategory === "Plazo")}
-              onClick={scrollToTopAfterNav}
-            >
-              {bn.categories.Plazo}
-            </Link>
-            <Link
-              href="/store?category=Tops"
-              className={navClass(onStorePage && activeCategory === "Tops")}
-              onClick={scrollToTopAfterNav}
-            >
-              {bn.categories.Tops}
-            </Link>
+            {navCategories
+              .filter((c) => c.showInNav !== false)
+              .map((cat) => (
+                <Link
+                  key={cat.id}
+                  href={`/store?category=${encodeURIComponent(cat.id)}`}
+                  className={navClass(onStorePage && activeCategory === cat.id)}
+                  onClick={scrollToTopAfterNav}
+                >
+                  {categoryLabelBn(cat.id, cat.nameBn)}
+                </Link>
+              ))}
             <Link href="/contact" className={navClass(pathname === "/contact")} onClick={scrollToTopAfterNav}>
               {bn.nav.contact}
             </Link>

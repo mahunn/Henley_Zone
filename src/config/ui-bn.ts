@@ -21,6 +21,7 @@ export const bn = {
   categories: {
     all: "সব",
     "Salwar Kameez": "সালোয়ার কামিজ",
+    Kurti: "কুর্তি",
     "Two Pieces": "টু পিস",
     "Three Pieces": "থ্রি পিস",
     Frogs: "ফ্রগ",
@@ -273,7 +274,8 @@ export const bn = {
   }
 } as const;
 
-export function categoryLabelBn(category: string): string {
+export function categoryLabelBn(category: string, customNameBn?: string): string {
+  if (customNameBn && customNameBn.trim()) return customNameBn.trim();
   const map = bn.categories as Record<string, string | undefined>;
   return map[category] ?? category;
 }

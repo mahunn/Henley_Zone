@@ -1,0 +1,111 @@
+export interface CategoryItem {
+  id: string;
+  title: string;
+  nameBn: string;
+  label?: string;
+  description?: string;
+  icon?: string;
+  imageUrl?: string;
+  accent?: string;
+  showInNav: boolean;
+  order: number;
+}
+
+export const DEFAULT_CATEGORIES: CategoryItem[] = [
+  {
+    id: "Salwar Kameez",
+    title: "Salwar Kameez",
+    nameBn: "সালোয়ার কামিজ",
+    label: "Everyday Elegance",
+    description: "Comfort-first designs with stylish detailing.",
+    icon: "✨",
+    imageUrl: "/products/kurti/salwar1/olive.jpeg",
+    accent: "#0ea5e9",
+    showInNav: true,
+    order: 1
+  },
+  {
+    id: "Kurti",
+    title: "Kurti",
+    nameBn: "কুর্তি",
+    label: "Kurti Collection",
+    description: "Stylish and comfortable kurti collection for modern daily wear.",
+    icon: "👘",
+    imageUrl: "/products/kurti/frog1/magenda.jpeg",
+    accent: "#0ea5e9",
+    showInNav: true,
+    order: 2
+  },
+  {
+    id: "Two Pieces",
+    title: "Two Pieces",
+    nameBn: "টু পিস",
+    label: "Modern Styles",
+    description: "Comfortable and trendy two piece sets for daily wear.",
+    icon: "🌿",
+    imageUrl: "/products/kurti/two-piece/blue.jpeg",
+    accent: "#38bdf8",
+    showInNav: true,
+    order: 3
+  },
+  {
+    id: "Three Pieces",
+    title: "Three Pieces",
+    nameBn: "থ্রি পিস",
+    label: "Premium Set",
+    description: "Pure cotton three piece sets with elegant print and embroidery.",
+    icon: "💫",
+    imageUrl: "/products/kurti/three-piece/purple.jpeg",
+    accent: "#0ea5e9",
+    showInNav: true,
+    order: 4
+  },
+  {
+    id: "Frogs",
+    title: "Frogs",
+    nameBn: "ফ্রগ",
+    label: "Trending Collection",
+    description: "Stylish frogs with elegant print and embroidery finishing.",
+    icon: "👗",
+    imageUrl: "/products/kurti/frog1/magenda.jpeg",
+    accent: "#0ea5e9",
+    showInNav: true,
+    order: 5
+  },
+  {
+    id: "Gown",
+    title: "Gown",
+    nameBn: "গাউন",
+    label: "One Piece",
+    description: "Ready-made cotton gown one piece with embroidery and glass work.",
+    icon: "🌸",
+    imageUrl: "/products/kurti/gown1/navy-blue.jpeg",
+    accent: "#0284c7",
+    showInNav: true,
+    order: 6
+  },
+  {
+    id: "Plazo",
+    title: "Plazo",
+    nameBn: "প্লাজো",
+    label: "Comfort Wear",
+    description: "Embroidered plazo — premium fabric, free fit, long sizes 38–40.",
+    icon: "👖",
+    imageUrl: "/products/plazo/plazo1/img1.jpeg",
+    accent: "#7c3aed",
+    showInNav: true,
+    order: 7
+  },
+  {
+    id: "Tops",
+    title: "Tops",
+    nameBn: "টপস",
+    label: "Trendy Wear",
+    description: "Fashionable and comfortable tops for modern daily wear.",
+    icon: "👚",
+    imageUrl: "https://placehold.co/120x120/e0f2fe/0284c7?text=Tops",
+    accent: "#0ea5e9",
+    showInNav: true,
+    order: 8
+  }
+];

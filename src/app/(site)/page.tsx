@@ -8,11 +8,12 @@ import { useWishlist } from "@/components/wishlist-provider";
 import { CountdownTimer } from "@/components/shop/countdown-timer";
 import { animateFlyToCart } from "@/lib/cart-fly-animation";
 import { seedProducts } from "@/data/seed-products";
-import { categories } from "@/data/categories";
 import type { Product } from "@/types/commerce";
 import { getProductsCatalog, getSyncedProductCatalog } from "@/lib/product-catalog-client";
 import { productPagePath } from "@/lib/product-url";
-import { bn } from "@/config/ui-bn";
+import { bn, categoryLabelBn } from "@/config/ui-bn";
+import { getCategoriesCatalog, getSyncedCategories } from "@/lib/categories-client";
+import { DEFAULT_CATEGORIES, type CategoryItem } from "@/types/category";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 interface ColorVariant {
@@ -287,36 +288,41 @@ function ProductCard({
 /* ─── CategoryScrollSection ──────────────────────────────────── */
 function CategoryScrollSection() {
   const trackRef = useRef<HTMLDivElement>(null);
+  const [items, setItems] = useState<CategoryItem[]>(() => getSyncedCategories() ?? DEFAULT_CATEGORIES);
+
+  useEffect(() => {
+    void getCategoriesCatalog().then(setItems);
+
+    const onCategoriesUpdated = () => {
+      void getCategoriesCatalog().then(setItems);
+    };
+    window.addEventListener("hz:categories-updated", onCategoriesUpdated);
+    return () => window.removeEventListener("hz:categories-updated", onCategoriesUpdated);
+  }, []);
 
   const scroll = (dir: "left" | "right") => {
     if (!trackRef.current) return;
     trackRef.current.scrollBy({ left: dir === "left" ? -240 : 240, behavior: "smooth" });
   };
 
-  const catItems = [
-    ...categories.map((c) => ({ id: c.id, label: c.title, image: c.imageUrl })),
-    { id: "KURTI", label: "KURTI", image: "https://placehold.co/120x120/e0f2fe/0284c7?text=KURTI" },
-    { id: "BORKA", label: "BORKA", image: "https://placehold.co/120x120/e0f2fe/0284c7?text=BORKA" }
-  ];
-
   return (
     <div className="cat-scroll-wrap">
       <button className="cat-scroll-arrow left" onClick={() => scroll("left")} aria-label="Previous categories">‹</button>
       <div className="cat-scroll-track" ref={trackRef}>
-        {catItems.map((cat) => (
+        {items.map((cat) => (
           <Link
             key={cat.id}
             href={`/store?category=${encodeURIComponent(cat.id)}`}
             className="cat-item"
           >
             <img
-              src={cat.image}
-              alt={cat.label}
+              src={cat.imageUrl || "https://placehold.co/120x120/e0f2fe/0284c7?text=" + encodeURIComponent(cat.title)}
+              alt={cat.nameBn || cat.title}
               className="cat-item-img"
               loading="lazy"
               decoding="async"
             />
-            <span className="cat-item-label">{cat.label}</span>
+            <span className="cat-item-label">{cat.nameBn || cat.title}</span>
           </Link>
         ))}
       </div>

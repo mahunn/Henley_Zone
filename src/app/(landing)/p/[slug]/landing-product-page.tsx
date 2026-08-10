@@ -2,12 +2,16 @@
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { Product } from "../../../../types/commerce";
 import type { PdpDetail } from "../../../../lib/product-detail-mapper";
+import { getProductsCatalog } from "../../../../lib/product-catalog-client";
+import { productPagePath } from "../../../../lib/product-url";
 import { formatCurrency } from "../../../../lib/money";
 import { defaultBusiness, businessTelHref, businessWhatsappChatUrl } from "../../../../config/businesses";
 import { DELIVERY_FEE_INSIDE_DHAKA, DELIVERY_FEE_OUTSIDE_DHAKA } from "../../../../config/delivery";
 import { bn } from "../../../../config/ui-bn";
 import { ProductImage } from "../../../../components/shop/product-image";
+import { normalizePhoneNumber, isValidPhoneNumber } from "../../../../lib/phone-normalizer";
 
 /* ── Types ───────────────────────────────────────────── */
 
@@ -40,12 +44,7 @@ export function LandingProductPage({
   /* ── Variant state ─────────────────────────────────── */
   const [selectedColors, setSelectedColors] = useState<SelectedVariant[]>([]);
   const [selectedSize, setSelectedSize] = useState<string>("");
-
-  const selectSizeForColor = useCallback((colorId: string, size: string) => {
-    setSelectedColors((prev) =>
-      prev.map((c) => (c.colorId === colorId ? { ...c, size } : c))
-    );
-  }, []);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
   const translateColorLabel = useCallback((label: string): string => {
     const clean = label.trim().toLowerCase();
@@ -89,6 +88,34 @@ export function LandingProductPage({
     }
   }, []);
 
+  useEffect(() => {
+    void getProductsCatalog().then((all) => {
+      if (!detail) return;
+      const filtered = all.filter((p) => p.id !== detail.id);
+      setRelatedProducts(filtered.slice(0, 4));
+    });
+  }, [detail]);
+
+  useEffect(() => {
+    if (detail && detail.colors && detail.colors.length > 0) {
+      const hasReal = detail.colors.length > 1 || (detail.colors.length === 1 && detail.colors[0].id !== "default");
+      if (hasReal && selectedColors.length === 0) {
+        const defaultColor = detail.colors.find((c) => (c as any).isDefault) ?? detail.colors[0];
+        setSelectedColors([{
+          colorId: defaultColor.id,
+          label: translateColorLabel(defaultColor.label),
+          image: defaultColor.swatchImage
+        }]);
+      }
+    }
+  }, [detail, translateColorLabel]);
+
+  const selectSizeForColor = useCallback((colorId: string, size: string) => {
+    setSelectedColors((prev) =>
+      prev.map((c) => (c.colorId === colorId ? { ...c, size } : c))
+    );
+  }, []);
+
   /* ── Order form state ──────────────────────────────── */
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
@@ -124,7 +151,7 @@ export function LandingProductPage({
   }, []);
 
   useEffect(() => {
-    const cleanedPhone = phone.replace(/\s+/g, "");
+    const cleanedPhone = normalizePhoneNumber(phone);
     if (!leadId || !detail || !cleanedPhone.trim()) return;
     const timer = setTimeout(async () => {
       try {
@@ -135,7 +162,7 @@ export function LandingProductPage({
           body: JSON.stringify({
             id: leadId,
             customerName: customerName.trim(),
-            phone: phone.replace(/\s+/g, ""),
+            phone: cleanedPhone,
             address: address.trim(),
             items,
             subtotal,
@@ -148,7 +175,7 @@ export function LandingProductPage({
       } catch {
         /* silent */
       }
-    }, 2000);
+    }, 800);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leadId, customerName, phone, address, delivery, selectedColors.length]);
@@ -217,7 +244,7 @@ export function LandingProductPage({
     }));
   }, [detail, selectedColors, selectedSize]);
 
-  /* ── Scroll to order form ──────────────────────────── */
+  /* ── Scroll to order form ──────────────────── */
   const scrollToOrder = useCallback(() => {
     orderFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
@@ -229,15 +256,15 @@ export function LandingProductPage({
 
     if (!detail) return;
 
-    const cleanedPhone = phone.replace(/\s+/g, "");
+    const cleanedPhone = normalizePhoneNumber(phone);
 
     if (!customerName.trim() || !cleanedPhone || !address.trim()) {
       setError(bn.landing.errors.required);
       return;
     }
 
-    if (!/^\+?[0-9]{10,15}$/.test(cleanedPhone)) {
-      setError(bn.landing.errors.phone);
+    if (!isValidPhoneNumber(phone)) {
+      setError("সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন (যেমন: 017XXXXXXXX)");
       return;
     }
 
@@ -463,11 +490,10 @@ export function LandingProductPage({
       </div>
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 5: PHONE / CALL
+          SECTION 5: PHONE / CALL (Single Phone Number)
           ═══════════════════════════════════════════════════ */}
       <section className="lp-call">
         <p className="lp-call-label">যেকোনো প্রয়োজনে কল করুন</p>
-        <p className="lp-call-number">{phoneNumber}</p>
         <a
           href={businessTelHref(defaultBusiness)}
           className="lp-call-btn"
@@ -479,35 +505,7 @@ export function LandingProductPage({
         </a>
       </section>
 
-      {/* ═══════════════════════════════════════════════════
-          SECTION 6: TRUST BADGES
-          ═══════════════════════════════════════════════════ */}
-      <div className="lp-trust">
-        <div className="lp-trust-item">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lp-trust-icon">
-            <rect x="1" y="3" width="15" height="13" />
-            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
-            <circle cx="5.5" cy="18.5" r="2.5" />
-            <circle cx="18.5" cy="18.5" r="2.5" />
-          </svg>
-          <span>সারাদেশে ডেলিভারি</span>
-        </div>
-        <div className="lp-trust-item">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#eab308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lp-trust-icon">
-            <rect x="2" y="6" width="20" height="12" rx="2" />
-            <circle cx="12" cy="12" r="2" />
-            <path d="M6 12h.01M18 12h.01" />
-          </svg>
-          <span>ক্যাশ অন ডেলিভারি</span>
-        </div>
-        <div className="lp-trust-item">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lp-trust-icon">
-            <polyline points="9 11 12 14 22 4" />
-            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-          </svg>
-          <span>১০০% অরিজিনাল</span>
-        </div>
-      </div>
+
 
       {/* ═══════════════════════════════════════════════════
           SECTION 7: COLOR / VARIANT SELECTION
@@ -786,7 +784,53 @@ export function LandingProductPage({
       </form>
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 11: FAQ
+          SECTION 11: RELATED PRODUCTS (4 items)
+          ═══════════════════════════════════════════════════ */}
+      {relatedProducts.length > 0 && (
+        <section className="lp-related" style={{ marginTop: "32px", paddingTop: "24px", borderTop: "1px dashed var(--color-border)" }}>
+          <h2 style={{ fontSize: "1.15rem", fontWeight: 700, marginBottom: "16px", textAlign: "center", color: "var(--color-text-primary)" }}>
+            🛍️ আরও কিছু চমৎকার পছন্দ (Related Products)
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "12px" }}>
+            {relatedProducts.map((rp) => (
+              <a
+                key={rp.id}
+                href={productPagePath(rp.slug)}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  background: "#fff",
+                  border: "1px solid var(--color-border)",
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  textDecoration: "none",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                  transition: "transform 0.2s ease"
+                }}
+              >
+                <div style={{ position: "relative", width: "100%", paddingTop: "120%", background: "#f8fafc" }}>
+                  <img
+                    src={rp.imageUrl}
+                    alt={rp.name}
+                    style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                </div>
+                <div style={{ padding: "10px", display: "flex", flexDirection: "column", gap: "4px", flex: 1 }}>
+                  <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-primary)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: 1.3 }}>
+                    {rp.name}
+                  </div>
+                  <div style={{ fontSize: "13.5px", fontWeight: 700, color: "var(--color-primary-dark)", marginTop: "auto" }}>
+                    ৳{rp.price.toLocaleString("bn-BD")}
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ═══════════════════════════════════════════════════
+          SECTION 12: FAQ
           ═══════════════════════════════════════════════════ */}
       <section className="lp-faq">
         <h2 className="lp-faq-title">{bn.landing.faqTitle}</h2>
@@ -812,7 +856,7 @@ export function LandingProductPage({
       </section>
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 12: CUSTOMER REVIEWS
+          SECTION 13: CUSTOMER REVIEWS
           ═══════════════════════════════════════════════════ */}
       <section className="lp-reviews">
         <h2 className="lp-reviews-title">{bn.landing.reviewsTitle}</h2>
@@ -831,7 +875,7 @@ export function LandingProductPage({
       </section>
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 13: STATS BAR
+          SECTION 14: STATS BAR
           ═══════════════════════════════════════════════════ */}
       <div className="lp-stats">
         <div className="lp-stat">

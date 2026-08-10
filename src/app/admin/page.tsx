@@ -74,6 +74,12 @@ export default function AdminPanelPage() {
           </span>
           Checkout Leads
         </a>
+        <a href="/admin/categories" className="admin-nav-tile">
+          <span className="admin-nav-tile__icon">
+            <IconPackage size={22} />
+          </span>
+          Categories & Nav Order
+        </a>
         <button
           type="button"
           className="admin-nav-tile admin-nav-tile--logout"

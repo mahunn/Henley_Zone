@@ -16,11 +16,11 @@ import {
   IconUpload,
   IconX
 } from "@/components/admin/admin-icons";
-import { categories as staticCategories } from "@/data/categories";
 import { categoryLabelBn } from "@/config/ui-bn";
+import { getCategoriesCatalog } from "@/lib/categories-client";
 
 const AVAILABLE_SIZES = ["32", "34", "36", "38", "40", "42", "44", "46", "48"];
-type ColorImageRow = { label: string; image: string };
+type ColorImageRow = { label: string; image: string; isDefault?: boolean };
 type EditFormState = {
   id: string;
   name: string;
@@ -127,12 +127,13 @@ export default function AdminManageProductsPage() {
         const data = (await res.json()) as { products: Product[] };
         const products = data.products ?? [];
         setAllProducts(products);
+        const loadedCats = await getCategoriesCatalog(true);
         const cats = Array.from(
           new Set([
-            ...staticCategories.map((c) => c.id),
+            ...loadedCats.map((c) => c.id),
             ...products.map((p) => p.category)
           ])
-        ).sort();
+        );
         setExistingCategories(cats);
         setLoadErr("");
       } catch {
@@ -152,19 +153,24 @@ export default function AdminManageProductsPage() {
     const data = (await res.json()) as { products: Product[] };
     const products = data.products ?? [];
     setAllProducts(products);
-    setExistingCategories(
-      Array.from(
-        new Set([
-          ...staticCategories.map((c) => c.id),
-          ...products.map((p) => p.category)
-        ])
-      ).sort()
+    const loadedCats = await getCategoriesCatalog(true);
+    const cats = Array.from(
+      new Set([
+        ...loadedCats.map((c) => c.id),
+        ...products.map((p) => p.category)
+      ])
     );
+    setExistingCategories(cats);
     setLoadErr("");
   }
 
   function toColorRowsFromProduct(p: Product): ColorImageRow[] {
-    return (p.colors ?? []).map((c) => ({ label: c.label, image: c.image }));
+    const hasDefaultMark = (p.colors ?? []).some((c) => c.isDefault);
+    return (p.colors ?? []).map((c, idx) => ({
+      label: c.label,
+      image: c.image,
+      isDefault: hasDefaultMark ? !!c.isDefault : idx === 0
+    }));
   }
 
   function makeColorLabelFromFileName(fileName: string): string {
@@ -293,11 +299,13 @@ export default function AdminManageProductsPage() {
     }
     setSavingEdit(true);
     try {
+      const defaultIdx = editing.colorImages.findIndex((r) => r.isDefault);
       const colorPayload: ProductColor[] = editing.colorImages
-        .map((row) => ({
+        .map((row, idx) => ({
           id: row.label.trim().toLowerCase().replace(/\s+/g, "_"),
           label: row.label.trim(),
-          image: row.image.trim()
+          image: row.image.trim(),
+          isDefault: defaultIdx >= 0 ? idx === defaultIdx : idx === 0
         }))
         .filter((row) => row.label && row.image);
 
@@ -569,21 +577,46 @@ export default function AdminManageProductsPage() {
 
               {editing.colorImages.length > 0 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {editing.colorImages.map((row, i) => (
-                    <div key={`${row.image}-${i}`} style={{ display: "grid", gridTemplateColumns: "56px 1fr 1fr auto", gap: 8, alignItems: "center" }}>
-                      <img src={row.image} alt={row.label} style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, border: "1px solid var(--color-border)" }} />
-                      <input className="nav-search" value={row.label} onChange={(e) => updateEditColor(i, { label: e.target.value })} placeholder="Color name" />
-                      <input className="nav-search" value={row.image} onChange={(e) => updateEditColor(i, { image: e.target.value })} placeholder="Color image URL" />
-                      <AdminIconButton
-                        type="button"
-                        variant="danger"
-                        label={`Remove color ${row.label}`}
-                        onClick={() => removeEditColor(i)}
-                      >
-                        <IconTrash />
-                      </AdminIconButton>
-                    </div>
-                  ))}
+                  {editing.colorImages.map((row, i) => {
+                    const isDefault = row.isDefault || (i === 0 && !editing.colorImages.some(r => r.isDefault));
+                    return (
+                      <div key={`${row.image}-${i}`} style={{ display: "grid", gridTemplateColumns: "56px 1fr 1fr auto auto", gap: 8, alignItems: "center" }}>
+                        <img src={row.image} alt={row.label} style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, border: "1px solid var(--color-border)" }} />
+                        <input className="nav-search" value={row.label} onChange={(e) => updateEditColor(i, { label: e.target.value })} placeholder="Color name" />
+                        <input className="nav-search" value={row.image} onChange={(e) => updateEditColor(i, { image: e.target.value })} placeholder="Color image URL" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditing({
+                              ...editing,
+                              colorImages: editing.colorImages.map((r, idx) => ({ ...r, isDefault: idx === i }))
+                            });
+                          }}
+                          style={{
+                            padding: "6px 10px",
+                            borderRadius: "6px",
+                            border: isDefault ? "1.5px solid #0ea5e9" : "1px solid var(--color-border)",
+                            background: isDefault ? "#e0f2fe" : "#f8fafc",
+                            color: isDefault ? "#0369a1" : "var(--color-text-secondary)",
+                            fontWeight: 600,
+                            fontSize: "12px",
+                            cursor: "pointer",
+                            whiteSpace: "nowrap"
+                          }}
+                        >
+                          {isDefault ? "⭐ Default" : "Set Default"}
+                        </button>
+                        <AdminIconButton
+                          type="button"
+                          variant="danger"
+                          label={`Remove color ${row.label}`}
+                          onClick={() => removeEditColor(i)}
+                        >
+                          <IconTrash />
+                        </AdminIconButton>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </fieldset>

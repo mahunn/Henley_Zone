@@ -7,6 +7,7 @@ import { useCart } from "@/components/cart-provider";
 import { defaultBusiness } from "@/config/businesses";
 import { DELIVERY_FEE_INSIDE_DHAKA, DELIVERY_FEE_OUTSIDE_DHAKA } from "@/config/delivery";
 import { formatCurrency } from "@/lib/money";
+import { normalizePhoneNumber, isValidPhoneNumber } from "@/lib/phone-normalizer";
 import { Order } from "@/types/commerce";
 import { bn } from "@/config/ui-bn";
  
@@ -36,14 +37,14 @@ export default function CheckoutPage() {
   const [address, setAddress] = useState("");
   const [note, setNote] = useState("");
   const [delivery, setDelivery] = useState<DeliveryId>("inside");
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(true);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [leadId, setLeadId] = useState<string>("");
  
   const deliveryFee = DELIVERY_OPTIONS.find((o) => o.id === delivery)!.fee;
   const total = subtotal + (items.length > 0 ? deliveryFee : 0);
-  const cleanedPhone = phone.replace(/\s+/g, "");
+  const cleanedPhone = normalizePhoneNumber(phone);
 
   // Generate / retrieve leadId on mount or cart change
   useEffect(() => {
@@ -60,7 +61,7 @@ export default function CheckoutPage() {
     }
   }, [items.length]);
 
-  // Debounced effect to save lead data to backend
+  // Debounced effect to save lead data to backend (800ms for faster drop-off protection)
   useEffect(() => {
     if (!leadId || items.length === 0 || !cleanedPhone.trim()) return;
 
@@ -86,7 +87,7 @@ export default function CheckoutPage() {
       } catch (err) {
         console.error("Failed to save checkout progress:", err);
       }
-    }, 1500);
+    }, 800);
 
     return () => clearTimeout(timer);
   }, [leadId, customerName, cleanedPhone, address, note, items, subtotal, deliveryFee, total, delivery]);
@@ -100,8 +101,8 @@ export default function CheckoutPage() {
       setError(bn.checkout.errors.required);
       return;
     }
-    if (!/^\+?[0-9]{10,15}$/.test(cleanedPhone)) {
-      setError(bn.checkout.errors.phone);
+    if (!isValidPhoneNumber(phone)) {
+      setError("সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন (যেমন: 017XXXXXXXX)");
       return;
     }
     if (!termsAccepted) {
@@ -246,7 +247,7 @@ export default function CheckoutPage() {
                       id="co-phone"
                       type="tel"
                       className="form-input"
-                      placeholder={bn.checkout.phonePlaceholder}
+                      placeholder="017XXXXXXXX"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       required

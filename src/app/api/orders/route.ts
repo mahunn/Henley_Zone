@@ -7,6 +7,7 @@ import {
   updateOrderStatus
 } from "@/lib/orders-repository";
 import { markLeadAsConverted } from "@/lib/leads-repository";
+import { normalizePhoneNumber } from "@/lib/phone-normalizer";
 import { Order } from "@/types/commerce";
 import { isAdminAuthorized } from "@/lib/admin-request";
 import { withAdminSessionRefresh } from "@/lib/admin-session-response";
@@ -19,7 +20,8 @@ export async function GET() {
 
     const orders = await listOrders();
     return withAdminSessionRefresh(NextResponse.json({ orders }));
-  } catch {
+  } catch (err) {
+    console.error("Failed to read orders:", err);
     return NextResponse.json(
       { message: "Failed to read orders." },
       { status: 500 }
@@ -38,13 +40,16 @@ export async function POST(request: Request) {
       );
     }
 
+    const cleanedPhone = normalizePhoneNumber(body.phone);
     const createdAt = body.createdAt || new Date().toISOString();
+    const orderId = body.id?.trim() ? body.id.trim() : await allocateNextOrderId(createdAt);
+
     const order: Order = {
       ...body,
-      id: body.id?.trim() ? body.id.trim() : await allocateNextOrderId(createdAt),
+      id: orderId,
       createdAt,
       customerName: body.customerName.trim(),
-      phone: body.phone.trim(),
+      phone: cleanedPhone,
       address: body.address.trim(),
       note: body.note?.trim() || undefined
     };
@@ -61,8 +66,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, orderId: order.id, order }, { status: 201 });
   } catch (e) {
-
     const message = e instanceof Error ? e.message : "Failed to create order.";
+    console.error("POST /api/orders error:", e);
     return NextResponse.json({ message }, { status: 500 });
   }
 }
@@ -156,4 +161,3 @@ export async function DELETE(request: Request) {
     );
   }
 }
-
