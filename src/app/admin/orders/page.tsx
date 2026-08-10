@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { formatOrderItemLabel } from "@/lib/format-order-line";
 import { customerTelHref, customerWhatsappUrl } from "@/lib/customer-contact";
 import { formatCurrency } from "@/lib/money";
 import { defaultBusiness } from "@/config/businesses";
 import { Order } from "@/types/commerce";
-import { useRouter } from "next/navigation";
 
 const statusTabs: Array<{ key: Order["status"] | "all"; label: string }> = [
   { key: "all", label: "All" },
@@ -75,15 +75,36 @@ function groupOrdersByDay(orders: Order[]): { key: string; heading: string; orde
 
 export default function AdminOrdersPage() {
   const router = useRouter();
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingOrders, setLoadingOrders] = useState(true);
   const [error, setError] = useState("");
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<Order["status"] | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
 
-  const loadOrders = async () => {
+  const verify = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/session", { method: "GET", cache: "no-store", credentials: "include" });
+      if (res.status === 401) {
+        if (typeof window !== "undefined") {
+          window.location.href = "/login?type=admin";
+        }
+        return;
+      }
+      setAuthorized(res.ok);
+    } catch {
+      setAuthorized(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void verify();
+  }, [verify]);
+
+  const loadOrders = useCallback(async () => {
+    setLoadingOrders(true);
     try {
       const res = await fetch("/api/orders", { cache: "no-store", credentials: "include" });
       if (res.status === 401) {
@@ -93,19 +114,21 @@ export default function AdminOrdersPage() {
         return;
       }
       if (!res.ok) throw new Error("failed");
-      const data = (await res.json()) as { orders: Order[] };
+      const data = (await res.json()) as { orders?: Order[] };
       setOrders(Array.isArray(data.orders) ? data.orders : []);
       setError("");
     } catch {
       setError("Could not load orders.");
     } finally {
-      setLoading(false);
+      setLoadingOrders(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    void loadOrders();
-  }, [router]);
+    if (authorized) {
+      void loadOrders();
+    }
+  }, [authorized, loadOrders]);
 
   const updateStatus = async (orderId: string, status: Order["status"]) => {
     setUpdatingOrderId(orderId);
@@ -176,6 +199,18 @@ export default function AdminOrdersPage() {
     cancelled: orders.filter((order) => (order.status || "").toLowerCase() === "cancelled").length
   };
 
+  if (authorized === null) {
+    return (
+      <main style={{ maxWidth: 720, margin: "60px auto", padding: "24px", textAlign: "center", fontFamily: "sans-serif", color: "#64748B" }}>
+        Checking admin session…
+      </main>
+    );
+  }
+
+  if (!authorized) {
+    return null;
+  }
+
   return (
     <main style={{ maxWidth: 1240, margin: "0 auto", padding: "24px 16px", fontFamily: "sans-serif" }}>
       {/* Top Header */}
@@ -207,7 +242,9 @@ export default function AdminOrdersPage() {
             type="button"
             onClick={async () => {
               await fetch("/api/admin/logout", { method: "POST", credentials: "include" });
-              router.push("/login?type=admin");
+              if (typeof window !== "undefined") {
+                window.location.href = "/login?type=admin";
+              }
             }}
             style={{
               padding: "7px 12px",
@@ -287,11 +324,11 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
-      {loading ? <p>Loading orders...</p> : null}
+      {loadingOrders ? <p style={{ color: "#64748B", fontSize: 13 }}>Loading orders...</p> : null}
       {error ? <p style={{ color: "crimson", fontSize: 13 }}>{error}</p> : null}
 
       {/* Day-wise Grouped Orders Sections */}
-      {!loading && dayGroups.length === 0 ? (
+      {!loadingOrders && dayGroups.length === 0 ? (
         <div style={{ padding: 32, textAlign: "center", background: "#fff", borderRadius: 8, border: "1px solid #E2E8F0", color: "#64748B" }}>
           No orders found matching your selection.
         </div>
