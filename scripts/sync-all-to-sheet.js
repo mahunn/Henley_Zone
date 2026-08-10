@@ -35,8 +35,7 @@ async function syncAllOrders() {
   const orders = data.orders || [];
   console.log(`Found ${orders.length} orders in database.`);
 
-  // Sort OLDEST to NEWEST before pushing with insertRowBefore(2)
-  // so that the newest ends up at row 2 (top)
+  // Sort OLDEST to NEWEST before pushing so the newest ends up at row 2 (top)
   orders.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
   let successCount = 0;
@@ -72,8 +71,8 @@ async function syncAllOrders() {
       });
       await resp.text();
       successCount++;
-      console.log(`[${i + 1}/${orders.length}] Synced ${o.id} (${payload.date})`);
-      await new Promise(r => setTimeout(r, 200));
+      console.log(`[${i + 1}/${orders.length}] Synced ${o.id} -> Date: ${payload.date} | Customer: ${payload.customerName}`);
+      await new Promise(r => setTimeout(r, 180));
     } catch (err) {
       console.error(`Failed to sync order ${o.id}:`, err.message);
     }
