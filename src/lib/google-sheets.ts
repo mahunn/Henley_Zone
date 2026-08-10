@@ -41,7 +41,7 @@ export function getGoogleSheetWebhookUrl(): string {
   return (
     process.env.GOOGLE_SHEET_WEBHOOK_URL ||
     process.env.NEXT_PUBLIC_GOOGLE_SHEET_WEBHOOK_URL ||
-    ""
+    "https://script.google.com/macros/s/AKfycbwlPAQnXh0uOMX9B_6Y2hu84aSS9VwLj5yUXBdf5vY8VYsR5jMPwOjIhbkKlEL6UoOiyw/exec"
   ).trim();
 }
 
