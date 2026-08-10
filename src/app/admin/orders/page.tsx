@@ -23,8 +23,14 @@ function statusBadgeStyle(status: Order["status"]) {
   return { background: "#FEE2E2", color: "#991B1B", border: "1px solid #FCA5A5" };
 }
 
-function localDateKey(iso: string): string {
-  const d = new Date(iso);
+function safeDate(val: string | undefined | null): Date {
+  if (!val) return new Date();
+  const d = new Date(val);
+  return Number.isNaN(d.getTime()) ? new Date() : d;
+}
+
+function localDateKey(iso: string | undefined | null): string {
+  const d = safeDate(iso);
   const y = d.getFullYear();
   const mo = d.getMonth() + 1;
   const day = d.getDate();
@@ -32,14 +38,23 @@ function localDateKey(iso: string): string {
 }
 
 function formatDayHeading(ymd: string): string {
-  const [y, m, day] = ymd.split("-").map(Number);
-  const dt = new Date(y, m - 1, day);
-  return dt.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric"
-  });
+  try {
+    const parts = ymd.split("-").map(Number);
+    if (parts.length === 3 && !parts.some(Number.isNaN)) {
+      const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+      if (!Number.isNaN(dt.getTime())) {
+        return dt.toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        });
+      }
+    }
+  } catch {
+    // fallback
+  }
+  return "Recent Orders";
 }
 
 function groupOrdersByDay(orders: Order[]): { key: string; heading: string; orders: Order[] }[] {
@@ -53,7 +68,7 @@ function groupOrdersByDay(orders: Order[]): { key: string; heading: string; orde
   return sortedKeys.map((key) => ({
     key,
     heading: formatDayHeading(key),
-    orders: map.get(key)!
+    orders: map.get(key) || []
   }));
 }
 
@@ -76,7 +91,7 @@ export default function AdminOrdersPage() {
       }
       if (!res.ok) throw new Error("failed");
       const data = (await res.json()) as { orders: Order[] };
-      setOrders(data.orders);
+      setOrders(Array.isArray(data.orders) ? data.orders : []);
       setError("");
     } catch {
       setError("Could not load orders.");
@@ -115,8 +130,8 @@ export default function AdminOrdersPage() {
   const availableMonths = useMemo(() => {
     const map = new Map<string, string>();
     for (const o of orders) {
-      const d = new Date(o.createdAt);
-      if (Number.isNaN(d.getTime())) continue;
+      if (!o.createdAt) continue;
+      const d = safeDate(o.createdAt);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       const label = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
       map.set(key, label);
@@ -128,20 +143,19 @@ export default function AdminOrdersPage() {
     return orders
       .filter((order) => {
         if (selectedMonth === "all") return true;
-        const d = new Date(order.createdAt);
-        if (Number.isNaN(d.getTime())) return true;
+        const d = safeDate(order.createdAt);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
         return key === selectedMonth;
       })
       .filter((order) => (activeFilter === "all" ? true : order.status === activeFilter))
       .filter((order) => {
-        const q = searchQuery.trim().toLowerCase();
+        const q = (searchQuery || "").trim().toLowerCase();
         if (!q) return true;
         return (
-          order.id.toLowerCase().includes(q) ||
-          order.customerName.toLowerCase().includes(q) ||
-          order.phone.toLowerCase().includes(q) ||
-          order.address.toLowerCase().includes(q)
+          (order.id || "").toLowerCase().includes(q) ||
+          (order.customerName || "").toLowerCase().includes(q) ||
+          (order.phone || "").toLowerCase().includes(q) ||
+          (order.address || "").toLowerCase().includes(q)
         );
       });
   }, [orders, selectedMonth, activeFilter, searchQuery]);
@@ -161,7 +175,7 @@ export default function AdminOrdersPage() {
       {/* Top Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: "1.4rem", color: "#0F172A" }}>Admin Orders (Day-wise & Month-wise)</h1>
+          <h1 style={{ margin: 0, fontSize: "1.4rem", color: "#0F172A" }}>Admin Orders</h1>
           <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748B" }}>
             Orders are grouped by day and month, syncing automatically to your Google Sheet.
           </p>
@@ -315,31 +329,34 @@ export default function AdminOrdersPage() {
                 <tbody>
                   {group.orders.map((order, idx) => {
                     const badge = statusBadgeStyle(order.status);
+                    const timeString = safeDate(order.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true });
+                    const items = Array.isArray(order.items) ? order.items : [];
+
                     return (
                       <tr
-                        key={order.id}
+                        key={order.id || idx}
                         style={{
                           background: idx % 2 === 0 ? "#F8FAFC" : "#FFFFFF",
                           borderBottom: "1px solid #E2E8F0"
                         }}
                       >
                         <td style={{ padding: "10px 12px", verticalAlign: "top", borderRight: "1px solid #E2E8F0" }}>
-                          <div style={{ fontWeight: 700, color: "#0F172A" }}>{order.id}</div>
+                          <div style={{ fontWeight: 700, color: "#0F172A" }}>{order.id || "N/A"}</div>
                           <div style={{ fontSize: 11, color: "#64748B", marginTop: 2 }}>
-                            {new Date(order.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                            {timeString}
                           </div>
                         </td>
 
                         <td style={{ padding: "10px 12px", verticalAlign: "top", borderRight: "1px solid #E2E8F0" }}>
-                          <div style={{ fontWeight: 600 }}>{order.customerName}</div>
+                          <div style={{ fontWeight: 600 }}>{order.customerName || "Customer"}</div>
                           {order.note && (
                             <div style={{ fontSize: 11, color: "#D97706", marginTop: 2 }}>Note: {order.note}</div>
                           )}
                         </td>
 
                         <td style={{ padding: "10px 12px", verticalAlign: "top", borderRight: "1px solid #E2E8F0", whiteSpace: "nowrap" }}>
-                          <div style={{ fontWeight: 600 }}>{order.phone}</div>
-                          {customerTelHref(order.phone) && (
+                          <div style={{ fontWeight: 600 }}>{order.phone || "N/A"}</div>
+                          {order.phone && customerTelHref(order.phone) && (
                             <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
                               <a
                                 href={customerTelHref(order.phone)}
@@ -356,7 +373,7 @@ export default function AdminOrdersPage() {
                                 📞 Call
                               </a>
                               <a
-                                href={customerWhatsappUrl(order.phone, `Hi ${order.customerName}, regarding your order ${order.id}.`)}
+                                href={customerWhatsappUrl(order.phone, `Hi ${order.customerName || ""}, regarding your order ${order.id || ""}.`)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 style={{
@@ -376,28 +393,32 @@ export default function AdminOrdersPage() {
                         </td>
 
                         <td style={{ padding: "10px 12px", verticalAlign: "top", borderRight: "1px solid #E2E8F0", fontSize: 12 }}>
-                          {order.address}
+                          {order.address || "N/A"}
                         </td>
 
                         <td style={{ padding: "10px 12px", verticalAlign: "top", borderRight: "1px solid #E2E8F0" }}>
-                          <ul style={{ margin: 0, paddingLeft: 14, fontSize: 12, lineHeight: 1.45 }}>
-                            {order.items.map((item, i) => (
-                              <li key={i}>
-                                <strong>{formatOrderItemLabel(item)}</strong> ({item.quantity}টি)
-                              </li>
-                            ))}
-                          </ul>
+                          {items.length === 0 ? (
+                            <span style={{ color: "#94A3B8" }}>No items listed</span>
+                          ) : (
+                            <ul style={{ margin: 0, paddingLeft: 14, fontSize: 12, lineHeight: 1.45 }}>
+                              {items.map((item, i) => (
+                                <li key={i}>
+                                  <strong>{formatOrderItemLabel(item)}</strong> ({item.quantity || 1}টি)
+                                </li>
+                              ))}
+                            </ul>
+                          )}
                         </td>
 
                         <td style={{ padding: "10px 12px", verticalAlign: "top", borderRight: "1px solid #E2E8F0", whiteSpace: "nowrap" }}>
                           <div style={{ fontWeight: 700, color: "#0F172A" }}>
-                            {formatCurrency(order.total, defaultBusiness.currency)}
+                            {formatCurrency(order.total || 0, defaultBusiness.currency)}
                           </div>
                         </td>
 
                         <td style={{ padding: "10px 12px", verticalAlign: "top" }}>
                           <select
-                            value={order.status}
+                            value={order.status || "pending"}
                             onChange={(e) => void updateStatus(order.id, e.target.value as Order["status"])}
                             disabled={updatingOrderId === order.id}
                             style={{
