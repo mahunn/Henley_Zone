@@ -1,24 +1,25 @@
 import type { CartItem } from "@/types/commerce";
 
-/** Human-readable line for admin UI + order storage (includes color/size when present). */
-export function formatOrderItemLabel(item: CartItem): string {
+/** Human-readable line for admin UI + order storage (includes color/size when present). 100% crash-proof against null/undefined. */
+export function formatOrderItemLabel(item: Partial<CartItem> | null | undefined): string {
+  if (!item) return "Product";
+  const name = (typeof item.name === "string" ? item.name : "Product").trim();
   const extras: string[] = [];
 
-  const color = item.selectedColor?.trim();
-  if (color && !item.name.toLowerCase().includes(color.toLowerCase())) {
+  const color = typeof item.selectedColor === "string" ? item.selectedColor.trim() : "";
+  if (color && !name.toLowerCase().includes(color.toLowerCase())) {
     extras.push(color);
   }
 
-  const size = item.selectedSize?.trim();
-  if (size && !/\bsize\s*[\d]+/i.test(item.name)) {
+  const size = typeof item.selectedSize === "string" ? item.selectedSize.trim() : "";
+  if (size && !/\bsize\s*[\d]+/i.test(name)) {
     extras.push(`Size ${size}`);
   }
 
-  if (extras.length === 0) return item.name;
+  if (extras.length === 0) return name;
 
-  const base = item.name.trim();
-  if (base.includes("(") && base.endsWith(")")) {
-    return `${base.slice(0, -1)}, ${extras.join(", ")})`;
+  if (name.includes("(") && name.endsWith(")")) {
+    return `${name.slice(0, -1)}, ${extras.join(", ")})`;
   }
-  return `${base} (${extras.join(", ")})`;
+  return `${name} (${extras.join(", ")})`;
 }
