@@ -16,10 +16,11 @@ const statusTabs: Array<{ key: Order["status"] | "all"; label: string }> = [
   { key: "cancelled", label: "Cancelled" }
 ];
 
-function statusBadgeStyle(status: Order["status"]) {
-  if (status === "confirmed") return { background: "#DCFCE7", color: "#166534", border: "1px solid #86EFAC" };
-  if (status === "pending") return { background: "#FEF3C7", color: "#92400E", border: "1px solid #FCD34D" };
-  if (status === "delivered") return { background: "#E0F2FE", color: "#0369A1", border: "1px solid #BAE6FD" };
+function statusBadgeStyle(status: string | undefined | null) {
+  const s = (status || "").toLowerCase();
+  if (s === "confirmed") return { background: "#DCFCE7", color: "#166534", border: "1px solid #86EFAC" };
+  if (s === "pending") return { background: "#FEF3C7", color: "#92400E", border: "1px solid #FCD34D" };
+  if (s === "delivered") return { background: "#E0F2FE", color: "#0369A1", border: "1px solid #BAE6FD" };
   return { background: "#FEE2E2", color: "#991B1B", border: "1px solid #FCA5A5" };
 }
 
@@ -147,7 +148,10 @@ export default function AdminOrdersPage() {
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
         return key === selectedMonth;
       })
-      .filter((order) => (activeFilter === "all" ? true : order.status === activeFilter))
+      .filter((order) => {
+        if (activeFilter === "all") return true;
+        return (order.status || "").toLowerCase() === activeFilter.toLowerCase();
+      })
       .filter((order) => {
         const q = (searchQuery || "").trim().toLowerCase();
         if (!q) return true;
@@ -164,10 +168,10 @@ export default function AdminOrdersPage() {
 
   const countByStatus = {
     all: orders.length,
-    pending: orders.filter((order) => order.status === "pending").length,
-    confirmed: orders.filter((order) => order.status === "confirmed").length,
-    delivered: orders.filter((order) => order.status === "delivered").length,
-    cancelled: orders.filter((order) => order.status === "cancelled").length
+    pending: orders.filter((order) => (order.status || "").toLowerCase() === "pending").length,
+    confirmed: orders.filter((order) => (order.status || "").toLowerCase() === "confirmed").length,
+    delivered: orders.filter((order) => (order.status || "").toLowerCase() === "delivered").length,
+    cancelled: orders.filter((order) => (order.status || "").toLowerCase() === "cancelled").length
   };
 
   return (
@@ -328,7 +332,8 @@ export default function AdminOrdersPage() {
                 </thead>
                 <tbody>
                   {group.orders.map((order, idx) => {
-                    const badge = statusBadgeStyle(order.status);
+                    const currentStatus = (order.status || "pending").toLowerCase();
+                    const badge = statusBadgeStyle(currentStatus);
                     const timeString = safeDate(order.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true });
                     const items = Array.isArray(order.items) ? order.items : [];
 
@@ -418,7 +423,7 @@ export default function AdminOrdersPage() {
 
                         <td style={{ padding: "10px 12px", verticalAlign: "top" }}>
                           <select
-                            value={order.status || "pending"}
+                            value={currentStatus}
                             onChange={(e) => void updateStatus(order.id, e.target.value as Order["status"])}
                             disabled={updatingOrderId === order.id}
                             style={{
