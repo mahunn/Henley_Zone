@@ -87,7 +87,9 @@ export default function AdminOrdersPage() {
     try {
       const res = await fetch("/api/orders", { cache: "no-store", credentials: "include" });
       if (res.status === 401) {
-        router.replace("/login?type=admin");
+        if (typeof window !== "undefined") {
+          window.location.href = "/login?type=admin";
+        }
         return;
       }
       if (!res.ok) throw new Error("failed");

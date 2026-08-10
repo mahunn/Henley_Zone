@@ -16,13 +16,20 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const loginUrl = request.nextUrl.clone();
-  loginUrl.pathname = "/login";
-  loginUrl.searchParams.set("type", "admin");
+  // Force HTTPS on production proxy
+  const proto =
+    request.headers.get("x-forwarded-proto") ||
+    (request.url.startsWith("https") ? "https" : "https");
+  const host =
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host") ||
+    request.nextUrl.host ||
+    "henleyzone.com";
+
+  const loginUrl = new URL("/login?type=admin", `${proto}://${host}`);
   return NextResponse.redirect(loginUrl);
 }
 
 export const config = {
   matcher: ["/admin", "/admin/:path*"]
 };
-
