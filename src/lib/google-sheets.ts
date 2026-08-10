@@ -19,23 +19,58 @@ export interface GoogleSheetOrderPayload {
 }
 
 /**
- * Formats order items into clean detailed Bengali descriptions for Google Sheet rows.
- * E.g.: "কটন শার্ট (কালার: নেভী, সাইজ: 42) - 1টি"
+ * Formats a date into a clean DD-MM-YYYY, hh:mm AM/PM string in Asia/Dhaka time zone.
+ * E.g. "10-08-2026, 08:30 PM"
+ */
+export function formatBangladeshiDate(isoString: string | undefined | null): string {
+  const d = isoString ? new Date(isoString) : new Date();
+  const date = Number.isNaN(d.getTime()) ? new Date() : d;
+
+  try {
+    const options: Intl.DateTimeFormatOptions = {
+      timeZone: "Asia/Dhaka",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+    };
+    const parts = new Intl.DateTimeFormat("en-GB", options).formatToParts(date);
+    const day = parts.find((p) => p.type === "day")?.value || "01";
+    const month = parts.find((p) => p.type === "month")?.value || "01";
+    const year = parts.find((p) => p.type === "year")?.value || "2026";
+    const hour = parts.find((p) => p.type === "hour")?.value || "12";
+    const minute = parts.find((p) => p.type === "minute")?.value || "00";
+    const dayPeriod = parts.find((p) => p.type === "dayPeriod")?.value.toUpperCase() || "AM";
+
+    return `${day}-${month}-${year}, ${hour}:${minute} ${dayPeriod}`;
+  } catch {
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
+}
+
+/**
+ * Formats order items into clean detailed descriptions for Google Sheet rows.
+ * E.g.: "Henley Premium Cotton (Color: Navy, Size: 42) - 1টি"
  */
 export function formatOrderItemsForSheet(order: Order): string {
   if (!order.items || order.items.length === 0) return "N/A";
-  
+
   return order.items
     .map((item) => {
       const label = formatOrderItemLabel(item);
-      const qty = `${item.quantity}টি`;
+      const qty = `${item.quantity || 1}টি`;
       return `${label} - ${qty}`;
     })
     .join(" | ");
 }
 
 /**
- * Gets the configured Google Apps Script Webhook URL from environment variables.
+ * Gets the configured Google Apps Script Webhook URL.
  */
 export function getGoogleSheetWebhookUrl(): string {
   return (
@@ -47,7 +82,7 @@ export function getGoogleSheetWebhookUrl(): string {
 
 /**
  * Synchronizes a newly placed order to Google Sheets in real-time.
- * Safe & non-blocking: Never throws an unhandled exception to prevent order disruption.
+ * Clean, non-blocking, and formatted descending (newest at top).
  */
 export async function syncOrderToGoogleSheet(order: Order): Promise<{ success: boolean; error?: string }> {
   const webhookUrl = getGoogleSheetWebhookUrl();
@@ -55,34 +90,26 @@ export async function syncOrderToGoogleSheet(order: Order): Promise<{ success: b
     return { success: false, error: "GOOGLE_SHEET_WEBHOOK_URL not configured." };
   }
 
-  const orderDate = new Date(order.createdAt);
-  const validDate = Number.isNaN(orderDate.getTime()) ? new Date() : orderDate;
+  const validDate = order.createdAt ? new Date(order.createdAt) : new Date();
+  const d = Number.isNaN(validDate.getTime()) ? new Date() : validDate;
 
-  const monthName = validDate.toLocaleDateString("en-US", {
+  const monthName = d.toLocaleDateString("en-US", {
     timeZone: "Asia/Dhaka",
     month: "long",
     year: "numeric"
-  }); // e.g. "August 2026"
+  });
 
-  const dayHeading = validDate.toLocaleDateString("en-US", {
+  const dayHeading = d.toLocaleDateString("en-US", {
     timeZone: "Asia/Dhaka",
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric"
-  }); // e.g. "Monday, 10 August 2026"
+  });
 
   const payload: GoogleSheetOrderPayload = {
     orderId: order.id,
-    date: validDate.toLocaleString("en-GB", {
-      timeZone: "Asia/Dhaka",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true
-    }),
+    date: formatBangladeshiDate(order.createdAt),
     monthName,
     dayHeading,
     customerName: order.customerName,
@@ -158,136 +185,103 @@ export async function syncOrderStatusToGoogleSheet(
 }
 
 /**
- * Enhanced Google Apps Script with Month-wise Tabs & Day-wise Sections
+ * Full Professional Google Apps Script (Paste into Extensions > Apps Script)
  */
 export const GOOGLE_APPS_SCRIPT_CODE = `/**
- * HENLEY ZONE - MONTH-WISE & DAY-WISE ORDER SYNC
+ * HENLEY ZONE - PROFESSIONAL ORDER MANAGEMENT SCRIPT
+ * 
  * Features:
- * 1. Automatically creates a tab for each Month (e.g. "August 2026").
- * 2. Adds Green Section Header for each Day (e.g. "📅 Monday, 10 August 2026").
- * 3. Adds Dropdown Menus for Order Status (Confirmed, Pending, Cancelled) and Packing Status.
+ * 1. Clean DD-MM-YYYY, hh:mm AM/PM date formatting.
+ * 2. Descending Order (Newest orders automatically placed at top, Row 2).
+ * 3. Color-coded interactive dropdowns for Order Status and Packing Status.
+ * 4. Beautiful professional dark navy headers and auto-adjusted columns.
  */
 
 function doPost(e) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var data = JSON.parse(e.postData.contents);
-    var monthName = data.monthName || "Orders";
-    var dayHeading = data.dayHeading || "Today";
-
-    // 1. Get or Create Month Tab
-    var sheet = ss.getSheetByName(monthName);
+    var sheet = ss.getSheetByName("Orders");
+    
+    // Use or rename active sheet to "Orders"
     if (!sheet) {
-      sheet = ss.insertSheet(monthName);
-      var defaultSheet = ss.getSheetByName("Sheet1");
-      if (defaultSheet && defaultSheet.getLastRow() === 0 && ss.getSheets().length > 1) {
-        try { ss.deleteSheet(defaultSheet); } catch(e) {}
-      }
+      sheet = ss.getSheets()[0];
+      sheet.setName("Orders");
     }
 
-    // 2. Initialize Headers if sheet is empty
+    var data = JSON.parse(e.postData.contents);
+
+    // 1. Setup Header Row if sheet is fresh
     if (sheet.getLastRow() === 0) {
-      var headers = [
-        "Order ID",
-        "Date & Time",
-        "Customer Name",
-        "Phone Number",
-        "Delivery Address",
-        "Detailed Items (Color/Size/Qty)",
-        "Total (৳)",
-        "Order Status",
-        "Packing Status",
-        "Notes"
-      ];
-      sheet.appendRow(headers);
-      var headerRange = sheet.getRange(1, 1, 1, headers.length);
-      headerRange.setBackground("#0F172A").setFontColor("#FFFFFF").setFontWeight("bold").setFontSize(11);
-      sheet.setFrozenRows(1);
+      setupSheetHeaders(sheet);
     }
 
-    // 3. Handle Status Updates from Admin Panel
+    // 2. Handle Status Updates from Admin Dashboard
     if (data.action === "UPDATE_STATUS") {
-      var sheets = ss.getSheets();
-      for (var s = 0; s < sheets.length; s++) {
-        var curSheet = sheets[s];
-        var rows = curSheet.getDataRange().getValues();
-        for (var i = 1; i < rows.length; i++) {
-          if (rows[i][0] === data.orderId) {
-            var statusCell = curSheet.getRange(i + 1, 8);
-            statusCell.setValue(data.status);
-            applyStatusColor(statusCell, data.status);
-            break;
-          }
-        }
-      }
-      return ContentService.createTextOutput(JSON.stringify({ result: "status updated" }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // 4. Check if Day Header exists for today; if not, add Green Day Section Header
-    var lastRow = sheet.getLastRow();
-    var needDayHeader = true;
-    if (lastRow > 1) {
-      var lastValues = sheet.getRange(1, 1, lastRow, 2).getValues();
-      for (var r = lastValues.length - 1; r >= 0; r--) {
-        if (lastValues[r][0] && String(lastValues[r][0]).indexOf(dayHeading) !== -1) {
-          needDayHeader = false;
-          break;
+      var rows = sheet.getDataRange().getValues();
+      for (var i = 1; i < rows.length; i++) {
+        if (rows[i][0] === data.orderId) {
+          var statusCell = sheet.getRange(i + 1, 8);
+          statusCell.setValue(data.status);
+          applyStatusBadge(statusCell, data.status);
+          return ContentService.createTextOutput(JSON.stringify({ result: "status updated" }))
+            .setMimeType(ContentService.MimeType.JSON);
         }
       }
     }
 
-    if (needDayHeader) {
-      // Append blank row for spacing if not first row
-      if (sheet.getLastRow() > 1) {
-        sheet.appendRow(["", "", "", "", "", "", "", "", "", ""]);
-      }
-      var dayHeaderRow = ["📅 " + dayHeading, "", "", "", "", "", "", "", "", ""];
-      sheet.appendRow(dayHeaderRow);
-      var dayHeaderIdx = sheet.getLastRow();
-      var dayRange = sheet.getRange(dayHeaderIdx, 1, 1, 10);
-      dayRange.setBackground("#15803D").setFontColor("#FFFFFF").setFontWeight("bold").setFontSize(11);
-    }
+    // 3. Format Date as DD-MM-YYYY, hh:mm AM/PM
+    var formattedDate = data.date || formatDateBD(new Date());
 
-    // 5. Append New Order Row
+    // 4. Format New Order Row
     var newRow = [
       data.orderId || "",
-      data.date || new Date().toLocaleString(),
+      formattedDate,
       data.customerName || "",
       "'" + (data.phone || ""),
       data.address || "",
       data.itemsText || "",
-      data.total || 0,
+      data.total ? "৳" + Number(data.total).toLocaleString("en-US") : "৳0",
       data.status || "PENDING",
       data.packingStatus || "Unpacked",
       data.note || ""
     ];
 
-    sheet.appendRow(newRow);
-    var orderRowIdx = sheet.getLastRow();
+    // 5. Insert at Row 2 (Descending Order: Newest at the Top!)
+    sheet.insertRowBefore(2);
+    var rowRange = sheet.getRange(2, 1, 1, newRow.length);
+    rowRange.setValues([newRow]);
     
-    var rowRange = sheet.getRange(orderRowIdx, 1, 1, newRow.length);
-    rowRange.setFontFamily("Arial").setFontSize(10).setVerticalAlignment("middle");
+    // Apply styling to the new row
+    rowRange.setFontFamily("Segoe UI")
+      .setFontSize(10)
+      .setVerticalAlignment("middle")
+      .setBackground("#FFFFFF");
 
-    // Add Dropdown Menu for Order Status (Column 8)
-    var statusCell = sheet.getRange(orderRowIdx, 8);
+    // Alignments
+    sheet.getRange(2, 1).setHorizontalAlignment("center").setFontWeight("bold"); // Order ID
+    sheet.getRange(2, 2).setHorizontalAlignment("center"); // Date
+    sheet.getRange(2, 4).setHorizontalAlignment("center"); // Phone
+    sheet.getRange(2, 7).setHorizontalAlignment("right").setFontWeight("bold"); // Total
+
+    // Order Status Dropdown & Badge (Column 8)
+    var statusCell = sheet.getRange(2, 8);
     var statusRule = SpreadsheetApp.newDataValidation()
       .requireValueInList(["PENDING", "CONFIRMED", "DELIVERED", "CANCELLED"], true)
       .setAllowInvalid(false)
       .build();
     statusCell.setDataValidation(statusRule);
-    applyStatusColor(statusCell, data.status || "PENDING");
+    applyStatusBadge(statusCell, data.status || "PENDING");
 
-    // Add Dropdown Menu for Packing Status (Column 9)
-    var packingCell = sheet.getRange(orderRowIdx, 9);
+    // Packing Status Dropdown & Badge (Column 9)
+    var packingCell = sheet.getRange(2, 9);
     var packingRule = SpreadsheetApp.newDataValidation()
       .requireValueInList(["Unpacked", "Packed", "Done for delivery"], true)
       .setAllowInvalid(false)
       .build();
     packingCell.setDataValidation(packingRule);
-    applyPackingColor(packingCell, data.packingStatus || "Unpacked");
+    applyPackingBadge(packingCell, data.packingStatus || "Unpacked");
 
-    return ContentService.createTextOutput(JSON.stringify({ result: "success", row: orderRowIdx }))
+    return ContentService.createTextOutput(JSON.stringify({ result: "success", row: 2 }))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (error) {
     return ContentService.createTextOutput(JSON.stringify({ result: "error", message: error.toString() }))
@@ -295,8 +289,49 @@ function doPost(e) {
   }
 }
 
-function applyStatusColor(cell, status) {
+function setupSheetHeaders(sheet) {
+  var headers = [
+    "Order ID",
+    "Date & Time",
+    "Customer Name",
+    "Phone Number",
+    "Delivery Address",
+    "Detailed Items (Color/Size/Qty)",
+    "Total",
+    "Order Status",
+    "Packing Status",
+    "Notes"
+  ];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  var headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange
+    .setBackground("#0F172A")
+    .setFontColor("#FFFFFF")
+    .setFontWeight("bold")
+    .setFontSize(11)
+    .setFontFamily("Segoe UI")
+    .setVerticalAlignment("middle")
+    .setHorizontalAlignment("center");
+  
+  sheet.setRowHeight(1, 38);
+  sheet.setFrozenRows(1);
+  
+  // Set clean column widths
+  sheet.setColumnWidth(1, 160); // Order ID
+  sheet.setColumnWidth(2, 170); // Date & Time
+  sheet.setColumnWidth(3, 160); // Customer Name
+  sheet.setColumnWidth(4, 130); // Phone Number
+  sheet.setColumnWidth(5, 240); // Delivery Address
+  sheet.setColumnWidth(6, 320); // Detailed Items
+  sheet.setColumnWidth(7, 100); // Total
+  sheet.setColumnWidth(8, 130); // Order Status
+  sheet.setColumnWidth(9, 140); // Packing Status
+  sheet.setColumnWidth(10, 180); // Notes
+}
+
+function applyStatusBadge(cell, status) {
   var s = (status || "").toUpperCase();
+  cell.setHorizontalAlignment("center");
   if (s === "CONFIRMED") {
     cell.setBackground("#DCFCE7").setFontColor("#166534").setFontWeight("bold");
   } else if (s === "PENDING") {
@@ -308,13 +343,30 @@ function applyStatusColor(cell, status) {
   }
 }
 
-function applyPackingColor(cell, packing) {
+function applyPackingBadge(cell, packing) {
+  cell.setHorizontalAlignment("center");
   if (packing === "Packed") {
     cell.setBackground("#FDF2F8").setFontColor("#9D174D").setFontWeight("bold");
   } else if (packing === "Done for delivery") {
     cell.setBackground("#15803D").setFontColor("#FFFFFF").setFontWeight("bold");
   } else {
-    cell.setBackground("#F1F5F9").setFontColor("#475569");
+    cell.setBackground("#F1F5F9").setFontColor("#475569").setFontWeight("normal");
   }
+}
+
+function formatDateBD(d) {
+  var dt = new Date(d);
+  var day = ("0" + dt.getDate()).slice(-2);
+  var month = ("0" + (dt.getMonth() + 1)).slice(-2);
+  var year = dt.getFullYear();
+  
+  var hours = dt.getHours();
+  var minutes = ("0" + dt.getMinutes()).slice(-2);
+  var ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  var strHours = ("0" + hours).slice(-2);
+  
+  return day + "-" + month + "-" + year + ", " + strHours + ":" + minutes + " " + ampm;
 }
 `;
