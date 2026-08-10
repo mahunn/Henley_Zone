@@ -1,14 +1,32 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { formatOrderItemLabel } from "@/lib/format-order-line";
-import { customerTelHref, customerWhatsappUrl } from "@/lib/customer-contact";
-import { formatCurrency } from "@/lib/money";
-import { defaultBusiness } from "@/config/businesses";
-import { Order } from "@/types/commerce";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
-const statusTabs: Array<{ key: Order["status"] | "all"; label: string }> = [
+interface CartItem {
+  productId?: string;
+  name?: string;
+  price?: number;
+  quantity?: number;
+  selectedColor?: string;
+  selectedSize?: string;
+}
+
+interface Order {
+  id: string;
+  customerName: string;
+  phone: string;
+  address: string;
+  note?: string;
+  items: CartItem[];
+  subtotal: number;
+  deliveryFee: number;
+  total: number;
+  paymentMethod: string;
+  status: "pending" | "confirmed" | "delivered" | "cancelled" | string;
+  createdAt: string;
+}
+
+const statusTabs = [
   { key: "all", label: "All" },
   { key: "pending", label: "Pending" },
   { key: "confirmed", label: "Confirmed" },
@@ -58,29 +76,47 @@ function formatDayHeading(ymd: string): string {
   return "Recent Orders";
 }
 
-function groupOrdersByDay(orders: Order[]): { key: string; heading: string; orders: Order[] }[] {
-  const map = new Map<string, Order[]>();
-  for (const o of orders) {
-    const key = localDateKey(o.createdAt);
-    if (!map.has(key)) map.set(key, []);
-    map.get(key)!.push(o);
+function normalizePhoneDigits(phone: string | null | undefined): string {
+  if (!phone) return "";
+  const digits = String(phone).replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.startsWith("880")) return digits;
+  if (digits.startsWith("0")) return `880${digits.slice(1)}`;
+  if (digits.length === 10 && digits.startsWith("1")) return `880${digits}`;
+  return digits;
+}
+
+function formatItemLabel(item: CartItem | null | undefined): string {
+  if (!item) return "Product";
+  const name = (typeof item.name === "string" ? item.name : "Product").trim();
+  const extras: string[] = [];
+
+  const color = typeof item.selectedColor === "string" ? item.selectedColor.trim() : "";
+  if (color && !name.toLowerCase().includes(color.toLowerCase())) {
+    extras.push(color);
   }
-  const sortedKeys = [...map.keys()].sort((a, b) => b.localeCompare(a));
-  return sortedKeys.map((key) => ({
-    key,
-    heading: formatDayHeading(key),
-    orders: map.get(key) || []
-  }));
+
+  const size = typeof item.selectedSize === "string" ? item.selectedSize.trim() : "";
+  if (size && !/\bsize\s*[\d]+/i.test(name)) {
+    extras.push(`Size ${size}`);
+  }
+
+  if (extras.length === 0) return name;
+  return `${name} (${extras.join(", ")})`;
+}
+
+function formatTaka(amount: number | null | undefined): string {
+  const num = typeof amount === "number" && !Number.isNaN(amount) ? amount : 0;
+  return `৳${num.toLocaleString("en-US")}`;
 }
 
 export default function AdminOrdersPage() {
-  const router = useRouter();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [error, setError] = useState("");
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
-  const [activeFilter, setActiveFilter] = useState<Order["status"] | "all">("all");
+  const [activeFilter, setActiveFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
 
@@ -130,7 +166,7 @@ export default function AdminOrdersPage() {
     }
   }, [authorized, loadOrders]);
 
-  const updateStatus = async (orderId: string, status: Order["status"]) => {
+  const updateStatus = async (orderId: string, status: string) => {
     setUpdatingOrderId(orderId);
     try {
       const res = await fetch("/api/orders", {
@@ -189,7 +225,20 @@ export default function AdminOrdersPage() {
       });
   }, [orders, selectedMonth, activeFilter, searchQuery]);
 
-  const dayGroups = useMemo(() => groupOrdersByDay(filteredOrders), [filteredOrders]);
+  const dayGroups = useMemo(() => {
+    const map = new Map<string, Order[]>();
+    for (const o of filteredOrders) {
+      const key = localDateKey(o.createdAt);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(o);
+    }
+    const sortedKeys = [...map.keys()].sort((a, b) => b.localeCompare(a));
+    return sortedKeys.map((key) => ({
+      key,
+      heading: formatDayHeading(key),
+      orders: map.get(key) || []
+    }));
+  }, [filteredOrders]);
 
   const countByStatus = {
     all: orders.length,
@@ -216,7 +265,12 @@ export default function AdminOrdersPage() {
       {/* Top Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: "1.4rem", color: "#0F172A" }}>Admin Orders</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <a href="/admin" style={{ textDecoration: "none", color: "#64748B", fontSize: 13 }}>
+              ← Admin Home
+            </a>
+            <h1 style={{ margin: 0, fontSize: "1.4rem", color: "#0F172A" }}>Admin Orders</h1>
+          </div>
           <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748B" }}>
             Orders are grouped by day and month, syncing automatically to your Google Sheet.
           </p>
@@ -280,7 +334,7 @@ export default function AdminOrdersPage() {
                 cursor: "pointer"
               }}
             >
-              {tab.label} ({countByStatus[tab.key]})
+              {tab.label} ({countByStatus[tab.key as keyof typeof countByStatus] ?? 0})
             </button>
           ))}
         </div>
@@ -375,6 +429,7 @@ export default function AdminOrdersPage() {
                     const badge = statusBadgeStyle(currentStatus);
                     const timeString = safeDate(order.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true });
                     const items = Array.isArray(order.items) ? order.items : [];
+                    const phoneDigits = normalizePhoneDigits(order.phone);
 
                     return (
                       <tr
@@ -400,10 +455,10 @@ export default function AdminOrdersPage() {
 
                         <td style={{ padding: "10px 12px", verticalAlign: "top", borderRight: "1px solid #E2E8F0", whiteSpace: "nowrap" }}>
                           <div style={{ fontWeight: 600 }}>{order.phone || "N/A"}</div>
-                          {order.phone && customerTelHref(order.phone) && (
+                          {phoneDigits && (
                             <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
                               <a
-                                href={customerTelHref(order.phone)}
+                                href={`tel:+${phoneDigits}`}
                                 style={{
                                   fontSize: 11,
                                   padding: "2px 6px",
@@ -417,7 +472,7 @@ export default function AdminOrdersPage() {
                                 📞 Call
                               </a>
                               <a
-                                href={customerWhatsappUrl(order.phone, `Hi ${order.customerName || ""}, regarding your order ${order.id || ""}.`)}
+                                href={`https://wa.me/${phoneDigits}?text=${encodeURIComponent(`Hi ${order.customerName || ""}, regarding your order ${order.id || ""}.`)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 style={{
@@ -447,7 +502,7 @@ export default function AdminOrdersPage() {
                             <ul style={{ margin: 0, paddingLeft: 14, fontSize: 12, lineHeight: 1.45 }}>
                               {items.map((item, i) => (
                                 <li key={i}>
-                                  <strong>{formatOrderItemLabel(item)}</strong> ({item.quantity || 1}টি)
+                                  <strong>{formatItemLabel(item)}</strong> ({item?.quantity || 1}টি)
                                 </li>
                               ))}
                             </ul>
@@ -456,14 +511,14 @@ export default function AdminOrdersPage() {
 
                         <td style={{ padding: "10px 12px", verticalAlign: "top", borderRight: "1px solid #E2E8F0", whiteSpace: "nowrap" }}>
                           <div style={{ fontWeight: 700, color: "#0F172A" }}>
-                            {formatCurrency(order.total || 0, defaultBusiness.currency)}
+                            {formatTaka(order.total)}
                           </div>
                         </td>
 
                         <td style={{ padding: "10px 12px", verticalAlign: "top" }}>
                           <select
                             value={currentStatus}
-                            onChange={(e) => void updateStatus(order.id, e.target.value as Order["status"])}
+                            onChange={(e) => void updateStatus(order.id, e.target.value)}
                             disabled={updatingOrderId === order.id}
                             style={{
                               padding: "4px 8px",
