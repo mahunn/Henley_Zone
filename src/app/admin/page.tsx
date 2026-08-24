@@ -66,7 +66,7 @@ export default function AdminPanelPage() {
           <span className="admin-nav-tile__icon">
             <IconClipboardList size={22} />
           </span>
-          Orders
+          Orders & Courier (Pathao)
         </a>
         <a href="/admin/leads" className="admin-nav-tile">
           <span className="admin-nav-tile__icon">

@@ -67,6 +67,39 @@ export async function updateOrderStatus(
   }
 }
 
+export async function updateOrderCourierInFile(
+  orderId: string,
+  courierData: {
+    courier: string;
+    consignmentId: string;
+    courierStatus?: string;
+    courierDeliveryFee?: number;
+    courierTrackingUrl?: string;
+  }
+): Promise<boolean> {
+  try {
+    const all = await readOrders();
+    const index = all.findIndex((order) => order.id === orderId);
+    if (index === -1) {
+      return false;
+    }
+
+    all[index] = {
+      ...all[index],
+      courier: courierData.courier,
+      consignmentId: courierData.consignmentId,
+      courierStatus: courierData.courierStatus || all[index].courierStatus || "Pending",
+      courierDeliveryFee: courierData.courierDeliveryFee ?? all[index].courierDeliveryFee,
+      courierTrackingUrl: courierData.courierTrackingUrl || all[index].courierTrackingUrl
+    };
+    await fs.writeFile(ordersPath, JSON.stringify(all, null, 2), "utf8");
+    return true;
+  } catch (err) {
+    console.error("Local order courier update error:", err);
+    return false;
+  }
+}
+
 export async function deleteOrderFromFile(orderId: string): Promise<boolean> {
   try {
     const all = await readOrders();

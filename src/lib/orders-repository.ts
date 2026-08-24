@@ -1,6 +1,7 @@
 import {
   deleteOrderFromFile,
   readOrders,
+  updateOrderCourierInFile,
   updateOrderStatus as updateOrderStatusInFile,
   writeOrder
 } from "@/lib/orders-store";
@@ -27,6 +28,11 @@ interface OrderRow {
   payment_method: "COD";
   status: Order["status"];
   created_at: string;
+  courier?: string | null;
+  consignment_id?: string | null;
+  courier_tracking_url?: string | null;
+  courier_status?: string | null;
+  courier_delivery_fee?: number | null;
 }
 
 interface OrderItemRow {
@@ -62,9 +68,15 @@ function mapOrderRow(order: OrderRow, items: OrderItemRow[]): Order {
     phone: order.phone,
     address: order.address,
     note: order.note ?? undefined,
-    createdAt: order.created_at
+    createdAt: order.created_at,
+    courier: order.courier ?? undefined,
+    consignmentId: order.consignment_id ?? undefined,
+    courierTrackingUrl: order.courier_tracking_url ?? undefined,
+    courierStatus: order.courier_status ?? undefined,
+    courierDeliveryFee: order.courier_delivery_fee ?? undefined
   };
 }
+
 
 /** Next id for the order month, e.g. ORD-2026080003 with collision resistance */
 export async function allocateNextOrderId(createdAt: string = new Date().toISOString()): Promise<string> {
@@ -282,6 +294,42 @@ export async function updateOrderStatus(
 
   if (error || !data || data.length === 0) {
     return { updated: true };
+  }
+
+  return { updated: true };
+}
+
+export async function updateOrderCourier(
+  orderId: string,
+  courierData: {
+    courier: string;
+    consignmentId: string;
+    courierStatus?: string;
+    courierDeliveryFee?: number;
+    courierTrackingUrl?: string;
+  }
+): Promise<{ updated: boolean; reason?: string }> {
+  // Update local file backup
+  await updateOrderCourierInFile(orderId, courierData);
+
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) {
+    return { updated: true };
+  }
+
+  try {
+    await supabase
+      .from("orders")
+      .update({
+        courier: courierData.courier,
+        consignment_id: courierData.consignmentId,
+        courier_status: courierData.courierStatus || "Pending",
+        courier_delivery_fee: courierData.courierDeliveryFee,
+        courier_tracking_url: courierData.courierTrackingUrl
+      })
+      .eq("id", orderId);
+  } catch (err) {
+    console.warn("Supabase courier columns update warning (stored locally):", err);
   }
 
   return { updated: true };

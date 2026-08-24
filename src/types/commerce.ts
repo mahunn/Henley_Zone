@@ -30,6 +30,9 @@ export interface CartItem {
   selectedSize?: string;
 }
 
+
+
+
 /** One saved wishlist row (variant = color option when applicable) */
 export interface WishlistItem {
   key: string;
@@ -62,7 +65,13 @@ export interface Order {
   address: string;
   note?: string;
   createdAt: string;
+  courier?: "pathao" | "steadfast" | string;
+  consignmentId?: string;
+  courierTrackingUrl?: string;
+  courierStatus?: string;
+  courierDeliveryFee?: number;
 }
+
 
 export interface CheckoutLead {
   id: string;
