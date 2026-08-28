@@ -12,7 +12,7 @@ export interface PdpDetail {
   originalPrice?: number;
   stock: number;
   badge?: string;
-  colors: { id: string; label: string; swatchImage: string }[];
+  colors: { id: string; label: string; swatchImage: string; sizes?: string[] }[];
   sizes: string[];
   images: string[];
   descriptionPoints: string[];
@@ -57,8 +57,13 @@ function toDescriptionPoints(description: string): string[] {
 export function mapProductToPdpDetail(found: Product): PdpDetail {
   const hasColors = found.colors && found.colors.length > 0;
   const colorSwatches = hasColors
-    ? found.colors!.map((c) => ({ id: c.id, label: c.label, swatchImage: c.image }))
-    : [{ id: "default", label: "Default", swatchImage: found.imageUrl }];
+    ? found.colors!.map((c) => ({
+        id: c.id,
+        label: c.label,
+        swatchImage: c.image,
+        sizes: c.sizes && c.sizes.length > 0 ? c.sizes : undefined
+      }))
+    : [{ id: "default", label: "Default", swatchImage: found.imageUrl, sizes: found.sizes }];
   const galleryImages = hasColors ? found.colors!.map((c) => c.image) : [found.imageUrl];
   const sizes = found.sizes?.length ? found.sizes : defaultSizes;
 

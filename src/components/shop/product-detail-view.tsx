@@ -13,6 +13,7 @@ interface ProductColor {
   id: string;
   label: string;
   swatchImage: string;
+  sizes?: string[];
 }
 
 interface DetailProduct {
@@ -122,6 +123,16 @@ export function ProductDetailView({
     product.colors[0]?.id ?? null
   );
 
+  const [activeSize, setActiveSize] = useState<string | null>(null);
+  const [qty, setQty] = useState(1);
+  const [activeTab, setActiveTab] = useState<"descriptions" | "specifications" | "reviews">("descriptions");
+  const [variantError, setVariantError] = useState("");
+
+  const selectedColorObj = product.colors.find((c) => c.id === activeColor);
+  const availableSizes = selectedColorObj?.sizes && selectedColorObj.sizes.length > 0
+    ? selectedColorObj.sizes
+    : product.sizes;
+
   // Keep gallery image in sync with color swatch selection
   // (when colors map 1-to-1 with images, selecting a color jumps to that image)
   function handleColorSelect(colorId: string) {
@@ -130,19 +141,20 @@ export function ProductDetailView({
     if (colorIdx !== -1 && colorIdx < product.images.length) {
       setActiveImg(colorIdx);
     }
+    const targetColor = product.colors.find((c) => c.id === colorId);
+    const sizesForTarget = targetColor?.sizes && targetColor.sizes.length > 0 ? targetColor.sizes : product.sizes;
+    if (activeSize && !sizesForTarget.includes(activeSize)) {
+      setActiveSize(sizesForTarget[0] ?? null);
+    }
   }
 
   // Keep active color in sync when thumbnail is clicked
   function handleThumbClick(imgIdx: number) {
     setActiveImg(imgIdx);
     if (imgIdx < product.colors.length) {
-      setActiveColor(product.colors[imgIdx].id);
+      handleColorSelect(product.colors[imgIdx].id);
     }
   }
-  const [activeSize, setActiveSize] = useState<string | null>(null);
-  const [qty, setQty] = useState(1);
-  const [activeTab, setActiveTab] = useState<"descriptions" | "specifications" | "reviews">("descriptions");
-  const [variantError, setVariantError] = useState("");
 
   // Always use the currently-selected color's image when adding to cart
   const selectedColorImage =
@@ -272,7 +284,7 @@ export function ProductDetailView({
         </div>
       )}
 
-      {product.sizes.length > 0 && (
+      {availableSizes.length > 0 && (
         <div className="pdp-variant-row pdp-variant-row--size">
           <p className="selector-label pdp-variant-label">
             {bn.product.size}: <strong>{activeSize ?? bn.product.selectSize}</strong>
@@ -283,7 +295,7 @@ export function ProductDetailView({
             minItemsForArrows={5}
             ariaLabel={bn.product.sizesAria}
           >
-            {product.sizes.map((sz) => (
+            {availableSizes.map((sz) => (
               <button
                 key={sz}
                 type="button"

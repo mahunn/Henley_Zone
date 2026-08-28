@@ -28,7 +28,20 @@ function parseColorsJson(raw: unknown): ProductColor[] | undefined {
     const id = typeof o.id === "string" ? o.id : "";
     const label = typeof o.label === "string" ? o.label : "";
     const image = typeof o.image === "string" ? o.image : "";
-    if (id && label && image) out.push({ id, label, image });
+    const isDefault = Boolean(o.isDefault);
+    const sizes = Array.isArray(o.sizes)
+      ? o.sizes.filter((s): s is string => typeof s === "string" && s.trim().length > 0).map((s) => s.trim())
+      : undefined;
+
+    if (id && label && image) {
+      out.push({
+        id,
+        label,
+        image,
+        isDefault: isDefault || undefined,
+        sizes: sizes && sizes.length > 0 ? sizes : undefined
+      });
+    }
   }
   return out.length ? out : undefined;
 }
@@ -184,7 +197,9 @@ export async function updateProductById(productId: string, input: UpdateProductI
     .map((c) => ({
       id: c.id.trim() || slugifyName(c.label),
       label: c.label.trim(),
-      image: c.image.trim()
+      image: c.image.trim(),
+      isDefault: Boolean(c.isDefault),
+      sizes: Array.isArray(c.sizes) ? c.sizes.map((s) => s.trim()).filter(Boolean) : undefined
     }))
     .filter((c) => c.label && c.image);
   const sizesClean = input.sizes.map((s) => s.trim()).filter(Boolean);
@@ -240,7 +255,9 @@ export async function createProduct(input: CreateProductInput): Promise<Product>
     .map((c) => ({
       id: c.id.trim() || slugifyName(c.label),
       label: c.label.trim(),
-      image: c.image.trim()
+      image: c.image.trim(),
+      isDefault: Boolean(c.isDefault),
+      sizes: Array.isArray(c.sizes) ? c.sizes.map((s) => s.trim()).filter(Boolean) : undefined
     }))
     .filter((c) => c.label && c.image);
 

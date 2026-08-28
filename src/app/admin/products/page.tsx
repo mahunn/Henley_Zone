@@ -11,7 +11,13 @@ import { categoryLabelBn } from "@/config/ui-bn";
 import { getCategoriesCatalog } from "@/lib/categories-client";
 
 const AVAILABLE_SIZES = ["32", "34", "36", "38", "40", "42", "44", "46", "48"];
-type ColorImageRow = { label: string; image: string; isDefault?: boolean };
+type ColorImageRow = {
+  label: string;
+  image: string;
+  isDefault?: boolean;
+  /** Available sizes for this specific color */
+  sizes?: string[];
+};
 
 export default function AdminProductsPage() {
   const router = useRouter();
@@ -135,6 +141,26 @@ export default function AdminProductsPage() {
     setColorImages((prev) => prev.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
   }
 
+  function toggleColorSize(colorIndex: number, size: string) {
+    setColorImages((prev) =>
+      prev.map((row, idx) => {
+        if (idx !== colorIndex) return row;
+        const currentSizes = row.sizes ?? (selectedSizes.length > 0 ? selectedSizes : AVAILABLE_SIZES);
+        const nextSizes = currentSizes.includes(size)
+          ? currentSizes.filter((s) => s !== size)
+          : [...currentSizes, size];
+        return { ...row, sizes: nextSizes };
+      })
+    );
+  }
+
+  function setAllSizesForColor(colorIndex: number, all: boolean) {
+    const basePool = selectedSizes.length > 0 ? selectedSizes : AVAILABLE_SIZES;
+    setColorImages((prev) =>
+      prev.map((row, idx) => (idx === colorIndex ? { ...row, sizes: all ? [...basePool] : [] } : row))
+    );
+  }
+
   function removeColorImageRow(i: number) {
     setColorImages((prev) => prev.filter((_, idx) => idx !== i));
   }
@@ -173,7 +199,8 @@ export default function AdminProductsPage() {
         id: row.label.trim().toLowerCase().replace(/\s+/g, "_"),
         label: row.label.trim(),
         image: row.image.trim(),
-        isDefault: defaultIdx >= 0 ? idx === defaultIdx : idx === 0
+        isDefault: defaultIdx >= 0 ? idx === defaultIdx : idx === 0,
+        sizes: row.sizes && row.sizes.length > 0 ? row.sizes : (selectedSizes.length > 0 ? selectedSizes : undefined)
       }))
       .filter((row) => row.label && row.image);
 
@@ -433,57 +460,119 @@ export default function AdminProductsPage() {
           </label>
 
           {colorImages.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 12 }}>
               {colorImages.map((row, i) => {
                 const isDefault = row.isDefault || (i === 0 && !colorImages.some(r => r.isDefault));
+                const colorSizes = row.sizes ?? (selectedSizes.length > 0 ? selectedSizes : AVAILABLE_SIZES);
                 return (
                   <div
                     key={`${row.image}-${i}`}
                     style={{
-                      display: "grid",
-                      gridTemplateColumns: "56px 1fr auto auto",
-                      gap: 10,
-                      alignItems: "center"
+                      background: "#F8FAFC",
+                      border: isDefault ? "1.5px solid #0284C7" : "1px solid #E2E8F0",
+                      borderRadius: 10,
+                      padding: 12,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10
                     }}
                   >
-                    <img
-                      src={row.image}
-                      alt={row.label}
-                      style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, border: "1px solid var(--color-border)" }}
-                    />
-                    <input
-                      className="nav-search"
-                      value={row.label}
-                      onChange={(e) => updateColorImageRow(i, { label: e.target.value })}
-                      placeholder="Color name"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setColorImages((prev) => prev.map((r, idx) => ({ ...r, isDefault: idx === i })));
-                      }}
-                      style={{
-                        padding: "6px 10px",
-                        borderRadius: "6px",
-                        border: isDefault ? "1.5px solid #0ea5e9" : "1px solid var(--color-border)",
-                        background: isDefault ? "#e0f2fe" : "#f8fafc",
-                        color: isDefault ? "#0369a1" : "var(--color-text-secondary)",
-                        fontWeight: 600,
-                        fontSize: "12px",
-                        cursor: "pointer",
-                        whiteSpace: "nowrap"
-                      }}
-                    >
-                      {isDefault ? "⭐ Default" : "Set Default"}
-                    </button>
-                    <AdminIconButton
-                      type="button"
-                      variant="danger"
-                      label={`Remove color ${row.label}`}
-                      onClick={() => removeColorImageRow(i)}
-                    >
-                      <IconTrash />
-                    </AdminIconButton>
+                    {/* Top row */}
+                    <div style={{ display: "grid", gridTemplateColumns: "56px 1fr auto auto", gap: 10, alignItems: "center" }}>
+                      <img
+                        src={row.image}
+                        alt={row.label}
+                        style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, border: "1px solid var(--color-border)" }}
+                      />
+                      <input
+                        className="nav-search"
+                        value={row.label}
+                        onChange={(e) => updateColorImageRow(i, { label: e.target.value })}
+                        placeholder="Color name (e.g. Yellow)"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setColorImages((prev) => prev.map((r, idx) => ({ ...r, isDefault: idx === i })));
+                        }}
+                        style={{
+                          padding: "6px 10px",
+                          borderRadius: "6px",
+                          border: isDefault ? "1.5px solid #0ea5e9" : "1px solid var(--color-border)",
+                          background: isDefault ? "#e0f2fe" : "#f8fafc",
+                          color: isDefault ? "#0369a1" : "var(--color-text-secondary)",
+                          fontWeight: 600,
+                          fontSize: "12px",
+                          cursor: "pointer",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        {isDefault ? "⭐ Default" : "Set Default"}
+                      </button>
+                      <AdminIconButton
+                        type="button"
+                        variant="danger"
+                        label={`Remove color ${row.label}`}
+                        onClick={() => removeColorImageRow(i)}
+                      >
+                        <IconTrash />
+                      </AdminIconButton>
+                    </div>
+
+                    {/* Bottom row: Per-color size selector chips */}
+                    <div style={{ borderTop: "1px dashed #CBD5E1", paddingTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                          📏 Available Sizes for {row.label || `Color #${i + 1}`}:
+                          <span style={{ marginLeft: 6, fontWeight: 500, color: colorSizes.length > 0 ? "#16A34A" : "#DC2626" }}>
+                            ({colorSizes.length > 0 ? `${colorSizes.join(", ")}` : "Out of stock / No size"})
+                          </span>
+                        </span>
+                        <div style={{ display: "flex", gap: 4 }}>
+                          <button
+                            type="button"
+                            onClick={() => setAllSizesForColor(i, true)}
+                            style={{ padding: "2px 6px", fontSize: 11, background: "#E2E8F0", border: "none", borderRadius: 4, cursor: "pointer", fontWeight: 600 }}
+                          >
+                            Select All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setAllSizesForColor(i, false)}
+                            style={{ padding: "2px 6px", fontSize: 11, background: "#FEE2E2", color: "#991B1B", border: "none", borderRadius: 4, cursor: "pointer", fontWeight: 600 }}
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        {AVAILABLE_SIZES.map((sz) => {
+                          const isSizeAvailable = colorSizes.includes(sz);
+                          return (
+                            <button
+                              key={sz}
+                              type="button"
+                              onClick={() => toggleColorSize(i, sz)}
+                              style={{
+                                padding: "4px 10px",
+                                borderRadius: 6,
+                                fontSize: 12,
+                                fontWeight: 700,
+                                cursor: "pointer",
+                                border: isSizeAvailable ? "1.5px solid #16A34A" : "1px solid #CBD5E1",
+                                background: isSizeAvailable ? "#DCFCE7" : "#FFFFFF",
+                                color: isSizeAvailable ? "#15803D" : "#94A3B8",
+                                transition: "all 0.15s ease"
+                              }}
+                              title={isSizeAvailable ? `Size ${sz} is available for ${row.label}` : `Size ${sz} is disabled for ${row.label}`}
+                            >
+                              {isSizeAvailable ? `✓ ${sz}` : sz}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 );
               })}

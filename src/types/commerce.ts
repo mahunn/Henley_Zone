@@ -3,6 +3,8 @@ export interface ProductColor {
   label: string;
   image: string;
   isDefault?: boolean;
+  /** Available sizes in stock specifically for this color */
+  sizes?: string[];
 }
 
 export interface Product {

@@ -134,10 +134,11 @@ export function LandingProductPage({
   // Initialize with first color if real colors exist
   useEffect(() => {
     if (detail && hasRealColors && selectedColors.length === 0) {
-      const defaultColor = detail.colors.find((c) => (c as any).isDefault) ?? detail.colors[0];
+      const defaultColor = detail.colors.find((c) => c.id !== "default") || detail.colors[0];
+      const availableSizes = defaultColor.sizes && defaultColor.sizes.length > 0 ? defaultColor.sizes : detail.sizes;
       const initialSizes: Record<string, number> = {};
-      if (detail.sizes && detail.sizes.length > 0) {
-        initialSizes[detail.sizes[0]] = 1;
+      if (availableSizes && availableSizes.length > 0) {
+        initialSizes[availableSizes[0]] = 1;
       }
       setSelectedColors([
         {
@@ -161,9 +162,10 @@ export function LandingProductPage({
         if (exists) {
           return prev.filter((c) => c.colorId !== color.id);
         }
+        const availableSizes = color.sizes && color.sizes.length > 0 ? color.sizes : sizes;
         const defaultSizes: Record<string, number> = {};
-        if (sizes.length > 0) {
-          defaultSizes[sizes[0]] = 1;
+        if (availableSizes.length > 0) {
+          defaultSizes[availableSizes[0]] = 1;
         }
         return [
           ...prev,
@@ -823,99 +825,104 @@ export function LandingProductPage({
                   {/* Expanded Section When Color is Selected */}
                   {isSelected && (
                     <div className="lp-variant-expanded">
-                      {/* Sizes Chips Grid */}
-                      {sizes.length > 0 ? (
-                        <div className="lp-variant-sizes-section">
-                          <div className="lp-variant-sizes-label">সাইজ নির্বাচন করুন:</div>
-                          <div className="lp-variant-sizes-grid">
-                            {sizes.map((size) => {
-                              const isSizeActive = (colorSizes[size] ?? 0) > 0;
-                              return (
+                      {(() => {
+                        const availableSizes = color.sizes && color.sizes.length > 0 ? color.sizes : sizes;
+                        if (availableSizes.length > 0) {
+                          return (
+                            <div className="lp-variant-sizes-section">
+                              <div className="lp-variant-sizes-label">সাইজ নির্বাচন করুন:</div>
+                              <div className="lp-variant-sizes-grid">
+                                {availableSizes.map((size) => {
+                                  const isSizeActive = (colorSizes[size] ?? 0) > 0;
+                                  return (
+                                    <button
+                                      key={size}
+                                      type="button"
+                                      className={`lp-size-chip${isSizeActive ? " active" : ""}`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleSizeForColor(color.id, size);
+                                      }}
+                                    >
+                                      {size}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+
+                              {/* Individual Quantity Counters For Each Selected Size */}
+                              {selectedSizeKeys.length > 0 && (
+                                <div className="lp-size-qty-list">
+                                  {selectedSizeKeys.map((size) => {
+                                    const qty = colorSizes[size] || 1;
+                                    return (
+                                      <div key={size} className="lp-size-qty-row">
+                                        <span className="lp-size-qty-title">{size} সাইজ পরিমাণ:</span>
+                                        <div className="lp-size-qty-controls">
+                                          <button
+                                            type="button"
+                                            className="lp-qty-btn minus"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              updateSizeQtyForColor(color.id, size, -1);
+                                            }}
+                                            aria-label="Decrease"
+                                          >
+                                            −
+                                          </button>
+                                          <span className="lp-qty-num">{qty}</span>
+                                          <button
+                                            type="button"
+                                            className="lp-qty-btn plus"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              updateSizeQtyForColor(color.id, size, 1);
+                                            }}
+                                            aria-label="Increase"
+                                          >
+                                            +
+                                          </button>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+                        return (
+                          /* Quantity control when product has no specific sizes */
+                          <div className="lp-size-qty-list" style={{ marginTop: 10 }}>
+                            <div className="lp-size-qty-row">
+                              <span className="lp-size-qty-title">পরিমাণ:</span>
+                              <div className="lp-size-qty-controls">
                                 <button
-                                  key={size}
                                   type="button"
-                                  className={`lp-size-chip${isSizeActive ? " active" : ""}`}
+                                  className="lp-qty-btn minus"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    toggleSizeForColor(color.id, size);
+                                    updateColorOnlyQty(color.id, -1);
                                   }}
                                 >
-                                  {size}
+                                  −
                                 </button>
-                              );
-                            })}
-                          </div>
-
-                          {/* Individual Quantity Counters For Each Selected Size */}
-                          {selectedSizeKeys.length > 0 && (
-                            <div className="lp-size-qty-list">
-                              {selectedSizeKeys.map((size) => {
-                                const qty = colorSizes[size] || 1;
-                                return (
-                                  <div key={size} className="lp-size-qty-row">
-                                    <span className="lp-size-qty-title">{size} সাইজ পরিমাণ:</span>
-                                    <div className="lp-size-qty-controls">
-                                      <button
-                                        type="button"
-                                        className="lp-qty-btn minus"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          updateSizeQtyForColor(color.id, size, -1);
-                                        }}
-                                        aria-label="Decrease"
-                                      >
-                                        −
-                                      </button>
-                                      <span className="lp-qty-num">{qty}</span>
-                                      <button
-                                        type="button"
-                                        className="lp-qty-btn plus"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          updateSizeQtyForColor(color.id, size, 1);
-                                        }}
-                                        aria-label="Increase"
-                                      >
-                                        +
-                                      </button>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        /* Quantity control when product has no specific sizes */
-                        <div className="lp-size-qty-list" style={{ marginTop: 10 }}>
-                          <div className="lp-size-qty-row">
-                            <span className="lp-size-qty-title">পরিমাণ:</span>
-                            <div className="lp-size-qty-controls">
-                              <button
-                                type="button"
-                                className="lp-qty-btn minus"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  updateColorOnlyQty(color.id, -1);
-                                }}
-                              >
-                                −
-                              </button>
-                              <span className="lp-qty-num">{selectedColorObj?.quantity ?? 1}</span>
-                              <button
-                                type="button"
-                                className="lp-qty-btn plus"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  updateColorOnlyQty(color.id, 1);
-                                }}
-                              >
-                                +
-                              </button>
+                                <span className="lp-qty-num">{selectedColorObj?.quantity ?? 1}</span>
+                                <button
+                                  type="button"
+                                  className="lp-qty-btn plus"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateColorOnlyQty(color.id, 1);
+                                  }}
+                                >
+                                  +
+                                </button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
