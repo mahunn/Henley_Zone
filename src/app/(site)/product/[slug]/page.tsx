@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import "@/app/(landing)/landing.css";
 import { mapProductToPdpDetail } from "@/lib/product-detail-mapper";
 import { getCachedProducts, getProductBySlug } from "@/lib/products-catalog-server";
-import { ProductDetailShell } from "./product-detail-shell";
+import { LandingProductPage } from "@/app/(landing)/p/[slug]/landing-product-page";
 
 export const dynamicParams = true;
 export const revalidate = 60;
@@ -28,24 +29,13 @@ export async function generateMetadata({
   const description = product.description.trim().slice(0, 160);
   const image = product.colors?.[0]?.image ?? product.imageUrl;
   return {
-    title: product.name,
+    title: `${product.name} — অর্ডার করুন`,
     description: description || product.name,
     openGraph: {
-      title: product.name,
+      title: `${product.name} — অর্ডার করুন`,
       description: description || undefined,
       images: image ? [{ url: image }] : undefined
     }
-  };
-}
-
-function productToRelated(p: { id: string; slug: string; name: string; category: string; imageUrl: string; price: number }) {
-  return {
-    id: p.id,
-    slug: p.slug,
-    name: p.name,
-    category: p.category,
-    image: p.imageUrl,
-    price: p.price
   };
 }
 
@@ -56,32 +46,32 @@ export default async function ProductPage({
 }) {
   const { slug } = await params;
   const decoded = decodeURIComponent(slug);
-  const products = await getCachedProducts();
-  const found = products.find((p) => p.slug === decoded) ?? null;
-  const initialDetail = found ? mapProductToPdpDetail(found) : null;
-  const initialRelated = products
-    .filter((p) => p.slug !== decoded)
-    .slice(0, 6)
-    .map(productToRelated);
+  const product = await getProductBySlug(decoded);
+  const detail = product ? mapProductToPdpDetail(product) : null;
 
-  const lcpImage = initialDetail?.images[0];
+  const lcpImage = detail?.images[0];
 
-  const jsonLd = found ? {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": found.name,
-    "image": found.imageUrl ? [found.imageUrl] : [],
-    "description": found.description.trim().slice(0, 160) || found.name,
-    "sku": `HENLEY-${found.id.toUpperCase().slice(0, 8)}`,
-    "offers": {
-      "@type": "Offer",
-      "url": `https://henleyzone.com/product/${found.slug}`,
-      "priceCurrency": "BDT",
-      "price": found.price.toString(),
-      "availability": found.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-      "itemCondition": "https://schema.org/NewCondition"
-    }
-  } : null;
+  const jsonLd = product
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: product.name,
+        image: product.imageUrl ? [product.imageUrl] : [],
+        description: product.description.trim().slice(0, 160) || product.name,
+        sku: `HENLEY-${product.id.toUpperCase().slice(0, 8)}`,
+        offers: {
+          "@type": "Offer",
+          url: `https://henleyzone.com/product/${product.slug}`,
+          priceCurrency: "BDT",
+          price: product.price.toString(),
+          availability:
+            product.stock > 0
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
+          itemCondition: "https://schema.org/NewCondition"
+        }
+      }
+    : null;
 
   return (
     <>
@@ -94,12 +84,7 @@ export default async function ProductPage({
       {lcpImage ? (
         <link rel="preload" as="image" href={lcpImage} fetchPriority="high" />
       ) : null}
-      <ProductDetailShell
-        slug={decoded}
-        initialDetail={initialDetail}
-        initialRelated={initialRelated}
-        skipCatalogUntilIdle={Boolean(initialDetail)}
-      />
+      <LandingProductPage slug={decoded} initialDetail={detail} />
     </>
   );
 }

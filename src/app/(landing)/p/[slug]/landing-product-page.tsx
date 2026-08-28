@@ -1,25 +1,29 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Product } from "../../../../types/commerce";
+import Link from "next/link";
+import type { Product, CartItem } from "../../../../types/commerce";
 import type { PdpDetail } from "../../../../lib/product-detail-mapper";
 import { getProductsCatalog } from "../../../../lib/product-catalog-client";
 import { productPagePath } from "../../../../lib/product-url";
-import { formatCurrency } from "../../../../lib/money";
 import { defaultBusiness, businessTelHref, businessWhatsappChatUrl } from "../../../../config/businesses";
 import { DELIVERY_FEE_INSIDE_DHAKA, DELIVERY_FEE_OUTSIDE_DHAKA } from "../../../../config/delivery";
 import { bn } from "../../../../config/ui-bn";
 import { ProductImage } from "../../../../components/shop/product-image";
+import { useCart } from "../../../../components/cart-provider";
 import { normalizePhoneNumber, isValidPhoneNumber } from "../../../../lib/phone-normalizer";
 
 /* ── Types ───────────────────────────────────────────── */
 
-interface SelectedVariant {
+export interface SelectedColorVariant {
   colorId: string;
   label: string;
   image: string;
-  size?: string;
+  /** Size label -> quantity (e.g. { "42": 2, "44": 1 }) */
+  sizes: Record<string, number>;
+  /** Quantity fallback if product has no sizes */
+  quantity?: number;
 }
 
 type DeliveryArea = "inside" | "outside";
@@ -34,6 +38,7 @@ export function LandingProductPage({
   initialDetail: PdpDetail | null;
 }) {
   const router = useRouter();
+  const { addCartItems, itemCount: globalCartCount } = useCart();
   const detail = initialDetail;
 
   /* ── Gallery state ─────────────────────────────────── */
@@ -42,47 +47,70 @@ export function LandingProductPage({
   const touchEndX = useRef(0);
 
   /* ── Variant state ─────────────────────────────────── */
-  const [selectedColors, setSelectedColors] = useState<SelectedVariant[]>([]);
-  const [selectedSize, setSelectedSize] = useState<string>("");
+  const [selectedColors, setSelectedColors] = useState<SelectedColorVariant[]>([]);
+  const [selectedStandaloneSizes, setSelectedStandaloneSizes] = useState<Record<string, number>>({});
+  const [standaloneQty, setStandaloneQty] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [cartToastMessage, setCartToastMessage] = useState<string | null>(null);
 
   const translateColorLabel = useCallback((label: string): string => {
     const clean = label.trim().toLowerCase();
     switch (clean) {
-      case "orange":
-        return "ইটা";
+      case "maroon":
+        return "মেরুন";
+      case "white":
+        return "সাদা";
       case "brown":
+        return "ব্রাউন";
+      case "coffee":
         return "কফি";
-      case "navy blue":
+      case "black":
+        return "কালো";
+      case "red":
+        return "লাল";
       case "navy":
+      case "navy blue":
         return "নেভী";
-      case "lime green":
-      case "tiya":
-        return "টিয়া";
-      case "yellow":
-        return "হলুদ";
       case "blue":
         return "নীল";
-      case "olive":
-        return "অলিভ";
-      case "purple":
-        return "বেগুনি";
+      case "sky blue":
+        return "আকাশি";
       case "green":
         return "সবুজ";
       case "deep green":
         return "গাঢ় সবুজ";
-      case "magenta":
-        return "ম্যাজেন্টা";
+      case "olive":
+      case "olive green":
+        return "অলিভ";
+      case "yellow":
+        return "হলুদ";
+      case "mustard":
+        return "সরিষা";
+      case "orange":
+        return "কমলা";
+      case "brick":
+        return "ইটা";
       case "pink":
         return "গোলাপী";
-      case "red":
-        return "লাল";
-      case "black":
-        return "কালো";
-      case "light blue":
-        return "হালকা নীল";
-      case "olive green":
-        return "অলিভ সবুজ";
+      case "magenta":
+        return "ম্যাজেন্টা";
+      case "purple":
+        return "বেগুনি";
+      case "lavender":
+        return "ল্যাভেন্ডার";
+      case "ash":
+      case "grey":
+      case "gray":
+        return "ছাই";
+      case "cream":
+        return "ক্রিম";
+      case "beige":
+        return "বেইজ";
+      case "teal":
+        return "টিল";
+      case "lime green":
+      case "tiya":
+        return "টিয়া";
       default:
         return label;
     }
@@ -96,25 +124,157 @@ export function LandingProductPage({
     });
   }, [detail]);
 
+  const sizes = useMemo(() => detail?.sizes ?? [], [detail]);
+  const colors = useMemo(() => detail?.colors ?? [], [detail]);
+  const hasRealColors = useMemo(
+    () => colors.length > 1 || (colors.length === 1 && colors[0].id !== "default"),
+    [colors]
+  );
+
+  // Initialize with first color if real colors exist
   useEffect(() => {
-    if (detail && detail.colors && detail.colors.length > 0) {
-      const hasReal = detail.colors.length > 1 || (detail.colors.length === 1 && detail.colors[0].id !== "default");
-      if (hasReal && selectedColors.length === 0) {
-        const defaultColor = detail.colors.find((c) => (c as any).isDefault) ?? detail.colors[0];
-        setSelectedColors([{
+    if (detail && hasRealColors && selectedColors.length === 0) {
+      const defaultColor = detail.colors.find((c) => (c as any).isDefault) ?? detail.colors[0];
+      const initialSizes: Record<string, number> = {};
+      if (detail.sizes && detail.sizes.length > 0) {
+        initialSizes[detail.sizes[0]] = 1;
+      }
+      setSelectedColors([
+        {
           colorId: defaultColor.id,
           label: translateColorLabel(defaultColor.label),
-          image: defaultColor.swatchImage
-        }]);
-      }
+          image: defaultColor.swatchImage,
+          sizes: initialSizes,
+          quantity: 1
+        }
+      ]);
+    } else if (detail && !hasRealColors && detail.sizes?.length > 0 && Object.keys(selectedStandaloneSizes).length === 0) {
+      setSelectedStandaloneSizes({ [detail.sizes[0]]: 1 });
     }
-  }, [detail, translateColorLabel]);
+  }, [detail, hasRealColors, selectedColors.length, selectedStandaloneSizes, translateColorLabel]);
 
-  const selectSizeForColor = useCallback((colorId: string, size: string) => {
+  /* ── Color toggle handler ──────────────────────────── */
+  const toggleColor = useCallback(
+    (color: PdpDetail["colors"][number]) => {
+      setSelectedColors((prev) => {
+        const exists = prev.find((c) => c.colorId === color.id);
+        if (exists) {
+          return prev.filter((c) => c.colorId !== color.id);
+        }
+        const defaultSizes: Record<string, number> = {};
+        if (sizes.length > 0) {
+          defaultSizes[sizes[0]] = 1;
+        }
+        return [
+          ...prev,
+          {
+            colorId: color.id,
+            label: translateColorLabel(color.label),
+            image: color.swatchImage,
+            sizes: defaultSizes,
+            quantity: 1
+          }
+        ];
+      });
+    },
+    [sizes, translateColorLabel]
+  );
+
+  /* ── Size toggle for a specific color ──────────────── */
+  const toggleSizeForColor = useCallback((colorId: string, size: string) => {
     setSelectedColors((prev) =>
-      prev.map((c) => (c.colorId === colorId ? { ...c, size } : c))
+      prev.map((c) => {
+        if (c.colorId !== colorId) return c;
+        const currentQty = c.sizes[size] ?? 0;
+        const nextSizes = { ...c.sizes };
+        if (currentQty > 0) {
+          delete nextSizes[size];
+        } else {
+          nextSizes[size] = 1;
+        }
+        return { ...c, sizes: nextSizes };
+      })
     );
   }, []);
+
+  /* ── Quantity adjuster for a specific color + size ── */
+  const updateSizeQtyForColor = useCallback((colorId: string, size: string, delta: number) => {
+    setSelectedColors((prev) =>
+      prev.map((c) => {
+        if (c.colorId !== colorId) return c;
+        const currentQty = c.sizes[size] ?? 1;
+        const nextQty = currentQty + delta;
+        const nextSizes = { ...c.sizes };
+        if (nextQty <= 0) {
+          delete nextSizes[size];
+        } else {
+          nextSizes[size] = nextQty;
+        }
+        return { ...c, sizes: nextSizes };
+      })
+    );
+  }, []);
+
+  /* ── Quantity adjuster for color without sizes ─────── */
+  const updateColorOnlyQty = useCallback((colorId: string, delta: number) => {
+    setSelectedColors((prev) =>
+      prev.map((c) => {
+        if (c.colorId !== colorId) return c;
+        const currentQty = c.quantity ?? 1;
+        const nextQty = Math.max(1, currentQty + delta);
+        return { ...c, quantity: nextQty };
+      })
+    );
+  }, []);
+
+  /* ── Standalone size handlers (products without multiple colors) ── */
+  const toggleStandaloneSize = useCallback((size: string) => {
+    setSelectedStandaloneSizes((prev) => {
+      const currentQty = prev[size] ?? 0;
+      const next = { ...prev };
+      if (currentQty > 0) {
+        delete next[size];
+      } else {
+        next[size] = 1;
+      }
+      return next;
+    });
+  }, []);
+
+  const updateStandaloneSizeQty = useCallback((size: string, delta: number) => {
+    setSelectedStandaloneSizes((prev) => {
+      const currentQty = prev[size] ?? 1;
+      const nextQty = currentQty + delta;
+      const next = { ...prev };
+      if (nextQty <= 0) {
+        delete next[size];
+      } else {
+        next[size] = nextQty;
+      }
+      return next;
+    });
+  }, []);
+
+  /* ── Total Items Count & Calculations ─────────────── */
+  const totalItemCount = useMemo(() => {
+    if (hasRealColors) {
+      if (selectedColors.length === 0) return 0;
+      return selectedColors.reduce((sum, c) => {
+        if (sizes.length > 0) {
+          const sizeSum = Object.values(c.sizes).reduce((s, q) => s + q, 0);
+          return sum + sizeSum;
+        }
+        return sum + (c.quantity ?? 1);
+      }, 0);
+    }
+
+    if (sizes.length > 0) {
+      const sizeSum = Object.values(selectedStandaloneSizes).reduce((s, q) => s + q, 0);
+      return sizeSum;
+    }
+
+    return standaloneQty;
+  }, [hasRealColors, selectedColors, sizes.length, selectedStandaloneSizes, standaloneQty]);
 
   /* ── Order form state ──────────────────────────────── */
   const [customerName, setCustomerName] = useState("");
@@ -130,14 +290,15 @@ export function LandingProductPage({
 
   /* ── Refs ───────────────────────────────────────────── */
   const orderFormRef = useRef<HTMLDivElement>(null);
+  const variantSectionRef = useRef<HTMLDivElement>(null);
 
   /* ── Derived values ────────────────────────────────── */
   const price = detail?.price ?? 0;
+  const originalPrice = detail?.originalPrice || Math.round(price / 0.87);
   const deliveryFee = delivery === "inside" ? DELIVERY_FEE_INSIDE_DHAKA : DELIVERY_FEE_OUTSIDE_DHAKA;
-  const itemCount = Math.max(selectedColors.length, 1);
-  const subtotal = price * itemCount;
+  const effectiveCount = Math.max(totalItemCount, 1);
+  const subtotal = price * (totalItemCount > 0 ? totalItemCount : 1);
   const total = subtotal + deliveryFee;
-  const currency = defaultBusiness.currency;
   const phoneNumber = defaultBusiness.whatsappNumber;
 
   /* ── Lead tracking ─────────────────────────────────── */
@@ -150,6 +311,75 @@ export function LandingProductPage({
     setLeadId(id);
   }, []);
 
+  /* ── Build cart items for order API & Cart Provider ────────────────── */
+  const buildCartItems = useCallback((): CartItem[] => {
+    if (!detail) return [];
+
+    if (hasRealColors && selectedColors.length > 0) {
+      const items: CartItem[] = [];
+      for (const color of selectedColors) {
+        const sizeEntries = Object.entries(color.sizes).filter(([_, qty]) => qty > 0);
+        if (sizeEntries.length > 0) {
+          for (const [size, qty] of sizeEntries) {
+            items.push({
+              key: `${detail.id}::${size}::${color.colorId}`,
+              productId: detail.id,
+              name: detail.name,
+              price: detail.price,
+              quantity: qty,
+              imageUrl: color.image || detail.images[0],
+              selectedColor: color.label,
+              selectedSize: size
+            });
+          }
+        } else {
+          // Color selected with fallback quantity
+          items.push({
+            key: `${detail.id}::default::${color.colorId}`,
+            productId: detail.id,
+            name: detail.name,
+            price: detail.price,
+            quantity: color.quantity ?? 1,
+            imageUrl: color.image || detail.images[0],
+            selectedColor: color.label,
+            selectedSize: undefined
+          });
+        }
+      }
+      return items;
+    }
+
+    if (sizes.length > 0) {
+      const sizeEntries = Object.entries(selectedStandaloneSizes).filter(([_, qty]) => qty > 0);
+      if (sizeEntries.length > 0) {
+        return sizeEntries.map(([size, qty]) => ({
+          key: `${detail.id}::${size}::default`,
+          productId: detail.id,
+          name: detail.name,
+          price: detail.price,
+          quantity: qty,
+          imageUrl: detail.images[0],
+          selectedColor: undefined,
+          selectedSize: size
+        }));
+      }
+    }
+
+    return [
+      {
+        key: `${detail.id}::default::default`,
+        productId: detail.id,
+        name: detail.name,
+        price: detail.price,
+        quantity: Math.max(1, standaloneQty),
+        imageUrl: detail.images[0],
+        selectedColor: undefined,
+        selectedSize: undefined
+      }
+    ];
+  }, [detail, hasRealColors, selectedColors, sizes.length, selectedStandaloneSizes, standaloneQty]);
+
+  // Lead auto-capture
   useEffect(() => {
     const cleanedPhone = normalizePhoneNumber(phone);
     if (!leadId || !detail || !cleanedPhone.trim()) return;
@@ -177,8 +407,7 @@ export function LandingProductPage({
       }
     }, 800);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leadId, customerName, phone, address, delivery, selectedColors.length]);
+  }, [leadId, detail, customerName, phone, address, delivery, subtotal, deliveryFee, total, buildCartItems]);
 
   /* ── Swipe handlers for gallery ────────────────────── */
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -189,9 +418,9 @@ export function LandingProductPage({
     (e: React.TouchEvent) => {
       touchEndX.current = e.changedTouches[0].screenX;
       const diff = touchStartX.current - touchEndX.current;
-      const total = detail?.images.length ?? 1;
+      const totalImgs = detail?.images.length ?? 1;
       if (Math.abs(diff) > 50) {
-        if (diff > 0 && activeImg < total - 1) {
+        if (diff > 0 && activeImg < totalImgs - 1) {
           setActiveImg((p) => p + 1);
         } else if (diff < 0 && activeImg > 0) {
           setActiveImg((p) => p - 1);
@@ -201,53 +430,27 @@ export function LandingProductPage({
     [activeImg, detail?.images.length]
   );
 
-  /* ── Color toggle ──────────────────────────────────── */
-  const toggleColor = useCallback(
-    (color: PdpDetail["colors"][number]) => {
-      setSelectedColors((prev) => {
-        const exists = prev.find((c) => c.colorId === color.id);
-        if (exists) {
-          return prev.filter((c) => c.colorId !== color.id);
-        }
-        return [...prev, { colorId: color.id, label: translateColorLabel(color.label), image: color.swatchImage }];
-      });
-    },
-    [translateColorLabel]
-  );
-
-  /* ── Build cart items for order API ────────────────── */
-  const buildCartItems = useCallback(() => {
-    if (!detail) return [];
-    if (selectedColors.length === 0) {
-      return [
-        {
-          key: `${detail.id}::${selectedSize || "default"}::default`,
-          productId: detail.id,
-          name: detail.name,
-          price: detail.price,
-          quantity: 1,
-          imageUrl: detail.images[0],
-          selectedColor: undefined,
-          selectedSize: selectedSize || undefined
-        }
-      ];
-    }
-    return selectedColors.map((c) => ({
-      key: `${detail.id}::${c.size || "default"}::${c.colorId}`,
-      productId: detail.id,
-      name: detail.name,
-      price: detail.price,
-      quantity: 1,
-      imageUrl: c.image,
-      selectedColor: c.label,
-      selectedSize: c.size || undefined
-    }));
-  }, [detail, selectedColors, selectedSize]);
-
-  /* ── Scroll to order form ──────────────────── */
+  /* ── Scroll Helpers ────────────────────────────────── */
   const scrollToOrder = useCallback(() => {
     orderFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
+
+  const scrollToVariants = useCallback(() => {
+    variantSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  /* ── Add to Cart Action ────────────────────────────── */
+  const handleAddToCart = useCallback(() => {
+    const itemsToAdd = buildCartItems();
+    if (itemsToAdd.length === 0) return;
+    addCartItems(itemsToAdd);
+
+    const totalAdded = itemsToAdd.reduce((sum, item) => sum + item.quantity, 0);
+    setCartToastMessage(`✓ ${totalAdded}টি আইটেম কার্টে যোগ করা হয়েছে!`);
+    setTimeout(() => {
+      setCartToastMessage(null);
+    }, 4000);
+  }, [addCartItems, buildCartItems]);
 
   /* ── Submit order ──────────────────────────────────── */
   const submitOrder = async (e: FormEvent) => {
@@ -268,25 +471,29 @@ export function LandingProductPage({
       return;
     }
 
-    /* colors required only if product has multiple colors */
-    const hasMultipleColors = detail.colors.length > 1 || (detail.colors.length === 1 && detail.colors[0].id !== "default");
-    if (hasMultipleColors && selectedColors.length === 0) {
-      setError(bn.landing.errors.noColor);
+    /* Colors check */
+    if (hasRealColors && selectedColors.length === 0) {
+      setError("অনুগ্রহ করে অন্তত একটি রঙ সিলেক্ট করুন।");
       return;
     }
 
-    if (hasMultipleColors && sizes.length > 0) {
-      const missingSizeColor = selectedColors.find((c) => !c.size);
-      if (missingSizeColor) {
-        setError(`অনুগ্রহ করে "${missingSizeColor.label}" রঙের সাইজ সিলেক্ট করুন।`);
+    /* Sizes check */
+    if (hasRealColors && sizes.length > 0) {
+      const emptyColor = selectedColors.find((c) => Object.keys(c.sizes).length === 0);
+      if (emptyColor) {
+        setError(`অনুগ্রহ করে "${emptyColor.label}" রঙের অন্তত একটি সাইজ সিলেক্ট করুন।`);
         return;
       }
-    } else if (!hasMultipleColors && sizes.length > 0 && !selectedSize) {
-      setError("অনুগ্রহ করে সাইজ সিলেক্ট করুন।");
+    } else if (!hasRealColors && sizes.length > 0 && Object.keys(selectedStandaloneSizes).length === 0) {
+      setError("অনুগ্রহ করে অন্তত একটি সাইজ সিলেক্ট করুন।");
       return;
     }
 
     const items = buildCartItems();
+    if (items.length === 0) {
+      setError("অনুগ্রহ করে পণ্য ও সাইজ সিলেক্ট করুন।");
+      return;
+    }
 
     const orderPayload = {
       items,
@@ -342,15 +549,46 @@ export function LandingProductPage({
   }
 
   const images = detail.images;
-  const colors = detail.colors;
-  const hasRealColors = colors.length > 1 || (colors.length === 1 && colors[0].id !== "default");
-  const sizes = detail.sizes;
   const stock = detail.stock;
   const faqs = bn.landing.faq;
   const reviews = bn.landing.reviews;
+  const waUrl = businessWhatsappChatUrl(defaultBusiness);
 
   return (
     <div className="lp-page">
+      {/* ═══════════════════════════════════════════════════
+          TOAST NOTIFICATION (Add to cart feedback)
+          ═══════════════════════════════════════════════════ */}
+      {cartToastMessage && (
+        <div className="lp-toast-notification">
+          <div className="lp-toast-content">
+            <span className="lp-toast-icon">🛒</span>
+            <span className="lp-toast-text">{cartToastMessage}</span>
+          </div>
+          <Link href="/cart" className="lp-toast-link">
+            কার্ট দেখুন →
+          </Link>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════
+          TRUST BADGES TOP BANNER (Screenshot Exact Layout)
+          ═══════════════════════════════════════════════════ */}
+      <div className="lp-trust-banner">
+        <div className="lp-trust-card">
+          <span className="lp-trust-emoji">🚚</span>
+          <span className="lp-trust-text">সারাদেশে ডেলিভারি</span>
+        </div>
+        <div className="lp-trust-card">
+          <span className="lp-trust-emoji">💰</span>
+          <span className="lp-trust-text">ক্যাশ অন ডেলিভারি</span>
+        </div>
+        <div className="lp-trust-card">
+          <span className="lp-trust-emoji">✅</span>
+          <span className="lp-trust-text">১০০% অরিজিনাল</span>
+        </div>
+      </div>
+
       {/* ═══════════════════════════════════════════════════
           SECTION 1: IMAGE GALLERY (swipeable)
           ═══════════════════════════════════════════════════ */}
@@ -370,10 +608,10 @@ export function LandingProductPage({
             className="lp-gallery-main-img"
           />
 
-          {/* Discount badge (if originalPrice exists) */}
-          {detail.originalPrice && detail.originalPrice > detail.price && (
+          {/* Discount badge */}
+          {originalPrice > price && (
             <div className="lp-gallery-badge">
-              -{Math.round(((detail.originalPrice - detail.price) / detail.originalPrice) * 100)}% ছাড়
+              -{Math.round(((originalPrice - price) / originalPrice) * 100)}% ছাড়
             </div>
           )}
 
@@ -440,17 +678,17 @@ export function LandingProductPage({
 
         {/* Price */}
         <div className="lp-info-price">
-          {detail.originalPrice && detail.originalPrice > detail.price && (
+          {originalPrice > price && (
             <span className="lp-info-price-original">
-              {formatCurrency(detail.originalPrice, currency)}
+              ৳{originalPrice.toLocaleString("bn-BD")}
             </span>
           )}
           <span className="lp-info-price-current">
             ৳{price.toLocaleString("bn-BD")}
           </span>
-          {detail.originalPrice && detail.originalPrice > detail.price && (
+          {originalPrice > price && (
             <span className="lp-info-price-discount">
-              -{Math.round(((detail.originalPrice - detail.price) / detail.originalPrice) * 100)}%
+              -{Math.round(((originalPrice - price) / originalPrice) * 100)}%
             </span>
           )}
         </div>
@@ -462,73 +700,94 @@ export function LandingProductPage({
       </section>
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 3: DESCRIPTION POINTS
+          SECTION 3: KEY HIGHLIGHTS / BULLET POINTS
           ═══════════════════════════════════════════════════ */}
-      <section className="lp-desc">
-        <ul className="lp-desc-list">
-          {detail.descriptionPoints.map((point, i) => (
-            <li key={i} className="lp-desc-item">
-              <span className="lp-desc-bullet">🔸</span>
-              <span>{point}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {detail.descriptionPoints?.length > 0 && (
+        <section className="lp-desc">
+          <ul className="lp-desc-list">
+            {detail.descriptionPoints.map((point, i) => (
+              <li key={i} className="lp-desc-item">
+                <span className="lp-desc-bullet">🔸</span>
+                <span>{point}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 4: CTA "ORDER NOW" BUTTON
+          SECTION 4: DUAL ACTION BUTTONS (Order Now & Add To Cart)
           ═══════════════════════════════════════════════════ */}
-      <div className="lp-cta-wrap">
+      <div className="lp-action-buttons-wrap">
         <button
-          className="lp-cta-btn"
+          className="lp-action-btn lp-btn-order"
           onClick={scrollToOrder}
           type="button"
-          id="lp-order-now-btn"
+          id="lp-top-order-btn"
         >
-          {bn.landing.orderNow}
+          <span className="lp-btn-icon">⚡</span>
+          <span>সরাসরি অর্ডার করুন</span>
+        </button>
+
+        <button
+          className="lp-action-btn lp-btn-cart"
+          onClick={handleAddToCart}
+          type="button"
+          id="lp-top-cart-btn"
+        >
+          <span className="lp-btn-icon">🛒</span>
+          <span>কার্টে যোগ করুন</span>
         </button>
       </div>
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 5: PHONE / CALL (Single Phone Number)
+          SECTION 5: HOTLINE / QUICK CALL BANNER
           ═══════════════════════════════════════════════════ */}
-      <section className="lp-call">
-        <p className="lp-call-label">যেকোনো প্রয়োজনে কল করুন</p>
-        <a
-          href={businessTelHref(defaultBusiness)}
-          className="lp-call-btn"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <section className="lp-call-banner">
+        <div className="lp-call-banner-text">যেকোনো তথ্যের জন্য সরাসরি কল বা হোয়াটসঅ্যাপ করুন</div>
+        <a href={businessTelHref(defaultBusiness)} className="lp-call-banner-btn">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
           </svg>
           <span>{phoneNumber}</span>
         </a>
       </section>
 
-
-
       {/* ═══════════════════════════════════════════════════
-          SECTION 7: COLOR / VARIANT SELECTION
+          STEP 1: COLOR & MULTI-SIZE SELECTION
+          (Exact design from user screenshot)
           ═══════════════════════════════════════════════════ */}
       {hasRealColors && (
-        <section className="lp-variants">
-          <h2 className="lp-variants-title">{bn.landing.selectColorSize}</h2>
-          <p className="lp-variants-hint">{bn.landing.multiSelectHint}</p>
+        <section className="lp-variants" id="lp-variant-section" ref={variantSectionRef}>
+          <div className="lp-step-header">
+            <div className="lp-step-badge">ধাপ ১</div>
+            <h2 className="lp-variants-title">🎨 পছন্দের রঙ ও সাইজ সিলেক্ট করুন</h2>
+            <p className="lp-variants-hint">নিচের যেকোনো রঙে ক্লিক করে পছন্দমতো সাইজ এবং পরিমাণ নির্ধারণ করুন (একাধিক রঙ নেওয়া যাবে)</p>
+          </div>
+
           <div className="lp-variant-list">
             {colors.map((color, idx) => {
-              const isSelected = selectedColors.some((c) => c.colorId === color.id);
-              const colorInfo = selectedColors.find((c) => c.colorId === color.id);
+              const selectedColorObj = selectedColors.find((c) => c.colorId === color.id);
+              const isSelected = Boolean(selectedColorObj);
               const translatedLabel = translateColorLabel(color.label);
-              const originalPrice = Math.round(price / 0.87);
+              const cardOriginalPrice = Math.round(price / 0.87);
+
+              // Selected sizes for this color
+              const colorSizes = selectedColorObj?.sizes ?? {};
+              const selectedSizeKeys = Object.keys(colorSizes);
 
               return (
                 <div
                   key={color.id}
                   className={`lp-variant-card${isSelected ? " selected" : ""}`}
                 >
+                  {/* Top Bar / Clickable Header */}
                   <div
                     className="lp-variant-card-header"
                     onClick={() => toggleColor(color)}
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={isSelected}
                   >
                     <div className="lp-variant-checkbox">
                       {isSelected && (
@@ -537,99 +796,269 @@ export function LandingProductPage({
                         </svg>
                       )}
                     </div>
+
                     <div className="lp-variant-details">
                       <div className="lp-variant-name">{translatedLabel}</div>
                       <div className="lp-variant-price">
                         <span className="lp-variant-price-original">
-                          ৳{originalPrice.toLocaleString("bn-BD")}
+                          ৳{cardOriginalPrice.toLocaleString("bn-BD")}
                         </span>
                         <span className="lp-variant-price-current">
                           ৳{price.toLocaleString("bn-BD")}
                         </span>
                       </div>
                     </div>
+
                     <ProductImage
                       src={color.swatchImage}
                       alt={color.label}
-                      width={60}
-                      height={72}
-                      sizes="60px"
-                      loadDelay={300 + idx * 100}
+                      width={64}
+                      height={76}
+                      sizes="64px"
+                      loadDelay={200 + idx * 80}
                       className="lp-variant-img"
                     />
                   </div>
 
-                  {isSelected && sizes.length > 0 && (
-                    <div className="lp-variant-sizes">
-                      <div className="lp-variant-sizes-label">সাইজ:</div>
-                      <div className="lp-variant-sizes-grid">
-                        {sizes.map((size) => {
-                          const isSizeSelected = colorInfo?.size === size;
-                          return (
-                            <button
-                              key={size}
-                              type="button"
-                              className={`lp-size-chip${isSizeSelected ? " selected" : ""}`}
-                              onClick={() => selectSizeForColor(color.id, size)}
-                            >
-                              {size}
-                            </button>
-                          );
-                        })}
-                      </div>
+                  {/* Expanded Section When Color is Selected */}
+                  {isSelected && (
+                    <div className="lp-variant-expanded">
+                      {/* Sizes Chips Grid */}
+                      {sizes.length > 0 ? (
+                        <div className="lp-variant-sizes-section">
+                          <div className="lp-variant-sizes-label">সাইজ নির্বাচন করুন:</div>
+                          <div className="lp-variant-sizes-grid">
+                            {sizes.map((size) => {
+                              const isSizeActive = (colorSizes[size] ?? 0) > 0;
+                              return (
+                                <button
+                                  key={size}
+                                  type="button"
+                                  className={`lp-size-chip${isSizeActive ? " active" : ""}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleSizeForColor(color.id, size);
+                                  }}
+                                >
+                                  {size}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {/* Individual Quantity Counters For Each Selected Size */}
+                          {selectedSizeKeys.length > 0 && (
+                            <div className="lp-size-qty-list">
+                              {selectedSizeKeys.map((size) => {
+                                const qty = colorSizes[size] || 1;
+                                return (
+                                  <div key={size} className="lp-size-qty-row">
+                                    <span className="lp-size-qty-title">{size} সাইজ পরিমাণ:</span>
+                                    <div className="lp-size-qty-controls">
+                                      <button
+                                        type="button"
+                                        className="lp-qty-btn minus"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          updateSizeQtyForColor(color.id, size, -1);
+                                        }}
+                                        aria-label="Decrease"
+                                      >
+                                        −
+                                      </button>
+                                      <span className="lp-qty-num">{qty}</span>
+                                      <button
+                                        type="button"
+                                        className="lp-qty-btn plus"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          updateSizeQtyForColor(color.id, size, 1);
+                                        }}
+                                        aria-label="Increase"
+                                      >
+                                        +
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        /* Quantity control when product has no specific sizes */
+                        <div className="lp-size-qty-list" style={{ marginTop: 10 }}>
+                          <div className="lp-size-qty-row">
+                            <span className="lp-size-qty-title">পরিমাণ:</span>
+                            <div className="lp-size-qty-controls">
+                              <button
+                                type="button"
+                                className="lp-qty-btn minus"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateColorOnlyQty(color.id, -1);
+                                }}
+                              >
+                                −
+                              </button>
+                              <span className="lp-qty-num">{selectedColorObj?.quantity ?? 1}</span>
+                              <button
+                                type="button"
+                                className="lp-qty-btn plus"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateColorOnlyQty(color.id, 1);
+                                }}
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               );
             })}
           </div>
-        </section>
-      )}
 
-      {/* ═══════════════════════════════════════════════════
-          SECTION 7B: SIZE SELECTION (Fallback for single/no color products)
-          ═══════════════════════════════════════════════════ */}
-      {!hasRealColors && sizes.length > 0 && (
-        <section className="lp-sizes">
-          <h3 className="lp-sizes-title">{bn.product.size}</h3>
-          <div className="lp-sizes-grid">
-            {sizes.map((size) => (
-              <button
-                key={size}
-                type="button"
-                className={`lp-size-chip${selectedSize === size ? " selected" : ""}`}
-                onClick={() => setSelectedSize(selectedSize === size ? "" : size)}
-                aria-pressed={selectedSize === size}
-              >
-                {size}
-              </button>
-            ))}
+          {/* Sticky/Bottom Summary Bar for Variants (from screenshot) */}
+          <div className="lp-variant-summary-bar">
+            <div className="lp-variant-summary-count">
+              নির্বাচিত: <strong>{totalItemCount} টি</strong>
+            </div>
+            <div className="lp-variant-summary-total">
+              ৳{subtotal.toLocaleString("bn-BD")}
+            </div>
           </div>
         </section>
       )}
 
       {/* ═══════════════════════════════════════════════════
-          DIVIDER
+          STANDALONE SIZES (For products without multi-colors)
           ═══════════════════════════════════════════════════ */}
-      <hr className="lp-divider" />
+      {!hasRealColors && sizes.length > 0 && (
+        <section className="lp-variants" id="lp-variant-section" ref={variantSectionRef}>
+          <div className="lp-step-header">
+            <div className="lp-step-badge">ধাপ ১</div>
+            <h2 className="lp-variants-title">📏 সাইজ ও পরিমাণ সিলেক্ট করুন</h2>
+            <p className="lp-variants-hint">পছন্দের সাইজ বাটনে ক্লিক করে পরিমাণ নির্ধারণ করুন</p>
+          </div>
+
+          <div className="lp-variant-sizes-section" style={{ background: "#fff", padding: 14, borderRadius: 12, border: "1.5px solid #e2e8f0" }}>
+            <div className="lp-variant-sizes-grid">
+              {sizes.map((size) => {
+                const isSizeActive = (selectedStandaloneSizes[size] ?? 0) > 0;
+                return (
+                  <button
+                    key={size}
+                    type="button"
+                    className={`lp-size-chip${isSizeActive ? " active" : ""}`}
+                    onClick={() => toggleStandaloneSize(size)}
+                  >
+                    {size}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Individual Quantity Counters */}
+            {Object.keys(selectedStandaloneSizes).length > 0 && (
+              <div className="lp-size-qty-list" style={{ marginTop: 12 }}>
+                {Object.keys(selectedStandaloneSizes).map((size) => {
+                  const qty = selectedStandaloneSizes[size] || 1;
+                  return (
+                    <div key={size} className="lp-size-qty-row">
+                      <span className="lp-size-qty-title">{size} সাইজ পরিমাণ:</span>
+                      <div className="lp-size-qty-controls">
+                        <button
+                          type="button"
+                          className="lp-qty-btn minus"
+                          onClick={() => updateStandaloneSizeQty(size, -1)}
+                        >
+                          −
+                        </button>
+                        <span className="lp-qty-num">{qty}</span>
+                        <button
+                          type="button"
+                          className="lp-qty-btn plus"
+                          onClick={() => updateStandaloneSizeQty(size, 1)}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="lp-variant-summary-bar">
+            <div className="lp-variant-summary-count">
+              নির্বাচিত: <strong>{totalItemCount} টি</strong>
+            </div>
+            <div className="lp-variant-summary-total">
+              ৳{subtotal.toLocaleString("bn-BD")}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Standalone Single Product Quantity (when no colors and no sizes) */}
+      {!hasRealColors && sizes.length === 0 && (
+        <section className="lp-variants" id="lp-variant-section" ref={variantSectionRef}>
+          <div className="lp-step-header">
+            <div className="lp-step-badge">ধাপ ১</div>
+            <h2 className="lp-variants-title">🔢 পরিমাণ সিলেক্ট করুন</h2>
+          </div>
+          <div className="lp-size-qty-list" style={{ background: "#fff", padding: 14, borderRadius: 12, border: "1.5px solid #e2e8f0" }}>
+            <div className="lp-size-qty-row">
+              <span className="lp-size-qty-title">পণ্যের পরিমাণ:</span>
+              <div className="lp-size-qty-controls">
+                <button
+                  type="button"
+                  className="lp-qty-btn minus"
+                  onClick={() => setStandaloneQty((p) => Math.max(1, p - 1))}
+                >
+                  −
+                </button>
+                <span className="lp-qty-num">{standaloneQty}</span>
+                <button
+                  type="button"
+                  className="lp-qty-btn plus"
+                  onClick={() => setStandaloneQty((p) => p + 1)}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 8: ORDER FORM (inline checkout)
+          STEP 2: DIRECT ORDER FORM (Checkout)
           ═══════════════════════════════════════════════════ */}
       <form onSubmit={submitOrder}>
         <section className="lp-order-form" ref={orderFormRef} id="lp-order-section">
-          <h2 className="lp-order-form-title">{bn.landing.orderFormTitle}</h2>
+          <div className="lp-step-header">
+            <div className="lp-step-badge">ধাপ ২</div>
+            <h2 className="lp-order-form-title">📦 ডেলিভারি তথ্য দিন ও অর্ডার কনফার্ম করুন</h2>
+            <p className="lp-variants-hint">সম্পূর্ণ ক্যাশ অন ডেলিভারি (পণ্য হাতে পেয়ে টাকা পরিশোধ করুন)</p>
+          </div>
 
           {/* Name */}
           <div className="lp-form-group">
             <label htmlFor="lp-name" className="lp-form-label">
-              {bn.landing.nameLabel}
+              আপনার পুরো নাম লিখুন <span style={{ color: "#e11d48" }}>*</span>
             </label>
             <input
               id="lp-name"
               type="text"
               className="lp-form-input"
-              placeholder={bn.landing.namePlaceholder}
+              placeholder="যেমন: আরিফ হাসান"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               required
@@ -641,13 +1070,13 @@ export function LandingProductPage({
           {/* Phone */}
           <div className="lp-form-group">
             <label htmlFor="lp-phone" className="lp-form-label">
-              {bn.landing.phoneLabel}
+              আপনার মোবাইল নম্বর লিখুন <span style={{ color: "#e11d48" }}>*</span>
             </label>
             <input
               id="lp-phone"
               type="tel"
               className="lp-form-input"
-              placeholder={bn.landing.phonePlaceholder}
+              placeholder="01XXXXXXXXX"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required
@@ -660,12 +1089,12 @@ export function LandingProductPage({
           {/* Address */}
           <div className="lp-form-group">
             <label htmlFor="lp-address" className="lp-form-label">
-              {bn.landing.addressLabel}
+              আপনার সম্পূর্ণ ঠিকানা লিখুন <span style={{ color: "#e11d48" }}>*</span>
             </label>
             <textarea
               id="lp-address"
               className="lp-form-textarea"
-              placeholder={bn.landing.addressPlaceholder}
+              placeholder="বাসা নং, রোড নং, এলাকা, থানা ও জেলা উল্লেখ করুন"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               required
@@ -677,7 +1106,7 @@ export function LandingProductPage({
 
           {/* Delivery Area */}
           <div className="lp-form-group">
-            <label className="lp-form-label">{bn.landing.deliveryAreaLabel}</label>
+            <label className="lp-form-label">ডেলিভারি এলাকা নির্বাচন করুন</label>
             <div className="lp-delivery-options">
               <button
                 type="button"
@@ -688,8 +1117,8 @@ export function LandingProductPage({
                 <div className="lp-delivery-radio">
                   <div className="lp-delivery-radio-dot" />
                 </div>
-                <span>{bn.landing.outsideDhaka}</span>
-                <span className="lp-delivery-fee">({DELIVERY_FEE_OUTSIDE_DHAKA} {bn.landing.taka})</span>
+                <span>ঢাকার বাইরে</span>
+                <span className="lp-delivery-fee">({DELIVERY_FEE_OUTSIDE_DHAKA} টাকা)</span>
               </button>
               <button
                 type="button"
@@ -700,66 +1129,52 @@ export function LandingProductPage({
                 <div className="lp-delivery-radio">
                   <div className="lp-delivery-radio-dot" />
                 </div>
-                <span>{bn.landing.insideDhaka}</span>
-                <span className="lp-delivery-fee">({DELIVERY_FEE_INSIDE_DHAKA} {bn.landing.taka})</span>
+                <span>ঢাকার ভিতরে</span>
+                <span className="lp-delivery-fee">({DELIVERY_FEE_INSIDE_DHAKA} টাকা)</span>
               </button>
             </div>
           </div>
         </section>
 
         {/* ═══════════════════════════════════════════════════
-            SECTION 9: ORDER SUMMARY
+            ORDER SUMMARY
             ═══════════════════════════════════════════════════ */}
         <div className="lp-summary">
-          <h3 className="lp-summary-title">{bn.landing.orderSummaryTitle}</h3>
+          <h3 className="lp-summary-title">অর্ডারের বিবরণ (Order Summary)</h3>
 
-          {/* Item list */}
-          {selectedColors.length > 0 ? (
-            <div className="lp-summary-items">
-              {selectedColors.map((c) => (
-                <div key={c.colorId} className="lp-summary-item">
-                  <span className="lp-summary-item-name">
-                    {detail.name} — {c.label}
-                    {c.size ? ` (${c.size})` : ""}
-                  </span>
-                  <span className="lp-summary-item-price">
-                    ৳{price.toLocaleString("bn-BD")}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : hasRealColors ? (
-            <div className="lp-summary-warning">{bn.landing.selectColorWarning}</div>
-          ) : (
-            <div className="lp-summary-items">
-              <div className="lp-summary-item">
+          {/* Itemized List */}
+          <div className="lp-summary-items">
+            {buildCartItems().map((it, idx) => (
+              <div key={idx} className="lp-summary-item">
                 <span className="lp-summary-item-name">
-                  {detail.name}
-                  {selectedSize ? ` (${selectedSize})` : ""}
+                  {it.name}
+                  {it.selectedColor ? ` — ${it.selectedColor}` : ""}
+                  {it.selectedSize ? ` (${it.selectedSize} সাইজ)` : ""}
+                  {" "}<strong>x{it.quantity}</strong>
                 </span>
                 <span className="lp-summary-item-price">
-                  ৳{price.toLocaleString("bn-BD")}
+                  ৳{((it.price || price) * it.quantity).toLocaleString("bn-BD")}
                 </span>
               </div>
-            </div>
-          )}
+            ))}
+          </div>
 
           <div className="lp-summary-row">
-            <span>{bn.checkout.subtotal}</span>
+            <span>মোট পণ্যের দাম (Subtotal)</span>
             <span>৳{subtotal.toLocaleString("bn-BD")}</span>
           </div>
           <div className="lp-summary-row">
-            <span>{bn.checkout.deliveryFee}</span>
+            <span>ডেলিভারি চার্জ (Delivery Fee)</span>
             <span>৳{deliveryFee.toLocaleString("bn-BD")}</span>
           </div>
           <div className="lp-summary-row total">
-            <span>{bn.checkout.totalPayable}</span>
+            <span>সর্বমোট প্রদেয় বিল (Total Payable)</span>
             <span>৳{total.toLocaleString("bn-BD")}</span>
           </div>
         </div>
 
         {/* ═══════════════════════════════════════════════════
-            ERROR
+            ERROR MESSAGE
             ═══════════════════════════════════════════════════ */}
         {error && (
           <div className="lp-error" role="alert">
@@ -768,7 +1183,7 @@ export function LandingProductPage({
         )}
 
         {/* ═══════════════════════════════════════════════════
-            SECTION 10: CONFIRM ORDER BUTTON
+            CONFIRM ORDER & ADD TO CART BUTTONS
             ═══════════════════════════════════════════════════ */}
         <div className="lp-confirm-wrap">
           <button
@@ -777,19 +1192,44 @@ export function LandingProductPage({
             disabled={submitting}
             id="lp-confirm-order-btn"
           >
-            {submitting ? bn.landing.confirming : bn.landing.confirmOrder}
+            {submitting ? "অর্ডার কনফার্ম হচ্ছে..." : "🛍️ অর্ডার কনফার্ম করুন (ক্যাশ অন ডেলিভারি)"}
+          </button>
+
+          <button
+            type="button"
+            className="lp-add-cart-bottom-btn"
+            onClick={handleAddToCart}
+            id="lp-bottom-add-to-cart-btn"
+          >
+            <span className="lp-btn-icon">🛒</span>
+            <span>কার্টে যোগ করুন (Add to Cart)</span>
           </button>
         </div>
-        <p className="lp-secure-note">{bn.landing.secureNote}</p>
+
+        {/* Reassurance Trust Box */}
+        <div className="lp-reassurance-box">
+          <div className="lp-reassurance-item">
+            <span className="lp-reassurance-icon">🛡️</span>
+            <span>১০০% ক্যাশ অন ডেলিভারি — আগে কোনো টাকা দেওয়া লাগবে না।</span>
+          </div>
+          <div className="lp-reassurance-item">
+            <span className="lp-reassurance-icon">📦</span>
+            <span>ডেলিভারি ম্যানের সামনে পার্সেল চেক করে টাকা পরিশোধ করতে পারবেন।</span>
+          </div>
+          <div className="lp-reassurance-item">
+            <span className="lp-reassurance-icon">🔄</span>
+            <span>কোনো সমস্যা হলে ৭ দিনের মধ্যে সহজ রিটার্ন ও এক্সচেঞ্জ সুবিধা।</span>
+          </div>
+        </div>
       </form>
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 11: RELATED PRODUCTS (4 items)
+          SECTION 6: RELATED PRODUCTS (4 items)
           ═══════════════════════════════════════════════════ */}
       {relatedProducts.length > 0 && (
         <section className="lp-related" style={{ marginTop: "32px", paddingTop: "24px", borderTop: "1px dashed var(--color-border)" }}>
           <h2 style={{ fontSize: "1.15rem", fontWeight: 700, marginBottom: "16px", textAlign: "center", color: "var(--color-text-primary)" }}>
-            🛍️ আরও কিছু চমৎকার পছন্দ (Related Products)
+            🛍️ আরও কিছু চমৎকার পছন্দ
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "12px" }}>
             {relatedProducts.map((rp) => (
@@ -800,7 +1240,7 @@ export function LandingProductPage({
                   display: "flex",
                   flexDirection: "column",
                   background: "#fff",
-                  border: "1px solid var(--color-border)",
+                  border: "1.5px solid var(--color-border)",
                   borderRadius: "12px",
                   overflow: "hidden",
                   textDecoration: "none",
@@ -819,7 +1259,7 @@ export function LandingProductPage({
                   <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-primary)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: 1.3 }}>
                     {rp.name}
                   </div>
-                  <div style={{ fontSize: "13.5px", fontWeight: 700, color: "var(--color-primary-dark)", marginTop: "auto" }}>
+                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#e11d48", marginTop: "auto" }}>
                     ৳{rp.price.toLocaleString("bn-BD")}
                   </div>
                 </div>
@@ -830,7 +1270,7 @@ export function LandingProductPage({
       )}
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 12: FAQ
+          SECTION 7: FAQ
           ═══════════════════════════════════════════════════ */}
       <section className="lp-faq">
         <h2 className="lp-faq-title">{bn.landing.faqTitle}</h2>
@@ -856,7 +1296,7 @@ export function LandingProductPage({
       </section>
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 13: CUSTOMER REVIEWS
+          SECTION 8: CUSTOMER REVIEWS
           ═══════════════════════════════════════════════════ */}
       <section className="lp-reviews">
         <h2 className="lp-reviews-title">{bn.landing.reviewsTitle}</h2>
@@ -875,22 +1315,51 @@ export function LandingProductPage({
       </section>
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 14: STATS BAR
+          MOBILE STICKY BOTTOM ACTION BAR (Conversion Booster)
           ═══════════════════════════════════════════════════ */}
-      <div className="lp-stats">
-        <div className="lp-stat">
-          <div className="lp-stat-value">{bn.landing.statsRating}</div>
-          <div className="lp-stat-label">{bn.landing.statsRatingLabel}</div>
+      <div className="lp-sticky-bottom-bar">
+        <div className="lp-sticky-left">
+          <div className="lp-sticky-label">
+            নির্বাচিত: <strong>{totalItemCount} টি</strong>
+          </div>
+          <div className="lp-sticky-price">
+            ৳{subtotal.toLocaleString("bn-BD")}
+          </div>
         </div>
-        <div className="lp-stat">
-          <div className="lp-stat-value">{bn.landing.statsCustomers}</div>
-          <div className="lp-stat-label">{bn.landing.statsCustomersLabel}</div>
-        </div>
-        <div className="lp-stat">
-          <div className="lp-stat-value">{bn.landing.statsPositive}</div>
-          <div className="lp-stat-label">{bn.landing.statsPositiveLabel}</div>
+        <div className="lp-sticky-actions">
+          <button
+            type="button"
+            className="lp-sticky-btn cart"
+            onClick={handleAddToCart}
+            title="কার্টে যোগ করুন"
+          >
+            🛒 কার্ট {globalCartCount > 0 ? `(${globalCartCount})` : ""}
+          </button>
+          <button
+            type="button"
+            className="lp-sticky-btn order"
+            onClick={scrollToOrder}
+          >
+            ⚡ অর্ডার করুন
+          </button>
         </div>
       </div>
+
+      {/* ═══════════════════════════════════════════════════
+          FLOATING WHATSAPP BUTTON
+          ═══════════════════════════════════════════════════ */}
+      <a
+        href={waUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="lp-floating-wa"
+        aria-label="Chat on WhatsApp"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+          <path d="M12 0C5.373 0 0 5.373 0 12c0 2.13.556 4.13 1.528 5.87L0 24l6.29-1.65A11.95 11.95 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75c-1.993 0-3.886-.54-5.545-1.56l-.398-.237-3.728.978.995-3.636-.26-.413A9.72 9.72 0 0 1 2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75z"/>
+        </svg>
+      </a>
     </div>
   );
 }

@@ -254,9 +254,25 @@ export async function listOrders(): Promise<Order[]> {
     mapOrderRow(row, itemsByOrderId.get(row.id) ?? [])
   );
 
-  // Merge any orders that exist in local backup if not in Supabase
+  // Merge any orders or courier tracking info that exist in local backup
   try {
     const localOrders = await readOrders();
+    const localMap = new Map(localOrders.map((o) => [o.id, o]));
+
+    // For any mapped order from Supabase that lacks courier info, augment with local data
+    for (const mo of mappedOrders) {
+      const lo = localMap.get(mo.id);
+      if (lo) {
+        if (!mo.consignmentId && lo.consignmentId) {
+          mo.consignmentId = lo.consignmentId;
+          mo.courier = lo.courier || mo.courier || "pathao";
+          mo.courierStatus = lo.courierStatus || mo.courierStatus || "Pending";
+          mo.courierDeliveryFee = lo.courierDeliveryFee ?? mo.courierDeliveryFee;
+          mo.courierTrackingUrl = lo.courierTrackingUrl || mo.courierTrackingUrl;
+        }
+      }
+    }
+
     const existingIds = new Set(mappedOrders.map((o) => o.id));
     for (const lo of localOrders) {
       if (!existingIds.has(lo.id)) {

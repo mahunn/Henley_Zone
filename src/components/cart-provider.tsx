@@ -10,6 +10,7 @@ interface CartContextValue {
     product: Product,
     opts?: { selectedColor?: string; selectedSize?: string }
   ) => void;
+  addCartItems: (newItems: CartItem[]) => void;
   buyNow: (
     product: Product,
     opts?: { selectedColor?: string; selectedSize?: string }
@@ -109,6 +110,35 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const addCartItems = (newItems: CartItem[]) => {
+    if (!newItems || newItems.length === 0) return;
+    setItems((prev) => {
+      const updated = [...prev];
+      for (const newItem of newItems) {
+        const itemKey =
+          newItem.key ||
+          makeItemKey(
+            newItem.productId,
+            newItem.selectedColor,
+            newItem.selectedSize
+          );
+        const existingIndex = updated.findIndex((item) => item.key === itemKey);
+        if (existingIndex !== -1) {
+          updated[existingIndex] = {
+            ...updated[existingIndex],
+            quantity: updated[existingIndex].quantity + (newItem.quantity || 1)
+          };
+        } else {
+          updated.push({
+            ...newItem,
+            key: itemKey
+          });
+        }
+      }
+      return updated;
+    });
+  };
+
   const buyNow = (
     product: Product,
     opts?: { selectedColor?: string; selectedSize?: string }
@@ -171,6 +201,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     () => ({
       items,
       addToCart,
+      addCartItems,
       buyNow,
       increaseQty,
       decreaseQty,

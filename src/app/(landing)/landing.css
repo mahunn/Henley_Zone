@@ -7,13 +7,13 @@
 /* ─── SiteHeader Overrides for Landing Page ─────────────────────────── */
 
 /* Hide main website distractions (topbar & links row) on landing pages */
-.topbar,
-.header-nav-links {
+body:has(.lp-page) .topbar,
+body:has(.lp-page) .header-nav-links {
   display: none !important;
 }
 
 /* Ensure sticky positioning for landing page */
-.main-header {
+body:has(.lp-page) .main-header {
   position: sticky !important;
   top: 0 !important;
 }
@@ -252,87 +252,294 @@
   margin-top: 2px;
 }
 
-/* ─── CTA Button ─────────────────────────────────────────────────── */
+/* ─── Toast Notification (Add to Cart Feedback) ─────────────────── */
 
-.lp-cta-wrap {
-  padding: 12px var(--page-gutter) 8px;
+.lp-toast-notification {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0f172a;
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 10000;
+  animation: lp-toast-slide-down 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  font-size: 13.5px;
+  font-weight: 600;
 }
 
-.lp-cta-btn {
+@keyframes lp-toast-slide-down {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -16px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.lp-toast-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lp-toast-icon {
+  font-size: 16px;
+}
+
+.lp-toast-link {
+  color: #38bdf8;
+  text-decoration: none;
+  font-weight: 700;
+  border-left: 1px solid #334155;
+  padding-left: 10px;
+}
+
+.lp-toast-link:hover {
+  text-decoration: underline;
+}
+
+/* ─── Dual Action Buttons (Order Now & Add to Cart) ─────────────── */
+
+.lp-action-buttons-wrap {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 10px;
+  padding: 14px var(--page-gutter) 10px;
+}
+
+.lp-action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  width: 100%;
-  padding: 16px 20px;
-  font-size: 1.15rem;
+  padding: 15px 12px;
+  font-size: 15px;
   font-weight: 700;
   font-family: var(--font-heading);
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #fff;
   cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  text-decoration: none;
+}
+
+.lp-action-btn:active {
+  transform: scale(0.97);
+}
+
+.lp-btn-order {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
   box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
-  transition: transform 0.18s, box-shadow 0.18s;
 }
 
-.lp-cta-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);
+.lp-btn-order:hover {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.45);
 }
 
-.lp-cta-btn:active {
-  transform: translateY(0);
+.lp-btn-cart {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1.5px solid #86efac;
 }
 
-/* ─── Phone / Call Section ───────────────────────────────────────── */
+.lp-btn-cart:hover {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.25);
+}
 
-.lp-call {
+.lp-btn-icon {
+  font-size: 17px;
+  flex-shrink: 0;
+}
+
+/* ─── Hotline / Call Banner ───────────────────────────────────────── */
+
+.lp-call-banner {
+  margin: 6px var(--page-gutter) 16px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   text-align: center;
-  padding: 14px var(--page-gutter) 16px;
 }
 
-.lp-call-label {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-  margin-bottom: 6px;
+.lp-call-banner-text {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #475569;
 }
 
-.lp-call-number {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  font-family: var(--font-heading);
-  margin-bottom: 10px;
-}
-
-.lp-call-btn {
+.lp-call-banner-btn {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 14px 32px;
-  font-size: 17px;
-  font-weight: 700;
-  font-family: var(--font-body);
-  border: none;
+  gap: 6px;
+  padding: 8px 18px;
+  background: #e11d48;
+  color: #ffffff;
   border-radius: 999px;
-  background: linear-gradient(135deg, #f43f5e, #e11d48);
-  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
   text-decoration: none;
-  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.3);
-  transition: transform 0.18s, box-shadow 0.18s;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.25);
+  transition: all 0.2s ease;
 }
 
-.lp-call-btn:hover {
+.lp-call-banner-btn:hover {
+  background: #be123c;
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(225, 29, 72, 0.4);
 }
 
-.lp-call-btn svg {
-  width: 18px;
-  height: 18px;
+/* ─── Step Header & Badges ───────────────────────────────────────── */
+
+.lp-step-header {
+  margin-bottom: 12px;
+}
+
+.lp-step-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: #fdf2f8;
+  color: #db2777;
+  border: 1px solid #fbcfe8;
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+/* ─── Reassurance Box (Trust & Safety) ───────────────────────────── */
+
+.lp-reassurance-box {
+  margin: 16px var(--page-gutter) 0;
+  padding: 14px 16px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lp-reassurance-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #166534;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.lp-reassurance-icon {
+  font-size: 15px;
+  flex-shrink: 0;
+  margin-top: -1px;
+}
+
+/* ─── Mobile Sticky Bottom Action Bar ─────────────────────────────── */
+
+.lp-sticky-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+  border-top: 1.5px solid #e2e8f0;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  z-index: 998;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.lp-sticky-left {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lp-sticky-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.lp-sticky-label strong {
+  color: #db2777;
+}
+
+.lp-sticky-price {
+  font-size: 17px;
+  font-weight: 800;
+  color: #db2777;
+  line-height: 1.1;
+}
+
+.lp-sticky-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.lp-sticky-btn {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.lp-sticky-btn.cart {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1.5px solid #86efac;
+}
+
+.lp-sticky-btn.cart:hover {
+  background: #16a34a;
+  color: #ffffff;
+  border-color: #16a34a;
+}
+
+.lp-sticky-btn.order {
+  background: linear-gradient(135deg, #db2777, #be185d);
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(219, 39, 119, 0.35);
+}
+
+.lp-sticky-btn.order:hover {
+  background: linear-gradient(135deg, #be185d, #9d174d);
+}
+
+/* Ensure padding at bottom of page for sticky bar */
+.lp-page {
+  padding-bottom: 76px;
 }
 
 /* ─── Minimal Landing Header ──────────────────────────────────────── */
@@ -398,39 +605,42 @@
   background-color: #f3f4f6;
 }
 
-/* ─── Trust Badges ───────────────────────────────────────────────── */
+/* ─── Trust Badges Top Banner (Screenshot Exact Layout) ───────────── */
 
-.lp-trust {
-  display: flex;
-  align-items: stretch;
-  justify-content: space-between;
+.lp-trust-banner {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  padding: 16px var(--page-gutter);
+  padding: 12px var(--page-gutter);
   background: #f8fafc;
-  border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
 }
 
-.lp-trust-item {
+.lp-trust-card {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background: #fff;
-  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 10px 4px;
-  flex: 1;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 700;
   color: #1e293b;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-  min-width: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   text-align: center;
 }
 
-.lp-trust-icon {
+.lp-trust-emoji {
+  font-size: 15px;
   flex-shrink: 0;
+}
+
+.lp-trust-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ─── Variant Selection Cards ────────────────────────────────────── */
@@ -439,18 +649,25 @@
   padding: 20px var(--page-gutter);
 }
 
+.lp-variants-header {
+  margin-bottom: 14px;
+}
+
 .lp-variants-title {
   font-family: var(--font-heading);
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: #0f172a;
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .lp-variants-hint {
   font-size: 13px;
-  color: var(--color-text-secondary);
-  margin-bottom: 14px;
+  color: #64748b;
+  margin: 0;
 }
 
 .lp-variant-list {
@@ -462,17 +679,17 @@
 .lp-variant-card {
   display: flex;
   flex-direction: column;
-  padding: 14px;
+  padding: 12px;
   border: 1.5px solid #e2e8f0;
   border-radius: 12px;
-  background: var(--color-surface);
-  transition: border-color 0.18s, box-shadow 0.18s, background-color 0.18s;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  user-select: none;
 }
 
 .lp-variant-card.selected {
-  border-color: #e11d48;
-  background-color: #fff;
-  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.05);
+  border-color: #db2777; /* Brand Pink/Magenta from Screenshot */
+  box-shadow: 0 0 0 1px #db2777, 0 4px 14px rgba(219, 39, 119, 0.08);
 }
 
 .lp-variant-card-header {
@@ -492,14 +709,14 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: border-color 0.18s, background-color 0.18s;
+  transition: all 0.18s ease;
   background: #fff;
   color: #fff;
 }
 
 .lp-variant-card.selected .lp-variant-checkbox {
-  background-color: #e11d48;
-  border-color: #e11d48;
+  background-color: #db2777;
+  border-color: #db2777;
 }
 
 .lp-variant-details {
@@ -518,7 +735,7 @@
   font-size: 13px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .lp-variant-price-original {
@@ -528,33 +745,39 @@
 }
 
 .lp-variant-price-current {
-  color: #e11d48;
+  color: #db2777;
   font-weight: 700;
   font-size: 16px;
 }
 
 .lp-variant-img {
-  width: 60px;
-  height: 72px;
+  width: 64px;
+  height: 76px;
   border-radius: 8px;
   object-fit: cover;
   object-position: top;
   flex-shrink: 0;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #f1f5f9;
 }
 
-/* Size selection inside variant card */
-.lp-variant-sizes {
+/* ─── Expanded Section in Selected Variant Card ───────────────────── */
+
+.lp-variant-expanded {
   margin-top: 14px;
   padding-top: 14px;
-  border-top: 1px dashed #e2e8f0;
+  border-top: 1px dashed #f1f5f9;
+}
+
+.lp-variant-sizes-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .lp-variant-sizes-label {
   font-size: 13.5px;
   font-weight: 600;
   color: #475569;
-  margin-bottom: 8px;
 }
 
 .lp-variant-sizes-grid {
@@ -563,47 +786,155 @@
   gap: 8px;
 }
 
-/* ─── Size Selection ─────────────────────────────────────────────── */
-
-.lp-sizes {
-  padding: 0 var(--page-gutter) 16px;
-}
-
-.lp-sizes-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin-bottom: 10px;
-}
-
-.lp-sizes-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
 .lp-size-chip {
-  padding: 8px 16px;
-  border: 1.5px solid #cbd5e1;
+  padding: 8px 14px;
+  border: 1.5px solid #e2e8f0;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 700;
-  background: #fff;
+  background: #ffffff;
   color: #334155;
   cursor: pointer;
-  transition: border-color 0.18s, background-color 0.18s, color 0.18s;
+  transition: all 0.18s ease;
   min-width: 44px;
   text-align: center;
 }
 
 .lp-size-chip:hover {
-  border-color: #e11d48;
+  border-color: #db2777;
 }
 
+.lp-size-chip.active,
 .lp-size-chip.selected {
-  border-color: #e11d48;
-  background-color: #fdf2f8;
-  color: #e11d48;
+  border-color: #db2777;
+  background-color: #fff;
+  color: #db2777;
+  box-shadow: 0 0 0 1px #db2777;
+}
+
+/* ─── Per-Size Quantity Controls (Exact Screenshot Layout) ────────── */
+
+.lp-size-qty-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 8px;
+}
+
+.lp-size-qty-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lp-size-qty-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.lp-size-qty-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+}
+
+.lp-qty-btn {
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.lp-qty-btn:hover {
+  border-color: #db2777;
+  color: #db2777;
+  background: #fdf2f8;
+}
+
+.lp-qty-btn:active {
+  transform: scale(0.94);
+}
+
+.lp-qty-num {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  min-width: 24px;
+  text-align: center;
+}
+
+/* ─── Variant Bottom Summary Bar (Exact Screenshot Layout) ─────────── */
+
+.lp-variant-summary-bar {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: #fdf2f8;
+  border: 1px dashed #f472b6;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lp-variant-summary-count {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.lp-variant-summary-count strong {
+  color: #db2777;
+  font-weight: 700;
+}
+
+.lp-variant-summary-total {
+  font-size: 18px;
+  font-weight: 800;
+  color: #db2777;
+}
+
+/* ─── Floating WhatsApp Button (Screenshot Match) ─────────────────── */
+
+.lp-floating-wa {
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #25d366;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 18px rgba(37, 211, 102, 0.4);
+  z-index: 999;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lp-floating-wa:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 24px rgba(37, 211, 102, 0.5);
+}
+
+.lp-floating-wa svg {
+  width: 32px;
+  height: 32px;
 }
 
 /* ─── Order Form ─────────────────────────────────────────────────── */
@@ -811,6 +1142,39 @@
 .lp-confirm-btn:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+.lp-add-cart-bottom-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 15px 20px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-family: var(--font-heading);
+  border: 2px solid #16a34a;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #16a34a;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(22, 163, 74, 0.12);
+  transition: all 0.18s ease;
+  margin-top: 10px;
+  user-select: none;
+}
+
+.lp-add-cart-bottom-btn:hover {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #ffffff;
+  border-color: #16a34a;
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.35);
+  transform: translateY(-1px);
+}
+
+.lp-add-cart-bottom-btn:active {
+  transform: scale(0.98);
 }
 
 .lp-secure-note {

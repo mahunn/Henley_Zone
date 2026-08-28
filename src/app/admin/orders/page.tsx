@@ -582,6 +582,23 @@ export default function AdminOrdersPage() {
 
       setDispatchSuccess(`Success! Consignment ID: ${data.consignmentId}`);
       showToast(`Booked Pathao Parcel: ${data.consignmentId}`);
+
+      // Optimistically update table state immediately
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === dispatchModalOrder.id
+            ? {
+                ...o,
+                consignmentId: data.consignmentId,
+                courier: "pathao",
+                courierStatus: data.orderStatus || "Pending",
+                courierDeliveryFee: data.deliveryFee,
+                courierTrackingUrl: `https://pathao.com/courier/tracking/?consignment_id=${encodeURIComponent(data.consignmentId)}`
+              }
+            : o
+        )
+      );
+
       await loadOrders();
 
       setTimeout(() => {

@@ -23,6 +23,11 @@ create table if not exists orders (
   total integer not null,
   payment_method text not null check (payment_method in ('COD')),
   status text not null default 'pending' check (status in ('pending', 'confirmed', 'delivered', 'cancelled')),
+  courier text,
+  consignment_id text,
+  courier_tracking_url text,
+  courier_status text default 'Pending',
+  courier_delivery_fee numeric,
   created_at timestamptz not null default now()
 );
 
