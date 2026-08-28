@@ -47,6 +47,23 @@ export async function writeOrder(order: Order): Promise<void> {
   }
 }
 
+export async function updateOrderInFile(updatedOrder: Order): Promise<boolean> {
+  try {
+    const all = await readOrders();
+    const index = all.findIndex((order) => order.id === updatedOrder.id);
+    if (index === -1) {
+      all.unshift(updatedOrder);
+    } else {
+      all[index] = { ...all[index], ...updatedOrder };
+    }
+    await fs.writeFile(ordersPath, JSON.stringify(all, null, 2), "utf8");
+    return true;
+  } catch (err) {
+    console.error("Local order full update error:", err);
+    return false;
+  }
+}
+
 export async function updateOrderStatus(
   orderId: string,
   status: Order["status"]

@@ -9,6 +9,7 @@ import {
 } from "@/lib/courier-export";
 import { IconSpinner, IconTruck } from "@/components/admin/admin-icons";
 import { CartItem, Order } from "@/types/commerce";
+import { EditOrderModal } from "./edit-order-modal";
 
 interface PathaoStore {
   store_id: number;
@@ -132,6 +133,10 @@ export default function AdminOrdersPage() {
   const [dispatchError, setDispatchError] = useState("");
   const [dispatchSuccess, setDispatchSuccess] = useState("");
 
+  // Edit Order Modal State
+  const [editOrder, setEditOrder] = useState<Order | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   // Notification Toast
   const [toastMessage, setToastMessage] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
 
@@ -141,6 +146,56 @@ export default function AdminOrdersPage() {
       setToastMessage(null);
     }, 4000);
   }, []);
+
+  const openEditModal = (order: Order) => {
+    setEditOrder(order);
+    setIsEditModalOpen(true);
+  };
+
+  const handleOrderSaved = (updatedOrder: Order) => {
+    setOrders((prev) => {
+      const existing = prev.find((o) => o.id === updatedOrder.id);
+      if (existing) {
+        return prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o));
+      }
+      return [updatedOrder, ...prev];
+    });
+    showToast(`Order #${updatedOrder.id} updated successfully!`);
+    void loadOrders();
+  };
+
+  const handleOrderDeleted = (orderId: string) => {
+    setOrders((prev) => prev.filter((o) => o.id !== orderId));
+    showToast(`Order #${orderId} deleted.`);
+  };
+
+  const handleCreateNewOrder = () => {
+    const newOrderTemplate: Order = {
+      id: `ORD-${Date.now().toString().slice(-6)}`,
+      customerName: "",
+      phone: "",
+      address: "",
+      items: [
+        {
+          key: `item_${Date.now()}`,
+          productId: "custom",
+          name: "Henley Zone Apparel",
+          price: 550,
+          quantity: 1,
+          selectedColor: "Maroon",
+          selectedSize: "42"
+        }
+      ],
+      subtotal: 550,
+      deliveryFee: 130,
+      total: 680,
+      paymentMethod: "COD",
+      status: "pending",
+      createdAt: new Date().toISOString()
+    };
+    setEditOrder(newOrderTemplate);
+    setIsEditModalOpen(true);
+  };
 
   const verify = useCallback(async () => {
     try {
@@ -902,7 +957,7 @@ export default function AdminOrdersPage() {
         {/* + Create Order (Blue) */}
         <button
           type="button"
-          onClick={() => alert("To place a manual order, use the checkout page or create an order via website.")}
+          onClick={handleCreateNewOrder}
           style={{
             padding: "7px 12px",
             background: "#0284C7",
@@ -1528,25 +1583,44 @@ export default function AdminOrdersPage() {
 
                     {/* Actions */}
                     <td style={{ padding: "10px 12px", verticalAlign: "top", textAlign: "center" }}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedOrderIds(new Set([order.id]));
-                          setTimeout(handlePrintSelected, 50);
-                        }}
-                        style={{
-                          padding: "3px 6px",
-                          background: "#F1F5F9",
-                          border: "1px solid #CBD5E1",
-                          borderRadius: 4,
-                          fontSize: 11,
-                          cursor: "pointer",
-                          fontWeight: 600
-                        }}
-                        title="Print Invoice"
-                      >
-                        🖨 Print
-                      </button>
+                      <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
+                        <button
+                          type="button"
+                          onClick={() => openEditModal(order)}
+                          style={{
+                            padding: "3px 8px",
+                            background: "#E0F2FE",
+                            color: "#0369A1",
+                            border: "1px solid #BAE6FD",
+                            borderRadius: 4,
+                            fontSize: 11,
+                            cursor: "pointer",
+                            fontWeight: 700
+                          }}
+                          title="Edit Customer, Items, Price & Courier"
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedOrderIds(new Set([order.id]));
+                            setTimeout(handlePrintSelected, 50);
+                          }}
+                          style={{
+                            padding: "3px 6px",
+                            background: "#F1F5F9",
+                            border: "1px solid #CBD5E1",
+                            borderRadius: 4,
+                            fontSize: 11,
+                            cursor: "pointer",
+                            fontWeight: 600
+                          }}
+                          title="Print Invoice"
+                        >
+                          🖨
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -1945,6 +2019,18 @@ export default function AdminOrdersPage() {
           </div>
         </div>
       )}
+
+      {/* ── EDIT ORDER MODAL ── */}
+      <EditOrderModal
+        order={editOrder}
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditOrder(null);
+        }}
+        onSaved={handleOrderSaved}
+        onDelete={handleOrderDeleted}
+      />
     </main>
   );
 }

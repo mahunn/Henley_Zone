@@ -2,6 +2,7 @@ import {
   deleteOrderFromFile,
   readOrders,
   updateOrderCourierInFile,
+  updateOrderInFile,
   updateOrderStatus as updateOrderStatusInFile,
   writeOrder
 } from "@/lib/orders-store";
@@ -284,6 +285,56 @@ export async function listOrders(): Promise<Order[]> {
   }
 
   return mappedOrders.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+}
+
+export async function updateOrderDetails(
+  updatedOrder: Order
+): Promise<{ updated: boolean; reason?: string; order?: Order }> {
+  // Update local file backup
+  await updateOrderInFile(updatedOrder);
+
+  // Sync status to Google Sheet
+  if (updatedOrder.status) {
+    void syncOrderStatusToGoogleSheet(updatedOrder.id, updatedOrder.status);
+  }
+
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) {
+    return { updated: true, order: updatedOrder };
+  }
+
+  try {
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        customer_name: updatedOrder.customerName,
+        phone: updatedOrder.phone,
+        address: updatedOrder.address,
+        items: updatedOrder.items,
+        subtotal: updatedOrder.subtotal,
+        delivery_fee: updatedOrder.deliveryFee,
+        total: updatedOrder.total,
+        payment_method: updatedOrder.paymentMethod,
+        status: updatedOrder.status,
+        note: updatedOrder.note,
+        courier: updatedOrder.courier,
+        consignment_id: updatedOrder.consignmentId,
+        courier_tracking_url: updatedOrder.courierTrackingUrl,
+        courier_status: updatedOrder.courierStatus,
+        courier_delivery_fee: updatedOrder.courierDeliveryFee
+      })
+      .eq("id", updatedOrder.id)
+      .select("id")
+      .limit(1);
+
+    if (error) {
+      console.error("Supabase updateOrderDetails error:", error);
+    }
+  } catch (err) {
+    console.error("Supabase updateOrderDetails exception:", err);
+  }
+
+  return { updated: true, order: updatedOrder };
 }
 
 export async function updateOrderStatus(

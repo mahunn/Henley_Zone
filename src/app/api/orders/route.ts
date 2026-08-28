@@ -4,6 +4,7 @@ import {
   createOrder,
   deleteOrder,
   listOrders,
+  updateOrderDetails,
   updateOrderStatus
 } from "@/lib/orders-repository";
 import { markLeadAsConverted } from "@/lib/leads-repository";
@@ -109,6 +110,50 @@ export async function PATCH(request: Request) {
   } catch {
     return NextResponse.json(
       { message: "Failed to update order status." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    if (!(await isAdminAuthorized())) {
+      return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
+    }
+
+    const body = (await request.json()) as Order;
+
+    if (!body?.id || !body.customerName?.trim() || !body.phone?.trim() || !body.address?.trim()) {
+      return NextResponse.json(
+        { message: "Customer name, phone, and address are required." },
+        { status: 400 }
+      );
+    }
+
+    const cleanedPhone = normalizePhoneNumber(body.phone);
+    const updatedOrder: Order = {
+      ...body,
+      customerName: body.customerName.trim(),
+      phone: cleanedPhone,
+      address: body.address.trim(),
+      note: body.note?.trim() || undefined
+    };
+
+    const result = await updateOrderDetails(updatedOrder);
+    if (!result.updated) {
+      return NextResponse.json(
+        { message: result.reason || "Failed to update order." },
+        { status: 400 }
+      );
+    }
+
+    return withAdminSessionRefresh(
+      NextResponse.json({ ok: true, order: result.order || updatedOrder })
+    );
+  } catch (err) {
+    console.error("PUT /api/orders error:", err);
+    return NextResponse.json(
+      { message: "Failed to update order details." },
       { status: 500 }
     );
   }
