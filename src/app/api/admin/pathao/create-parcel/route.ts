@@ -70,7 +70,7 @@ export async function POST(request: Request) {
       consignmentId: result.consignmentId,
       courierStatus: result.orderStatus || "Pending",
       courierDeliveryFee: result.deliveryFee,
-      courierTrackingUrl: `https://pathao.com/courier/tracking/?consignment_id=${encodeURIComponent(result.consignmentId)}`
+      courierTrackingUrl: `https://merchant.pathao.com/tracking?consignment_id=${encodeURIComponent(result.consignmentId)}`
     });
 
     return withAdminSessionRefresh(

@@ -648,7 +648,7 @@ export default function AdminOrdersPage() {
                 courier: "pathao",
                 courierStatus: data.orderStatus || "Pending",
                 courierDeliveryFee: data.deliveryFee,
-                courierTrackingUrl: `https://pathao.com/courier/tracking/?consignment_id=${encodeURIComponent(data.consignmentId)}`
+                courierTrackingUrl: `https://merchant.pathao.com/tracking?consignment_id=${encodeURIComponent(data.consignmentId)}`
               }
             : o
         )
@@ -1522,26 +1522,48 @@ export default function AdminOrdersPage() {
                               ● {order.courierStatus || "Pending"}
                             </span>
                           </div>
-                          <div style={{ fontSize: 10, color: "#64748B" }}>
-                            ID: <strong>{order.consignmentId}</strong>
+                          <div style={{ fontSize: 10, color: "#64748B", marginBottom: 4 }}>
+                            ID: <strong style={{ fontFamily: "monospace", color: "#0F172A" }}>{order.consignmentId}</strong>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => openLiveTrack(order.consignmentId!, order.id)}
-                            style={{
-                              marginTop: 4,
-                              fontSize: 10,
-                              padding: "2px 6px",
-                              background: "#F1F5F9",
-                              border: "1px solid #CBD5E1",
-                              borderRadius: 4,
-                              cursor: "pointer",
-                              color: "#0284C7",
-                              fontWeight: 600
-                            }}
-                          >
-                            🔍 Live Track
-                          </button>
+                          <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                            <button
+                              type="button"
+                              onClick={() => openLiveTrack(order.consignmentId!, order.id)}
+                              style={{
+                                fontSize: 10,
+                                padding: "2px 6px",
+                                background: "#E0F2FE",
+                                border: "1px solid #BAE6FD",
+                                borderRadius: 4,
+                                cursor: "pointer",
+                                color: "#0369A1",
+                                fontWeight: 700
+                              }}
+                              title="Check live parcel status from Pathao"
+                            >
+                              🔍 Live Status
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(order.consignmentId!);
+                                showToast(`Consignment ID ${order.consignmentId} copied!`);
+                              }}
+                              style={{
+                                fontSize: 10,
+                                padding: "2px 6px",
+                                background: "#F1F5F9",
+                                border: "1px solid #CBD5E1",
+                                borderRadius: 4,
+                                cursor: "pointer",
+                                color: "#475569",
+                                fontWeight: 600
+                              }}
+                              title="Copy Consignment ID"
+                            >
+                              📋 Copy
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         <div>
@@ -1948,28 +1970,65 @@ export default function AdminOrdersPage() {
               </button>
             </div>
 
-            <div style={{ background: "#F8FAFC", padding: 12, borderRadius: 8, marginBottom: 16, border: "1px solid #E2E8F0" }}>
-              <div style={{ fontSize: 13, marginBottom: 4 }}>
-                <strong>Consignment ID:</strong> {trackModalConsignment.consignmentId}
+            <div style={{ background: "#F8FAFC", padding: "12px 14px", borderRadius: 8, marginBottom: 16, border: "1px solid #E2E8F0" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <div style={{ fontSize: 13 }}>
+                  <span style={{ color: "#64748B" }}>Consignment ID:</span>{" "}
+                  <strong style={{ fontFamily: "monospace", fontSize: 14, color: "#0284C7" }}>
+                    {trackModalConsignment.consignmentId}
+                  </strong>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(trackModalConsignment.consignmentId);
+                    showToast("Consignment ID copied to clipboard!");
+                  }}
+                  style={{
+                    padding: "3px 8px",
+                    background: "#E0F2FE",
+                    color: "#0369A1",
+                    border: "1px solid #BAE6FD",
+                    borderRadius: 4,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: "pointer"
+                  }}
+                >
+                  📋 Copy ID
+                </button>
               </div>
               {trackModalConsignment.orderId && (
-                <div style={{ fontSize: 13 }}>
+                <div style={{ fontSize: 12, color: "#475569" }}>
                   <strong>Order ID:</strong> {trackModalConsignment.orderId}
                 </div>
               )}
             </div>
 
             {loadingTrack ? (
-              <div style={{ textAlign: "center", padding: "20px 0", color: "#64748B", fontSize: 13 }}>
-                <IconSpinner size={24} />
-                <div style={{ marginTop: 8 }}>Fetching live tracking from Pathao...</div>
+              <div style={{ textAlign: "center", padding: "24px 0", color: "#64748B", fontSize: 13 }}>
+                <IconSpinner size={26} />
+                <div style={{ marginTop: 10, fontWeight: 600 }}>Connecting to Pathao API server...</div>
               </div>
             ) : liveTrackingInfo ? (
               <div style={{ fontSize: 13, lineHeight: 1.6 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #E2E8F0" }}>
-                  <span style={{ color: "#64748B" }}>Order Status:</span>
-                  <span style={{ fontWeight: 700, color: "#0284C7" }}>
-                    {String(liveTrackingInfo.order_status || "Pending")}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #E2E8F0" }}>
+                  <span style={{ color: "#64748B", fontWeight: 600 }}>Live Status:</span>
+                  <span
+                    style={{
+                      fontWeight: 700,
+                      padding: "3px 10px",
+                      borderRadius: 12,
+                      background: String(liveTrackingInfo.order_status).toLowerCase().includes("delivered")
+                        ? "#DCFCE7"
+                        : "#E0F2FE",
+                      color: String(liveTrackingInfo.order_status).toLowerCase().includes("delivered")
+                        ? "#15803D"
+                        : "#0369A1",
+                      fontSize: 12
+                    }}
+                  >
+                    ● {String(liveTrackingInfo.order_status || "Pending")}
                   </span>
                 </div>
                 {liveTrackingInfo.payment_status ? (
@@ -1984,16 +2043,36 @@ export default function AdminOrdersPage() {
                     <span>{String(liveTrackingInfo.updated_at)}</span>
                   </div>
                 ) : null}
+
+                <div style={{ marginTop: 12, padding: "8px 10px", background: "#EFF6FF", borderRadius: 6, fontSize: 11, color: "#1E40AF" }}>
+                  💡 <strong>Merchant Note:</strong> This status is directly fetched from your Pathao account via API. You can also view details or manage riders directly in your Pathao Merchant Dashboard or App.
+                </div>
               </div>
             ) : (
-              <div style={{ color: "#991B1B", fontSize: 13, textAlign: "center", padding: "12px 0" }}>
-                Could not retrieve tracking details. Consignment might still be syncing.
+              <div style={{ color: "#991B1B", fontSize: 13, textAlign: "center", padding: "14px 0" }}>
+                Could not retrieve tracking details from Pathao. Consignment might still be syncing.
               </div>
             )}
 
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 20 }}>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
               <a
-                href={`https://pathao.com/courier/tracking/?consignment_id=${encodeURIComponent(trackModalConsignment.consignmentId)}`}
+                href="https://merchant.pathao.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  padding: "8px 14px",
+                  borderRadius: 6,
+                  background: "#16A34A",
+                  color: "#FFFFFF",
+                  textDecoration: "none",
+                  fontSize: 12,
+                  fontWeight: 700
+                }}
+              >
+                Pathao Merchant Panel ↗
+              </a>
+              <a
+                href={`https://merchant.pathao.com/tracking?consignment_id=${encodeURIComponent(trackModalConsignment.consignmentId)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -2006,7 +2085,7 @@ export default function AdminOrdersPage() {
                   fontWeight: 700
                 }}
               >
-                Open on Pathao ↗
+                Track on Merchant ↗
               </a>
               <button
                 type="button"
