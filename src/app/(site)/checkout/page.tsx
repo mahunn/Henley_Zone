@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
  
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -10,6 +10,7 @@ import { formatCurrency } from "@/lib/money";
 import { normalizePhoneNumber, isValidPhoneNumber } from "@/lib/phone-normalizer";
 import { Order } from "@/types/commerce";
 import { bn } from "@/config/ui-bn";
+import { trackInitiateCheckout } from "@/lib/meta-pixel";
  
 const DELIVERY_OPTIONS = [
   {
@@ -393,3 +394,4 @@ export default function CheckoutPage() {
     </div>
   );
 }
+

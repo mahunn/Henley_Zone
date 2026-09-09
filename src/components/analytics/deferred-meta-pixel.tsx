@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
@@ -20,8 +20,9 @@ export function DeferredMetaPixel() {
   if (!validPixelId) return null;
 
   if (isProductPage) {
-    return <MetaFacebookPixel pixelId={validPixelId} testEventCode={testEventCode} strategy="lazyOnload" />;
+    return <MetaFacebookPixel pixelId={validPixelId} testEventCode={testEventCode} strategy="afterInteractive" />;
   }
 
   return <MetaFacebookPixel pixelId={validPixelId} testEventCode={testEventCode} strategy="afterInteractive" />;
 }
+

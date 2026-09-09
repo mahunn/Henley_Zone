@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { CartItem, Product } from "@/types/commerce";
 import { seedProducts } from "@/data/seed-products";
+import { trackAddToCart, trackMetaEvent } from "@/lib/meta-pixel";
 
 interface CartContextValue {
   items: CartItem[];
@@ -223,4 +224,5 @@ export function useCart() {
   }
   return ctx;
 }
+
 

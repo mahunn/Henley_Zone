@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -8,6 +8,7 @@ import { bn } from "@/config/ui-bn";
 import { formatOrderItemLabel } from "@/lib/format-order-line";
 import { formatCurrency } from "@/lib/money";
 import { Order } from "@/types/commerce";
+import { trackPurchase } from "@/lib/meta-pixel";
 
 function statusLabel(status: Order["status"]) {
   if (status === "pending") return bn.success.statusPending;
@@ -137,3 +138,4 @@ export default function CheckoutSuccessPage() {
     </main>
   );
 }
+

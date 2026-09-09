@@ -1,6 +1,6 @@
-Add-Type -AssemblyName System.IO.Compression.FileSystem
+﻿Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-$zipPath = "e:\WEB-DEV-Business\Henley_Zone_Arif\cpanel-deploy-small.zip"
+$zipPath = Join-Path (Get-Location).Path "cpanel-deploy-small.zip"
 if (Test-Path $zipPath) { Remove-Item -Force $zipPath }
 
 $zip = [System.IO.Compression.ZipFile]::Open($zipPath, 'Create')
@@ -23,4 +23,4 @@ foreach ($item in $items) {
 }
 $zip.Dispose()
 $sizeMB = ((Get-Item $zipPath).Length / 1MB).ToString("0.00")
-Write-Host "ZIP_CREATED_SUCCESS: $sizeMB MB"
+Write-Host "ZIP_CREATED_SUCCESS: $sizeMB MB at $zipPath"

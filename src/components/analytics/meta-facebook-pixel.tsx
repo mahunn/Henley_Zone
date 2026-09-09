@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Script from "next/script";
 import { usePathname } from "next/navigation";
@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef } from "react";
 declare global {
   interface Window {
     fbq?: (...args: unknown[]) => void;
+    _fbq_initialized?: boolean;
   }
 }
 
@@ -21,26 +22,28 @@ type Props = {
  * Meta Pixel — inline script via `dangerouslySetInnerHTML` (reliable with Next 15 + Turbopack).
  * `pixelId` must be supplied from the server layout after reading `NEXT_PUBLIC_META_PIXEL_ID`.
  */
-export function MetaFacebookPixel({ pixelId, testEventCode, strategy = "afterInteractive" }: Props) {
+export function MetaFacebookPixel({ pixelId, strategy = "afterInteractive" }: Props) {
   const pathname = usePathname();
   const skipNextRoutePageView = useRef(true);
 
   const initSnippet = useMemo(() => {
     if (!pixelId) return "";
     return `
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', ${JSON.stringify(pixelId)});
-${testEventCode ? `fbq('set', 'test_event_code', ${JSON.stringify(testEventCode)}, ${JSON.stringify(pixelId)});` : ""}
-fbq('track', 'PageView');
+if (!window._fbq_initialized) {
+  window._fbq_initialized = true;
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', ${JSON.stringify(pixelId)});
+  fbq('track', 'PageView');
+}
 `.trim();
-  }, [pixelId, testEventCode]);
+  }, [pixelId]);
 
   useEffect(() => {
     if (!pixelId || typeof window === "undefined" || !window.fbq) return;

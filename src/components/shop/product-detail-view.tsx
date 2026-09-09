@@ -1,6 +1,7 @@
-"use client";
+﻿"use client";
 
-import { useState, useLayoutEffect } from "react";
+import { useState, useLayoutEffect, useEffect } from "react";
+import { trackViewContent } from "@/lib/meta-pixel";
 import { useCart } from "@/components/cart-provider";
 import { useWishlist } from "@/components/wishlist-provider";
 import { useRouter } from "next/navigation";
@@ -587,3 +588,4 @@ export function ProductDetailView({
     </div>
   );
 }
+

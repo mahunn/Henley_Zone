@@ -1,4 +1,4 @@
-# Henley Zone Architecture, Deployment & Memory Guide (A-Z)
+﻿# Henley Zone Architecture, Deployment & Memory Guide (A-Z)
 
 This document contains the complete technical architecture, configuration details, root-cause troubleshooting log, and step-by-step cPanel deployment protocol for the **Henley Zone** e-commerce platform.
 
@@ -11,10 +11,11 @@ This document contains the complete technical architecture, configuration detail
 - **Database & Auth**: Supabase (PostgreSQL) for store data + Custom HMAC Signed Cookie Authentication for Admin Panel.
 - **Caching**: Local memory cache fallback (`cache-handler.js`) + optional Redis integration.
 - **Image Optimization**: `unoptimized: true` in `next.config.ts` (tailored for cPanel static serving / Cloudinary / Supabase).
+- **Tracking**: Meta (Facebook) Pixel with standard eCommerce events (`PageView`, `ViewContent`, `AddToCart`, `InitiateCheckout`, `Purchase`).
 
 ---
 
-## 2. Root Cause Analysis: What Caused the 500 Internal Server Error & How It Was Fixed
+## 2. Root Cause Analysis & Historical Troubleshooting Log
 
 ### Issue 1: `server.js` Defaulted to Development Mode (`dev: true`)
 - **Problem**: On cPanel Node.js Selector, `process.env.NODE_ENV` is empty by default. `const dev = process.env.NODE_ENV !== "production"` evaluated to `true`, causing Next.js to start in **Development Mode** on cPanel. Development mode attempted on-demand Webpack/Turbopack compilation on shared hosting, exceeding RAM/CPU limits and failing with 500 Internal Server Error.
@@ -32,56 +33,81 @@ This document contains the complete technical architecture, configuration detail
 - **Problem**: Extracting zip files on cPanel set directory permissions on `.next/static` or `.next/server` to restricted (`0700`), preventing Passenger from reading `.next/BUILD_ID` and static chunks.
 - **Fix**: Ran `fix-permissions.php` (sets directories to `0755` and files to `0644`).
 
-### Issue 5: Oversized Upload Packages (495 MB)
-- **Problem**: Zipping `.next` without excluding `.next/cache` created a 495 MB zip file that timed out during cPanel upload.
-- **Fix**: Created `scripts/make-small-zip.ps1` which excludes `.next/cache` and `.next/dev`, producing a lightweight **17.63 MB** zip (`cpanel-deploy-small.zip`).
+### Issue 5: Oversized Upload Packages (495 MB) & Hardcoded Script Path
+- **Problem**: Zipping `.next` without excluding `.next/cache` created a 495 MB zip file that timed out during cPanel upload. The script also had a hardcoded path from an older machine.
+- **Fix**: Updated `scripts/make-small-zip.ps1` to use dynamic relative path `Join-Path (Get-Location).Path "cpanel-deploy-small.zip"` and filter out `.next/cache` & `.next/dev`, producing a clean ~18 MB deploy zip.
+
+### Issue 6: Local Catalog Image 404s on New Laptop Setup
+- **Problem**: Product photos in production are saved to local server disk (`/uploads/catalog/...`) and `.gitignore` intentionally excludes them. On a new machine, `public/uploads/catalog/` is empty, causing 404 errors for every product image during `npm run dev`.
+- **Fix**: Added dynamic rewrites in `next.config.ts`:
+  ```typescript
+  async rewrites() {
+    if (process.env.NODE_ENV === "production") return [];
+    return [{ source: "/uploads/:path*", destination: "https://henleyzone.com/uploads/:path*" }];
+  }
+  ```
+  In local dev, any upload not found on the local filesystem automatically proxies to `https://henleyzone.com/uploads/...` with zero 404s.
+
+### Issue 7: Meta Pixel `test_event_code` Console Warning
+- **Problem**: In `meta-facebook-pixel.tsx`, code called `fbq('set', 'test_event_code', code, id)`. Meta's browser SDK printed `[Meta Pixel] - Unsupported metadata argument: test_event_code.` because `test_event_code` is strictly a Server-side Conversions API (CAPI) parameter, not supported by client `fbq('set')`.
+- **Fix**: Removed the unsupported `fbq('set', 'test_event_code')` call and commented out `NEXT_PUBLIC_META_PIXEL_TEST_EVENT_CODE` in `.env.local`.
+
+### Issue 8: Early `window.fbq` Stub Breaking Script Injection
+- **Problem**: Attempting to create a `window.fbq` queue stub in `meta-pixel.ts` caused official Meta snippet `!function(...) { if (f.fbq) return; ... }` to return early without injecting `fbevents.js`, resulting in "No Pixels found on this page".
+- **Fix**: Refactored `src/lib/meta-pixel.ts` to use an asynchronous polling dispatcher. It lets Meta's official snippet initialize `window.fbq` first, then dispatches queued events without interfering with the snippet's guard.
+
+### Issue 9: Multiple Pixels Conflicting Versions Warning
+- **Problem**: Next.js Fast Refresh or route changes re-ran the `<Script>` tag, causing multiple `fbq('init')` calls in the same browser session.
+- **Fix**: Added an idempotency flag `if (!window._fbq_initialized)` around the initialization block in `meta-facebook-pixel.tsx`.
 
 ---
 
-## 3. Standard cPanel Deployment Protocol (Step-by-Step)
+## 3. Meta Pixel Tracking Architecture
+
+Tracking is centralized in `src/lib/meta-pixel.ts`:
+- **`PageView`**: Fired on initial load and route changes by `meta-facebook-pixel.tsx`.
+- **`ViewContent`**: Fired in `product-detail-view.tsx` and `landing-product-page.tsx` on product mount with `id`, `name`, `price`, `category`, and `currency: "BDT"`.
+- **`AddToCart`**: Fired in `cart-provider.tsx` inside `addToCart` and `addCartItems`, capturing all store, landing, and card add-to-cart clicks.
+- **`InitiateCheckout`**: Fired in `checkout/page.tsx` when the customer enters checkout with items.
+- **`Purchase`**: Fired in `checkout/success/page.tsx` upon loading `latestOrder` from `localStorage`, with `sessionStorage` deduplication (`fb_purchased_<orderId>`) to prevent duplicate events on page reload.
+
+---
+
+## 4. Standard cPanel Deployment Protocol (Step-by-Step)
 
 Follow these exact steps for all future updates:
 
-### Step 1: Build & Zip Locally
+### Step 1: Build & Package Locally
 Run the following commands in the project directory:
-```bash
+```powershell
 npm run build
 powershell -ExecutionPolicy Bypass -File scripts/make-small-zip.ps1
 ```
-This generates `cpanel-deploy-small.zip` (~17 MB) in the project root.
+This outputs `cpanel-deploy-small.zip` (~18 MB) in the project root directory.
 
 ### Step 2: Upload to cPanel
 1. Open **cPanel > File Manager**.
-2. Go to site root: `/home/websybd/henleyzone.com/`.
+2. Navigate to your application root directory:
+   `/home/websybd/henleyzone.com/`
 3. Upload `cpanel-deploy-small.zip`.
-4. Select `cpanel-deploy-small.zip` and click **Extract** (overwrite files).
+4. Right-click `cpanel-deploy-small.zip` and click **Extract** (overwrite existing files).
+5. Delete `cpanel-deploy-small.zip` from cPanel to save space.
 
-### Step 3: Ensure Environment Variables Are Set
-In cPanel **Setup Node.js App** > **Environment Variables** (or in `.env.local`):
-- `ADMIN_DASHBOARD_USERNAME`
-- `ADMIN_DASHBOARD_PASSWORD`
-- `ADMIN_SESSION_SECRET`
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `UPLOAD_LOCAL=true`
-
-### Step 4: Fix Permissions & Restart
-1. Run `https://henleyzone.com/fix-permissions.php` once in browser.
-2. In cPanel **Setup Node.js App**, click **Restart Application**.
+### Step 3: Restart Application
+- In cPanel, navigate to **Setup Node.js App**.
+- Find `henleyzone.com` and click **Restart Application**.
+- *(Alternatively, create or touch an empty file at `/home/websybd/henleyzone.com/tmp/restart.txt`).*
 
 ---
 
-## 4. Admin Panel & Auth Reference
+## 5. Local Laptop Development Setup Reference
 
-- **Admin Login Route**: `/login?type=admin` (redirected from `/admin` when unauthenticated).
-- **Admin Dashboard**: `/admin`
-- **Catalog Management**: `/admin/products/manage`
-- **Add Product**: `/admin/products`
-- **Orders**: `/admin/orders`
-- **Checkout Leads**: `/admin/leads`
-- **Session Cookie**: `admin_session` (HMAC SHA-256 signed with `ADMIN_SESSION_SECRET`).
+- **Node.js**: Installed in `C:\Users\mahin\AppData\Local\Programs\nodejs` (`v22.23.2` LTS).
+- **Git**: Installed in `C:\Users\mahin\AppData\Local\Programs\Git\cmd` (`2.55.0`).
+- **PowerShell Execution Policy**: Set to `RemoteSigned` for `CurrentUser` to permit `npm.ps1`.
+- **Global Path & Wrappers**: User `PATH` updated permanently. CLI wrappers placed in `C:\Users\mahin\.gemini\antigravity-ide\bin`.
+- **Local Dev Server**: Run with `npm run dev` at `http://localhost:3000`.
 
 ---
 
-*Last Updated: July 26, 2026*
+*Last Updated: September 9, 2026*

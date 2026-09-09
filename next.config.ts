@@ -1,8 +1,18 @@
-import type { NextConfig } from "next";
+﻿import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Allow 50MB local memory cache to guarantee fast responses if Redis is unavailable
   cacheMaxMemorySize: 50 * 1024 * 1024,
+  async rewrites() {
+    // Only proxy uploads to live domain when running in local development
+    if (process.env.NODE_ENV === "production") return [];
+    return [
+      {
+        source: "/uploads/:path*",
+        destination: "https://henleyzone.com/uploads/:path*"
+      }
+    ];
+  },
   async headers() {
     return [
       {
@@ -45,5 +55,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-
-

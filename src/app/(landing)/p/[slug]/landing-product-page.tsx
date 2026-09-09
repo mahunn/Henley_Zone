@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,7 @@ import { bn } from "../../../../config/ui-bn";
 import { ProductImage } from "../../../../components/shop/product-image";
 import { useCart } from "../../../../components/cart-provider";
 import { normalizePhoneNumber, isValidPhoneNumber } from "../../../../lib/phone-normalizer";
+import { trackViewContent, trackInitiateCheckout } from "../../../../lib/meta-pixel";
 
 /* ── Types ───────────────────────────────────────────── */
 
@@ -40,6 +41,17 @@ export function LandingProductPage({
   const router = useRouter();
   const { addCartItems, itemCount: globalCartCount } = useCart();
   const detail = initialDetail;
+
+  useEffect(() => {
+    if (detail?.id) {
+      trackViewContent({
+        id: detail.id,
+        name: detail.name,
+        price: detail.price,
+        category: detail.categories?.[0]
+      });
+    }
+  }, [detail?.id, detail?.name, detail?.price]);
 
   /* ── Gallery state ─────────────────────────────────── */
   const [activeImg, setActiveImg] = useState(0);
@@ -1370,3 +1382,4 @@ export function LandingProductPage({
     </div>
   );
 }
+
