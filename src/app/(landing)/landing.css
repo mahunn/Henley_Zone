@@ -4,26 +4,16 @@
    Reuses CSS vars from globals.css (:root tokens).
    ───────────────────────────────────────────────────────────────────── */
 
-/* ─── SiteHeader Overrides for Landing Page ─────────────────────────── */
-
-/* Hide main website distractions (topbar & links row) on landing pages */
-body:has(.lp-page) .topbar,
-body:has(.lp-page) .header-nav-links {
-  display: none !important;
-}
-
-/* Ensure sticky positioning for landing page */
-body:has(.lp-page) .main-header {
-  position: sticky !important;
-  top: 0 !important;
-}
-
 /* ─── Page Container ─────────────────────────────────────────────── */
 
 .lp-page {
   max-width: 600px;
   margin: 0 auto;
   background: var(--color-surface);
+  box-sizing: border-box;
+  padding-left: max(0px, env(safe-area-inset-left, 0px));
+  padding-right: max(0px, env(safe-area-inset-right, 0px));
+  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ─── Image Gallery ──────────────────────────────────────────────── */
@@ -460,30 +450,39 @@ body:has(.lp-page) .main-header {
 .lp-sticky-bottom-bar {
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-top: 1.5px solid #e2e8f0;
-  padding: 10px 16px;
+  border-left: 1.5px solid #e2e8f0;
+  border-right: 1.5px solid #e2e8f0;
+  border-radius: 14px 14px 0 0;
+  padding: 8px 16px max(8px, env(safe-area-inset-bottom, 0px)) 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   z-index: 998;
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
+  box-sizing: border-box;
 }
 
 .lp-sticky-left {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  flex-shrink: 0;
 }
 
 .lp-sticky-label {
-  font-size: 11px;
+  font-size: 10.5px;
   color: #64748b;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .lp-sticky-label strong {
@@ -491,28 +490,44 @@ body:has(.lp-page) .main-header {
 }
 
 .lp-sticky-price {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 800;
   color: #db2777;
   line-height: 1.1;
+  white-space: nowrap;
 }
 
 .lp-sticky-actions {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
+  flex: 1;
+  justify-content: flex-end;
+  min-width: 0;
 }
 
 .lp-sticky-btn {
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: 8px;
-  font-size: 13.5px;
+  font-size: clamp(11.5px, 3.2vw, 13px);
   font-weight: 700;
   cursor: pointer;
   border: none;
   transition: all 0.18s ease;
   user-select: none;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+  flex: 1;
+  max-width: 145px;
+  min-width: 0;
+}
+
+.lp-sticky-btn:active {
+  transform: scale(0.97);
 }
 
 .lp-sticky-btn.cart {
@@ -537,9 +552,88 @@ body:has(.lp-page) .main-header {
   background: linear-gradient(135deg, #be185d, #9d174d);
 }
 
+@media (max-width: 640px) {
+  .lp-sticky-bottom-bar {
+    max-width: 100%;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    padding: 8px max(12px, env(safe-area-inset-right, 0px)) max(8px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+    gap: 8px;
+  }
+}
+
+@media (max-width: 375px) {
+  .lp-sticky-bottom-bar {
+    padding: 6px 8px max(6px, env(safe-area-inset-bottom, 0px)) 8px;
+    gap: 5px;
+  }
+  .lp-sticky-price {
+    font-size: 14.5px;
+  }
+  .lp-sticky-btn {
+    padding: 7px 6px;
+    font-size: 11px;
+    gap: 2px;
+  }
+}
+
+/* ─── Floating Cart Button (Scoped on landing page) ─── */
+.whatsapp-float {
+  position: fixed !important;
+  z-index: 997 !important;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s, color 0.2s;
+}
+
+/* On mobile (≤640px), where the bottom bar is 100% width, float cart safely above it */
+@media (max-width: 640px) {
+  .whatsapp-float {
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+    right: max(14px, calc(env(safe-area-inset-right, 0px) + 8px)) !important;
+    width: 48px !important;
+    height: 48px !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18) !important;
+  }
+  .whatsapp-float svg {
+    width: 22px !important;
+    height: 22px !important;
+  }
+}
+
+/* On desktop / laptop (>640px), place cart in the bottom-right corner with ample clearance */
+@media (min-width: 641px) {
+  .whatsapp-float {
+    bottom: 28px !important;
+    right: 28px !important;
+    width: 52px !important;
+    height: 52px !important;
+  }
+}
+
+.lp-cart-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #166534;
+}
+
+.lp-cart-notice-link {
+  color: #15803d;
+  font-weight: 700;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
 /* Ensure padding at bottom of page for sticky bar */
 .lp-page {
-  padding-bottom: 76px;
+  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ─── Minimal Landing Header ──────────────────────────────────────── */
@@ -1359,7 +1453,7 @@ body:has(.lp-page) .main-header {
 /* ─── Landing Footer ─────────────────────────────────────────────── */
 
 .lp-footer {
-  padding: 32px var(--page-gutter);
+  padding: 36px var(--page-gutter) calc(105px + env(safe-area-inset-bottom, 0px));
   background: #0f172a;
   border-top: 1px solid #1e293b;
   font-size: 13px;
@@ -1506,7 +1600,6 @@ body:has(.lp-page) .main-header {
     margin-top: 8px;
     margin-bottom: 24px;
     border-radius: 16px;
-    overflow: hidden;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
   }
 }
@@ -1520,12 +1613,6 @@ body:has(.lp-page) .main-header {
 .lp-form-input,
 .lp-form-textarea {
   font-size: 16px;
-}
-
-/* Smooth scrolling on the whole page */
-.lp-page {
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
 }
 
 /* Remove tap highlight on all interactive elements */
@@ -1599,19 +1686,10 @@ body:has(.lp-page) .main-header {
   padding-right: max(var(--page-gutter), env(safe-area-inset-right, 0px));
 }
 
-.lp-footer {
-  padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
-}
-
-.lp-whatsapp-float {
-  bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 12px));
-  right: max(16px, env(safe-area-inset-right, 0px));
-}
-
-/* Facebook/Messenger in-app browser viewport fix */
+/* Facebook/Messenger in-app browser viewport buffer for sticky bottom bar */
 @supports (padding: max(0px)) {
   .lp-page {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -1684,20 +1762,11 @@ body:has(.lp-page) .main-header {
 }
 
 /* Gallery swipe touch optimization */
+/* Gallery swipe touch optimization */
 .lp-gallery-main {
   touch-action: pan-y pinch-zoom;
   user-select: none;
   -webkit-user-select: none;
-}
-
-/* Prevent pull-to-refresh while swiping gallery */
-.lp-gallery {
-  overscroll-behavior: contain;
-}
-
-/* Smooth scroll behavior for "Order Now" button */
-html {
-  scroll-behavior: smooth;
 }
 
 /* Reduce motion for accessibility */

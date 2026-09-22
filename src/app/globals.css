@@ -59,9 +59,9 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  overflow-x: clip;
 }
 
-html,
 body {
   background: var(--color-bg);
   color: var(--color-text-primary);
@@ -70,8 +70,8 @@ body {
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: clip;
   max-width: 100%;
+  min-height: 100vh;
 }
 
 h1,
@@ -406,6 +406,20 @@ button {
 
 .icon-nav-btn.cart-icon-pop {
   animation: cartPop 0.26s ease;
+}
+
+.icon-nav-btn--whatsapp {
+  color: #16a34a;
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  transition: all 0.2s ease;
+}
+
+.icon-nav-btn--whatsapp:hover {
+  border-color: #22c55e;
+  color: #15803d;
+  background: #dcfce7;
+  transform: scale(1.06);
 }
 
 @keyframes cartPop {

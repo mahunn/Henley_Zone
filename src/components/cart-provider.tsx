@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { CartItem, Product } from "@/types/commerce";
@@ -146,18 +146,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   ) => {
     const selectedColor = opts?.selectedColor?.trim() || undefined;
     const selectedSize = opts?.selectedSize?.trim() || undefined;
-    setItems([
-      {
-        key: makeItemKey(product.id, selectedColor, selectedSize),
-        productId: product.id,
-        name: product.name,
-        price: product.price,
-        quantity: 1,
-        imageUrl: product.imageUrl,
-        selectedColor,
-        selectedSize
+    const itemKey = makeItemKey(product.id, selectedColor, selectedSize);
+
+    setItems((prev) => {
+      const existingIndex = prev.findIndex((item) => item.key === itemKey);
+      if (existingIndex !== -1) {
+        return prev;
       }
-    ]);
+      return [
+        ...prev,
+        {
+          key: itemKey,
+          productId: product.id,
+          name: product.name,
+          price: product.price,
+          quantity: 1,
+          imageUrl: product.imageUrl,
+          selectedColor,
+          selectedSize
+        }
+      ];
+    });
   };
 
   const increaseQty = (itemKey: string) => {

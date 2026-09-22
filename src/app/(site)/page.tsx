@@ -623,7 +623,7 @@ function HomePage({
               </div>
               <div>
                 <div className="trust-text-title">Easy Returns</div>
-                <div className="trust-text-sub">৩ দিনের মধ্যে রিটার্ন</div>
+                <div className="trust-text-sub">চেক করে তাৎক্ষণিক রিটার্ন</div>
               </div>
             </div>
           </div>

@@ -86,10 +86,10 @@ export default function ReturnPolicyPage() {
               <span style={{ fontSize: 20, flexShrink: 0, marginTop: 2 }}>✅</span>
               <div>
                 <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 4 }}>
-                  ৩ দিনের মধ্যে পরিবর্তনযোগ্য
+                  তাৎক্ষণিক চেক ও রিটার্ন/এক্সচেঞ্জ
                 </h3>
                 <p style={{ fontSize: 13.5, color: "var(--color-text-secondary)", lineHeight: 1.5 }}>
-                  ডেলিভারি পাওয়ার পর ৩ দিনের মধ্যে রিটার্ন অথবা এক্সচেঞ্জ রিকোয়েস্ট করতে পারবেন।
+                  ডেলিভারি পাওয়ার সময় ডেলিভারি ম্যানের সামনে পার্সেল চেক করে কোনো সমস্যা বা অমিল থাকলে সাথে সাথেই রিটার্ন অথবা এক্সচেঞ্জ করতে পারবেন।
                 </p>
               </div>
             </div>
