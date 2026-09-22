@@ -1,4 +1,4 @@
-﻿# Henley Zone Architecture, Deployment & Memory Guide (A-Z)
+# Henley Zone Architecture, Deployment & Memory Guide (A-Z)
 
 This document contains the complete technical architecture, configuration details, root-cause troubleshooting log, and step-by-step cPanel deployment protocol for the **Henley Zone** e-commerce platform.
 
@@ -60,6 +60,14 @@ This document contains the complete technical architecture, configuration detail
 - **Problem**: Next.js Fast Refresh or route changes re-ran the `<Script>` tag, causing multiple `fbq('init')` calls in the same browser session.
 - **Fix**: Added an idempotency flag `if (!window._fbq_initialized)` around the initialization block in `meta-facebook-pixel.tsx`.
 
+### Issue 10: WhatsApp Floating Button Overlap & Return Policy Realignment
+- **Problem**: Floating WhatsApp button at the bottom-right sat directly over the sticky "Order Now" button on mobile, interfering with conversions. Return policy was inconsistent across the site (7-day vs 3-day).
+- **Fix**: Moved WhatsApp button directly into the main site header (top-right replacing the old cart icon). Moved the floating cart button to the landing page with dynamic badge count. Elevated the floating cart button above the mobile sticky bottom bar (`bottom: calc(76px + env(...))`). Replaced all return policy text site-wide with "চেক করে তাৎক্ষণিক রিটার্ন/এক্সচেঞ্জ" (instant on-the-spot inspection upon delivery).
+
+### Issue 11: Laptop Trackpad Scroll Lock & Stretched Bottom Bar
+- **Problem**: On laptop/desktop screens (`>= 640px`), `.lp-page` had `overflow: hidden;`, trapping mouse wheel and touchpad precision scroll events and causing scrolling to feel stuck or broken. Additionally, `.lp-sticky-bottom-bar` spanned 100% width, pushing price to the far left under Next.js dev badges and buttons to the far right, while covering the footer credits (`Websy.bd`).
+- **Fix**: Removed `overflow: hidden;` and `-webkit-overflow-scrolling: touch;` from `.lp-page`. Bound `overflow-x: clip;` exclusively to `html`. Capped `.lp-sticky-bottom-bar` to `max-width: 600px; left: 50%; transform: translateX(-50%);` with rounded top corners for desktop/laptop, and added `105px` bottom padding to `.lp-footer` so all credits remain completely visible above the bar.
+
 ---
 
 ## 3. Meta Pixel Tracking Architecture
@@ -110,4 +118,4 @@ This outputs `cpanel-deploy-small.zip` (~18 MB) in the project root directory.
 
 ---
 
-*Last Updated: September 9, 2026*
+*Last Updated: September 22, 2026*
