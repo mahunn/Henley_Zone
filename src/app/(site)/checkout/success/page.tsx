@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -26,6 +26,26 @@ export default function CheckoutSuccessPage() {
     try {
       const parsed = JSON.parse(raw) as Order;
       setOrder(parsed);
+
+      if (parsed.id) {
+        const storageKey = `fb_purchased_${parsed.id}`;
+        if (!sessionStorage.getItem(storageKey)) {
+          const contentIds = (parsed.items || []).map((item) => item.productId);
+          const numItems = (parsed.items || []).reduce(
+            (sum, item) => sum + item.quantity,
+            0
+          );
+
+          trackPurchase({
+            orderId: parsed.id,
+            value: parsed.total,
+            content_ids: contentIds,
+            num_items: numItems,
+            currency: "BDT"
+          });
+          sessionStorage.setItem(storageKey, "1");
+        }
+      }
     } catch {
       setOrder(null);
     }

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Script from "next/script";
 import { usePathname } from "next/navigation";
@@ -44,6 +44,21 @@ if (!window._fbq_initialized) {
 }
 `.trim();
   }, [pixelId]);
+
+  // Capture `fbclid` from URL query to maintain first-party `_fbc` cookie for Meta CAPI
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const fbclid = searchParams.get("fbclid");
+      if (fbclid && !document.cookie.includes("_fbc=")) {
+        const creationTime = Date.now();
+        document.cookie = `_fbc=fb.1.${creationTime}.${fbclid}; path=/; max-age=7776000; SameSite=Lax`;
+      }
+    } catch {
+      // Ignore
+    }
+  }, []);
 
   useEffect(() => {
     if (!pixelId || typeof window === "undefined" || !window.fbq) return;

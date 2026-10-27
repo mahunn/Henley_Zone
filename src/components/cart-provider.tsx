@@ -86,6 +86,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const selectedColor = opts?.selectedColor?.trim() || undefined;
     const selectedSize = opts?.selectedSize?.trim() || undefined;
     const itemKey = makeItemKey(product.id, selectedColor, selectedSize);
+
+    trackAddToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1
+    });
+
     setItems((prev) => {
       const existing = prev.find((item) => item.key === itemKey);
       if (existing) {
@@ -113,6 +121,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addCartItems = (newItems: CartItem[]) => {
     if (!newItems || newItems.length === 0) return;
+
+    for (const newItem of newItems) {
+      trackAddToCart({
+        id: newItem.productId,
+        name: newItem.name,
+        price: newItem.price,
+        quantity: newItem.quantity || 1
+      });
+    }
+
     setItems((prev) => {
       const updated = [...prev];
       for (const newItem of newItems) {

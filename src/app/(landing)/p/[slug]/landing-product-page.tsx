@@ -444,10 +444,24 @@ export function LandingProductPage({
     [activeImg, detail?.images.length]
   );
 
-  /* ── Scroll Helpers ────────────────────────────────── */
+  /* ── Scroll Helpers & Checkout Tracking ────────────── */
+  const hasTrackedCheckoutRef = useRef(false);
+  const trackLandingCheckout = useCallback(() => {
+    if (!hasTrackedCheckoutRef.current && detail) {
+      hasTrackedCheckoutRef.current = true;
+      trackInitiateCheckout({
+        value: total,
+        num_items: effectiveCount,
+        content_ids: [detail.id],
+        currency: "BDT"
+      });
+    }
+  }, [detail, total, effectiveCount]);
+
   const scrollToOrder = useCallback(() => {
+    trackLandingCheckout();
     orderFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
+  }, [trackLandingCheckout]);
 
   const scrollToVariants = useCallback(() => {
     variantSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });

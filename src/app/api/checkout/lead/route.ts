@@ -8,6 +8,7 @@ import {
 import { CheckoutLead } from "@/types/commerce";
 import { isAdminAuthorized } from "@/lib/admin-request";
 import { withAdminSessionRefresh } from "@/lib/admin-session-response";
+import { sendMetaCheckoutLead, parseMetaCookies } from "@/lib/meta-conversions-api";
 
 export async function GET() {
   try {
@@ -69,6 +70,37 @@ export async function POST(request: Request) {
     };
 
     await saveLead(lead);
+
+    // Dispatch server-side Lead event to Meta Conversions API
+    try {
+      const reqHeaders = request.headers;
+      const clientIp =
+        reqHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+        reqHeaders.get("x-real-ip") ||
+        reqHeaders.get("cf-connecting-ip") ||
+        undefined;
+      const userAgent = reqHeaders.get("user-agent") || undefined;
+      const parsedCookies = parseMetaCookies(reqHeaders.get("cookie"));
+      const fbp = body.fbp || parsedCookies.fbp;
+      const fbc = body.fbc || parsedCookies.fbc;
+      const eventSourceUrl =
+        body.eventSourceUrl ||
+        reqHeaders.get("referer") ||
+        "https://henleyzone.com/checkout";
+
+      sendMetaCheckoutLead(lead, {
+        clientIp,
+        userAgent,
+        fbp,
+        fbc,
+        eventSourceUrl
+      }).catch((capiErr) =>
+        console.error("[Meta CAPI Lead Dispatch Error]:", capiErr)
+      );
+    } catch (capiErr) {
+      console.error("[Meta CAPI Trigger Error]:", capiErr);
+    }
+
     return NextResponse.json({ ok: true, leadId: lead.id }, { status: 201 });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to save lead.";

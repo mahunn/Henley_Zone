@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
  
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/components/cart-provider";
@@ -42,10 +42,24 @@ export default function CheckoutPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [leadId, setLeadId] = useState<string>("");
+  const hasTrackedCheckout = useRef(false);
  
   const deliveryFee = DELIVERY_OPTIONS.find((o) => o.id === delivery)!.fee;
   const total = subtotal + (items.length > 0 ? deliveryFee : 0);
   const cleanedPhone = normalizePhoneNumber(phone);
+
+  // Track InitiateCheckout once when entering checkout with items
+  useEffect(() => {
+    if (items.length > 0 && !hasTrackedCheckout.current) {
+      hasTrackedCheckout.current = true;
+      trackInitiateCheckout({
+        value: total,
+        num_items: items.reduce((sum, item) => sum + item.quantity, 0),
+        content_ids: items.map((item) => item.productId),
+        currency: "BDT"
+      });
+    }
+  }, [items, total]);
 
   // Generate / retrieve leadId on mount or cart change
   useEffect(() => {

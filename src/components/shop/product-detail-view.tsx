@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useLayoutEffect, useEffect } from "react";
 import { trackViewContent } from "@/lib/meta-pixel";
@@ -120,6 +120,18 @@ export function ProductDetailView({
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [product.slug]);
+
+  useEffect(() => {
+    if (product?.id) {
+      trackViewContent({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        category: product.categories?.[0]
+      });
+    }
+  }, [product.id, product.name, product.price]);
+
   const [activeColor, setActiveColor] = useState<string | null>(
     product.colors[0]?.id ?? null
   );

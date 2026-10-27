@@ -12,6 +12,7 @@ import { normalizePhoneNumber } from "@/lib/phone-normalizer";
 import { Order } from "@/types/commerce";
 import { isAdminAuthorized } from "@/lib/admin-request";
 import { withAdminSessionRefresh } from "@/lib/admin-session-response";
+import { sendMetaOrderPurchase, parseMetaCookies } from "@/lib/meta-conversions-api";
 
 export async function GET() {
   try {
@@ -56,6 +57,36 @@ export async function POST(request: Request) {
     };
 
     await createOrder(order);
+
+    // Dispatch server-side Purchase event to Meta Conversions API
+    try {
+      const reqHeaders = request.headers;
+      const clientIp =
+        reqHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+        reqHeaders.get("x-real-ip") ||
+        reqHeaders.get("cf-connecting-ip") ||
+        undefined;
+      const userAgent = reqHeaders.get("user-agent") || undefined;
+      const parsedCookies = parseMetaCookies(reqHeaders.get("cookie"));
+      const fbp = (body as { fbp?: string }).fbp || parsedCookies.fbp;
+      const fbc = (body as { fbc?: string }).fbc || parsedCookies.fbc;
+      const eventSourceUrl =
+        (body as { eventSourceUrl?: string }).eventSourceUrl ||
+        reqHeaders.get("referer") ||
+        "https://henleyzone.com/checkout/success";
+
+      sendMetaOrderPurchase(order, {
+        clientIp,
+        userAgent,
+        fbp,
+        fbc,
+        eventSourceUrl
+      }).catch((capiErr) =>
+        console.error("[Meta CAPI Order Dispatch Error]:", capiErr)
+      );
+    } catch (capiErr) {
+      console.error("[Meta CAPI Trigger Error]:", capiErr);
+    }
 
     if (body.leadId) {
       try {

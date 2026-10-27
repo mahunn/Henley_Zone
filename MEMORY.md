@@ -68,16 +68,29 @@ This document contains the complete technical architecture, configuration detail
 - **Problem**: On laptop/desktop screens (`>= 640px`), `.lp-page` had `overflow: hidden;`, trapping mouse wheel and touchpad precision scroll events and causing scrolling to feel stuck or broken. Additionally, `.lp-sticky-bottom-bar` spanned 100% width, pushing price to the far left under Next.js dev badges and buttons to the far right, while covering the footer credits (`Websy.bd`).
 - **Fix**: Removed `overflow: hidden;` and `-webkit-overflow-scrolling: touch;` from `.lp-page`. Bound `overflow-x: clip;` exclusively to `html`. Capped `.lp-sticky-bottom-bar` to `max-width: 600px; left: 50%; transform: translateX(-50%);` with rounded top corners for desktop/laptop, and added `105px` bottom padding to `.lp-footer` so all credits remain completely visible above the bar.
 
+### Issue 12: Meta Conversions API (CAPI) Missing Implementation & Deduplication
+- **Problem**: `META_CONVERSIONS_API_ACCESS_TOKEN` was present in `.env.local`, but Conversions API was never implemented on the server. Furthermore, `trackPurchase` in `checkout/success/page.tsx` was imported but never called, causing Meta Events Manager to report that Conversions API was not set up and no purchase events were arriving.
+- **Fix**:
+  1. Built server-side CAPI module `src/lib/meta-conversions-api.ts` with SHA-256 user data hashing (`ph`, `fn`, `ln`, `ct`, `country`), client IP/user-agent extraction, `_fbp`/`_fbc` cookie capture, and Meta Graph API v21.0 integration.
+  2. Created API route `/api/meta/capi` to relay client events to Meta Conversions API even when browser ad-blockers block `connect.facebook.net`.
+  3. Integrated direct server-side `Purchase` dispatch in `POST /api/orders` and `Lead` dispatch in `POST /api/checkout/lead`.
+  4. Wired browser-side `trackPurchase` in `src/app/(site)/checkout/success/page.tsx` with `sessionStorage` deduplication.
+  5. Implemented shared `eventID` deduplication across all events (`trackMetaEvent` passes `{ eventID }` to `fbq` and `/api/meta/capi`).
+  6. Added `_fbc` cookie auto-capture when visitors land with `?fbclid=...`.
+  7. Added `trackViewContent` in `ProductDetailView`, `trackAddToCart` in `cart-provider.tsx`, and `trackInitiateCheckout` in `checkout/page.tsx` and `landing-product-page.tsx`.
+
 ---
 
-## 3. Meta Pixel Tracking Architecture
+## 3. Meta Tracking Architecture (Pixel + Conversions API Deduplication)
 
-Tracking is centralized in `src/lib/meta-pixel.ts`:
-- **`PageView`**: Fired on initial load and route changes by `meta-facebook-pixel.tsx`.
+Tracking uses a dual-channel architecture (Browser Pixel + Server CAPI) with shared `eventID` for 100% Meta Event Deduplication:
+- **`PageView`**: Fired on initial load and route changes by `meta-facebook-pixel.tsx`, auto-relayed to `/api/meta/capi`.
 - **`ViewContent`**: Fired in `product-detail-view.tsx` and `landing-product-page.tsx` on product mount with `id`, `name`, `price`, `category`, and `currency: "BDT"`.
 - **`AddToCart`**: Fired in `cart-provider.tsx` inside `addToCart` and `addCartItems`, capturing all store, landing, and card add-to-cart clicks.
-- **`InitiateCheckout`**: Fired in `checkout/page.tsx` when the customer enters checkout with items.
-- **`Purchase`**: Fired in `checkout/success/page.tsx` upon loading `latestOrder` from `localStorage`, with `sessionStorage` deduplication (`fb_purchased_<orderId>`) to prevent duplicate events on page reload.
+- **`InitiateCheckout`**: Fired in `checkout/page.tsx` and `landing-product-page.tsx` when the customer enters checkout with items.
+- **`Lead`**: Fired server-side in `POST /api/checkout/lead` when customer enters contact info before completing order.
+- **`Purchase`**: Fired both server-side (`POST /api/orders`) and browser-side (`checkout/success/page.tsx`) with matching `eventID: order.id`, preventing duplicates and guaranteeing delivery even with ad blockers.
+- **Deduplication Key**: `order.id` (for purchases) or generated `eventId` passed identically to both `fbq('track', eventName, params, { eventID })` and Meta CAPI payload.
 
 ---
 
